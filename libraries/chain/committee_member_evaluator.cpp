@@ -36,7 +36,7 @@ void_result committee_member_create_evaluator::do_evaluate( const committee_memb
 { try {
    FC_ASSERT(db().get(op.committee_member_account).is_lifetime_member());
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 object_id_type committee_member_create_evaluator::do_apply( const committee_member_create_operation& op )
 { try {
@@ -51,13 +51,13 @@ object_id_type committee_member_create_evaluator::do_apply( const committee_memb
          obj.url                = op.url;
    });
    return new_del_object.id;
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result committee_member_update_evaluator::do_evaluate( const committee_member_update_operation& op )
 { try {
    FC_ASSERT(db().get(op.committee_member).committee_member_account == op.committee_member_account);
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result committee_member_update_evaluator::do_apply( const committee_member_update_operation& op )
 { try {
@@ -70,7 +70,7 @@ void_result committee_member_update_evaluator::do_apply( const committee_member_
             com.url = *op.new_url;
       });
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result committee_member_update_global_parameters_evaluator::do_evaluate(const committee_member_update_global_parameters_operation& o)
 { try {
@@ -80,7 +80,7 @@ void_result committee_member_update_global_parameters_evaluator::do_evaluate(con
          "Unable to set HTLC parameters until hardfork." );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result committee_member_update_global_parameters_evaluator::do_apply(const committee_member_update_global_parameters_operation& o)
 { try {
@@ -89,6 +89,6 @@ void_result committee_member_update_global_parameters_evaluator::do_apply(const 
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::chain

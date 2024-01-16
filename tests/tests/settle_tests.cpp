@@ -50,9 +50,9 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       const auto& bitusd = create_bitasset("USDBIT", paul_id);
       const auto& bitcny = create_bitasset("CNYBIT", paul_id);
       const auto& core   = asset_id_type()(db);
-      asset_id_type bitusd_id = bitusd.id;
-      asset_id_type bitcny_id = bitcny.id;
-      asset_id_type core_id = core.id;
+      asset_id_type bitusd_id = bitusd.get_id();
+      asset_id_type bitcny_id = bitcny.get_id();
+      asset_id_type core_id = core.get_id();
 
       // fund accounts
       transfer(committee_account, michael_id, asset( 100000000 ) );
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       transfer(committee_account, jim_id, asset(10000000));
 
       // add a feed to asset
-      update_feed_producers( bitusd, {paul.id} );
+      update_feed_producers( bitusd, {paul.get_id()} );
       price_feed current_feed;
       current_feed.maintenance_collateral_ratio = 1750;
       current_feed.maximum_short_squeeze_ratio = 1100;
@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
 
       // paul gets some bitusd
       const call_order_object& call_paul = *borrow( paul, bitusd.amount(1000), core.amount(100) );
-      call_order_id_type call_paul_id = call_paul.id;
+      call_order_id_type call_paul_id = call_paul.get_id();
       BOOST_REQUIRE_EQUAL( get_balance( paul, bitusd ), 1000 );
 
       // and transfer some to rachel
-      transfer(paul.id, rachel.id, asset(200, bitusd.id));
+      transfer(paul.get_id(), rachel.get_id(), asset(200, bitusd.get_id()));
 
       BOOST_CHECK_EQUAL(get_balance(rachel, core), 0);
       BOOST_CHECK_EQUAL(get_balance(rachel, bitusd), 200);
@@ -84,12 +84,12 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
 
       // michael gets some bitusd
       const call_order_object& call_michael = *borrow(michael, bitusd.amount(6), core.amount(8));
-      call_order_id_type call_michael_id = call_michael.id;
+      call_order_id_type call_michael_id = call_michael.get_id();
 
       // add settle order and check rounding issue
       operation_result result = force_settle(rachel, bitusd.amount(4));
 
-      force_settlement_id_type settle_id = result.get<object_id_type>();
+      force_settlement_id_type settle_id { result.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id(db).balance.amount.value, 4 );
 
       BOOST_CHECK_EQUAL(get_balance(rachel, core), 0);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       set_expiration( db, trx );
       operation_result result2 = force_settle(rachel_id(db), bitusd_id(db).amount(34));
 
-      force_settlement_id_type settle_id2 = result2.get<object_id_type>();
+      force_settlement_id_type settle_id2 { result2.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id2(db).balance.amount.value, 34 );
 
       BOOST_CHECK_EQUAL(get_balance(rachel_id(db), core_id(db)), 0);
@@ -194,13 +194,13 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       const operation_result result4 = force_settle(rachel_id(db), bitusd_id(db).amount(434));
       const operation_result result5 = force_settle(rachel_id(db), bitusd_id(db).amount(5));
 
-      force_settlement_id_type settle_id3 = result3.get<object_id_type>();
+      force_settlement_id_type settle_id3 { result3.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id3(db).balance.amount.value, 3 );
 
-      force_settlement_id_type settle_id4 = result4.get<object_id_type>();
+      force_settlement_id_type settle_id4 { result4.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id4(db).balance.amount.value, 434 );
 
-      force_settlement_id_type settle_id5 = result5.get<object_id_type>();
+      force_settlement_id_type settle_id5 { result5.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id5(db).balance.amount.value, 5 );
 
       BOOST_CHECK_EQUAL(get_balance(rachel_id(db), core_id(db)), 1);
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       generate_block();
 
       // jim borrow some cny
-      call_order_id_type call_jim_id = borrow(jim_id(db), bitcny_id(db).amount(2000), core_id(db).amount(2000))->id;
+      call_order_id_type call_jim_id = borrow(jim_id(db), bitcny_id(db).amount(2000), core_id(db).amount(2000))->get_id();
 
       BOOST_CHECK_EQUAL( 2000, call_jim_id(db).debt.value );
       BOOST_CHECK_EQUAL( 2000, call_jim_id(db).collateral.value );
@@ -386,13 +386,13 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       const operation_result result7 = force_settle(ted_id(db), bitusd_id(db).amount(21));
       const operation_result result8 = force_settle(ted_id(db), bitusd_id(db).amount(22));
 
-      force_settlement_id_type settle_id6 = result6.get<object_id_type>();
+      force_settlement_id_type settle_id6 { result6.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id6(db).balance.amount.value, 20 );
 
-      force_settlement_id_type settle_id7 = result7.get<object_id_type>();
+      force_settlement_id_type settle_id7 { result7.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id7(db).balance.amount.value, 21 );
 
-      force_settlement_id_type settle_id8 = result8.get<object_id_type>();
+      force_settlement_id_type settle_id8 { result8.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id8(db).balance.amount.value, 22 );
 
       BOOST_CHECK_EQUAL(get_balance(ted_id(db), core_id(db)), 0);
@@ -403,13 +403,13 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       const operation_result result102 = force_settle(joe_id(db), bitcny_id(db).amount(1000));
       const operation_result result103 = force_settle(joe_id(db), bitcny_id(db).amount(300));
 
-      force_settlement_id_type settle_id101 = result101.get<object_id_type>();
+      force_settlement_id_type settle_id101 { result101.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id101(db).balance.amount.value, 100 );
 
-      force_settlement_id_type settle_id102 = result102.get<object_id_type>();
+      force_settlement_id_type settle_id102 { result102.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id102(db).balance.amount.value, 1000 );
 
-      force_settlement_id_type settle_id103 = result103.get<object_id_type>();
+      force_settlement_id_type settle_id103 { result103.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id103(db).balance.amount.value, 300 );
 
       BOOST_CHECK_EQUAL(get_balance(joe_id(db), core_id(db)), 0);
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
 
       // bob borrow some
       const call_order_object& call_bob = *borrow( bob_id(db), bitusd_id(db).amount(19), core_id(db).amount(2) );
-      call_order_id_type call_bob_id = call_bob.id;
+      call_order_id_type call_bob_id = call_bob.get_id();
 
       BOOST_CHECK_EQUAL(get_balance(bob_id(db), core_id(db)), 9999998); // 10000000 - 2
       BOOST_CHECK_EQUAL(get_balance(bob_id(db), bitusd_id(db)), 19); // new
@@ -654,9 +654,9 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       const auto& bitusd = create_bitasset("USDBIT", paul_id);
       const auto& bitcny = create_bitasset("CNYBIT", paul_id);
       const auto& core   = asset_id_type()(db);
-      asset_id_type bitusd_id = bitusd.id;
-      asset_id_type bitcny_id = bitcny.id;
-      asset_id_type core_id = core.id;
+      asset_id_type bitusd_id = bitusd.get_id();
+      asset_id_type bitcny_id = bitcny.get_id();
+      asset_id_type core_id = core.get_id();
 
       // fund accounts
       transfer(committee_account, michael_id, asset( 100000000 ) );
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       transfer(committee_account, jim_id, asset(10000000));
 
       // add a feed to asset
-      update_feed_producers( bitusd, {paul.id} );
+      update_feed_producers( bitusd, {paul.get_id()} );
       price_feed current_feed;
       current_feed.maintenance_collateral_ratio = 1750;
       current_feed.maximum_short_squeeze_ratio = 1100;
@@ -675,11 +675,11 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
 
       // paul gets some bitusd
       const call_order_object& call_paul = *borrow( paul, bitusd.amount(1000), core.amount(100) );
-      call_order_id_type call_paul_id = call_paul.id;
+      call_order_id_type call_paul_id = call_paul.get_id();
       BOOST_REQUIRE_EQUAL( get_balance( paul, bitusd ), 1000 );
 
       // and transfer some to rachel
-      transfer(paul.id, rachel.id, asset(200, bitusd.id));
+      transfer(paul.get_id(), rachel.get_id(), asset(200, bitusd.get_id()));
 
       BOOST_CHECK_EQUAL(get_balance(rachel, core), 0);
       BOOST_CHECK_EQUAL(get_balance(rachel, bitusd), 200);
@@ -688,12 +688,12 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
 
       // michael gets some bitusd
       const call_order_object& call_michael = *borrow(michael, bitusd.amount(6), core.amount(8));
-      call_order_id_type call_michael_id = call_michael.id;
+      call_order_id_type call_michael_id = call_michael.get_id();
 
       // add settle order and check rounding issue
       const operation_result result = force_settle(rachel, bitusd.amount(4));
 
-      force_settlement_id_type settle_id = result.get<object_id_type>();
+      force_settlement_id_type settle_id { result.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id(db).balance.amount.value, 4 );
 
       BOOST_CHECK_EQUAL(get_balance(rachel, core), 0);
@@ -743,7 +743,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       set_expiration( db, trx );
       const operation_result result2 = force_settle(rachel_id(db), bitusd_id(db).amount(34));
 
-      force_settlement_id_type settle_id2 = result2.get<object_id_type>();
+      force_settlement_id_type settle_id2 { result2.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id2(db).balance.amount.value, 34 );
 
       BOOST_CHECK_EQUAL(get_balance(rachel_id(db), core_id(db)), 0);
@@ -798,13 +798,13 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       const operation_result result4 = force_settle(rachel_id(db), bitusd_id(db).amount(434));
       const operation_result result5 = force_settle(rachel_id(db), bitusd_id(db).amount(5));
 
-      force_settlement_id_type settle_id3 = result3.get<object_id_type>();
+      force_settlement_id_type settle_id3 { result3.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id3(db).balance.amount.value, 3 );
 
-      force_settlement_id_type settle_id4 = result4.get<object_id_type>();
+      force_settlement_id_type settle_id4 { result4.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id4(db).balance.amount.value, 434 );
 
-      force_settlement_id_type settle_id5 = result5.get<object_id_type>();
+      force_settlement_id_type settle_id5 { result5.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id5(db).balance.amount.value, 5 );
 
       BOOST_CHECK_EQUAL(get_balance(rachel_id(db), core_id(db)), 1);
@@ -962,7 +962,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       BOOST_CHECK_EQUAL( bitusd_id(db).bitasset_data(db).force_settled_volume.value, 203 ); // 182 + 21
 
       // jim borrow some cny
-      call_order_id_type call_jim_id = borrow(jim_id(db), bitcny_id(db).amount(2000), core_id(db).amount(2000))->id;
+      call_order_id_type call_jim_id = borrow(jim_id(db), bitcny_id(db).amount(2000), core_id(db).amount(2000))->get_id();
 
       BOOST_CHECK_EQUAL( 2000, call_jim_id(db).debt.value );
       BOOST_CHECK_EQUAL( 2000, call_jim_id(db).collateral.value );
@@ -992,13 +992,13 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       const operation_result result7 = force_settle(ted_id(db), bitusd_id(db).amount(21));
       const operation_result result8 = force_settle(ted_id(db), bitusd_id(db).amount(22));
 
-      force_settlement_id_type settle_id6 = result6.get<object_id_type>();
+      force_settlement_id_type settle_id6 { result6.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id6(db).balance.amount.value, 20 );
 
-      force_settlement_id_type settle_id7 = result7.get<object_id_type>();
+      force_settlement_id_type settle_id7 { result7.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id7(db).balance.amount.value, 21 );
 
-      force_settlement_id_type settle_id8 = result8.get<object_id_type>();
+      force_settlement_id_type settle_id8 { result8.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id8(db).balance.amount.value, 22 );
 
       BOOST_CHECK_EQUAL(get_balance(ted_id(db), core_id(db)), 0);
@@ -1009,13 +1009,13 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
       const operation_result result102 = force_settle(joe_id(db), bitcny_id(db).amount(1000));
       const operation_result result103 = force_settle(joe_id(db), bitcny_id(db).amount(300));
 
-      force_settlement_id_type settle_id101 = result101.get<object_id_type>();
+      force_settlement_id_type settle_id101 { result101.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id101(db).balance.amount.value, 100 );
 
-      force_settlement_id_type settle_id102 = result102.get<object_id_type>();
+      force_settlement_id_type settle_id102 { result102.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id102(db).balance.amount.value, 1000 );
 
-      force_settlement_id_type settle_id103 = result103.get<object_id_type>();
+      force_settlement_id_type settle_id103 { result103.get<object_id_type>() };
       BOOST_CHECK_EQUAL( settle_id103(db).balance.amount.value, 300 );
 
       BOOST_CHECK_EQUAL(get_balance(joe_id(db), core_id(db)), 0);
@@ -1085,7 +1085,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
 
       // bob borrow some
       const call_order_object& call_bob = *borrow( bob_id(db), bitusd_id(db).amount(19), core_id(db).amount(2) );
-      call_order_id_type call_bob_id = call_bob.id;
+      call_order_id_type call_bob_id = call_bob.get_id();
 
       BOOST_CHECK_EQUAL(get_balance(bob_id(db), core_id(db)), 9999998); // 10000000 - 2
       BOOST_CHECK_EQUAL(get_balance(bob_id(db), bitusd_id(db)), 19); // new
@@ -1265,8 +1265,8 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
       // create assets
       const auto& bitusd = create_bitasset("USDBIT", paul_id);
       const auto& core   = asset_id_type()(db);
-      asset_id_type bitusd_id = bitusd.id;
-      asset_id_type core_id = core.id;
+      asset_id_type bitusd_id = bitusd.get_id();
+      asset_id_type core_id = core.get_id();
 
       // fund accounts
       transfer(committee_account, michael_id, asset( 100000000 ) );
@@ -1299,7 +1299,7 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
 
       // paul gets some bitusd
       const call_order_object& call_paul = *borrow( paul_id(db), bitusd_id(db).amount(1001), core_id(db).amount(101));
-      call_order_id_type call_paul_id = call_paul.id;
+      call_order_id_type call_paul_id = call_paul.get_id();
       BOOST_REQUIRE_EQUAL( get_balance( paul_id(db), bitusd_id(db) ), 1001 );
       BOOST_REQUIRE_EQUAL( get_balance( paul_id(db), core_id(db) ), 10000000-101);
 
@@ -1315,7 +1315,7 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
 
       // michael borrow some bitusd
       const call_order_object& call_michael = *borrow(michael_id(db), bitusd_id(db).amount(6), core_id(db).amount(8));
-      call_order_id_type call_michael_id = call_michael.id;
+      call_order_id_type call_michael_id = call_michael.get_id();
 
       BOOST_CHECK_EQUAL(get_balance(michael_id(db), bitusd_id(db)), 6);
       BOOST_CHECK_EQUAL(get_balance(michael_id(db), core_id(db)), 100000000-8);
@@ -1337,8 +1337,8 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
       BOOST_CHECK_EQUAL(get_balance(paul_id(db), bitusd_id(db)), 801);
 
       // all call orders are gone after global settle
-      BOOST_CHECK( !db.find_object(call_paul_id) );
-      BOOST_CHECK( !db.find_object(call_michael_id) );
+      BOOST_CHECK( !db.find(call_paul_id) );
+      BOOST_CHECK( !db.find(call_michael_id) );
 
       // add settle order and check rounding issue
       force_settle(rachel_id(db), bitusd_id(db).amount(4));
@@ -1388,8 +1388,8 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test_after_hf_184 )
       // create assets
       const auto& bitusd = create_bitasset("USDBIT", paul_id);
       const auto& core   = asset_id_type()(db);
-      asset_id_type bitusd_id = bitusd.id;
-      asset_id_type core_id = core.id;
+      asset_id_type bitusd_id = bitusd.get_id();
+      asset_id_type core_id = core.get_id();
 
       // fund accounts
       transfer(committee_account, michael_id, asset( 100000000 ) );
@@ -1422,7 +1422,7 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test_after_hf_184 )
 
       // paul gets some bitusd
       const call_order_object& call_paul = *borrow( paul_id(db), bitusd_id(db).amount(1001), core_id(db).amount(101));
-      call_order_id_type call_paul_id = call_paul.id;
+      call_order_id_type call_paul_id = call_paul.get_id();
       BOOST_REQUIRE_EQUAL( get_balance( paul_id(db), bitusd_id(db) ), 1001 );
       BOOST_REQUIRE_EQUAL( get_balance( paul_id(db), core_id(db) ), 10000000-101);
 
@@ -1438,7 +1438,7 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test_after_hf_184 )
 
       // michael borrow some bitusd
       const call_order_object& call_michael = *borrow(michael_id(db), bitusd_id(db).amount(6), core_id(db).amount(8));
-      call_order_id_type call_michael_id = call_michael.id;
+      call_order_id_type call_michael_id = call_michael.get_id();
 
       BOOST_CHECK_EQUAL(get_balance(michael_id(db), bitusd_id(db)), 6);
       BOOST_CHECK_EQUAL(get_balance(michael_id(db), core_id(db)), 100000000-8);
@@ -1460,8 +1460,8 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test_after_hf_184 )
       BOOST_CHECK_EQUAL(get_balance(paul_id(db), bitusd_id(db)), 801);
 
       // all call orders are gone after global settle
-      BOOST_CHECK( !db.find_object(call_paul_id));
-      BOOST_CHECK( !db.find_object(call_michael_id));
+      BOOST_CHECK( !db.find(call_paul_id));
+      BOOST_CHECK( !db.find(call_michael_id));
 
       // settle order will not execute after HF due to too small
       GRAPHENE_REQUIRE_THROW( force_settle(rachel_id(db), bitusd_id(db).amount(4)), fc::exception );

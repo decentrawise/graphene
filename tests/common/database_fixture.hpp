@@ -25,6 +25,11 @@
 
 #include <fc/io/json.hpp>
 
+#include <boost/filesystem/path.hpp>
+#include <boost/program_options.hpp>
+
+#include <boost/test/unit_test.hpp>
+
 #include <graphene/protocol/types.hpp>
 #include <graphene/protocol/market.hpp>
 
@@ -34,8 +39,11 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
+#include <graphene/utilities/tempdir.hpp>
 
 #include <iostream>
+
+#include "program_options_util.hpp"
 
 using namespace graphene::db;
 
@@ -160,12 +168,12 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 #define ACTOR(name) \
    PREP_ACTOR(name) \
    const auto name = create_account(BOOST_PP_STRINGIZE(name), name ## _public_key); \
-   graphene::chain::account_id_type name ## _id = name.id; (void)name ## _id;
+   graphene::chain::account_id_type name ## _id = name.get_id(); (void)name ## _id;
 
 #define GET_ACTOR(name) \
    fc::ecc::private_key name ## _private_key = generate_private_key(BOOST_PP_STRINGIZE(name)); \
    const account_object& name = get_account(BOOST_PP_STRINGIZE(name)); \
-   graphene::chain::account_id_type name ## _id = name.id; \
+   graphene::chain::account_id_type name ## _id = name.get_id(); \
    (void)name ##_id
 
 #define ACTORS_IMPL(r, data, elem) ACTOR(elem)
@@ -182,7 +190,15 @@ public:
    void clear();
 };
 
-struct database_fixture {
+namespace test {
+/// set a reasonable expiration time for the transaction
+void set_expiration( const database& db, transaction& tx );
+
+bool _push_block( database& db, const signed_block& b, uint32_t skip_flags = 0 );
+processed_transaction _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags = 0 );
+} // namespace test
+
+struct database_fixture_base {
    // the reason we use an app is to exercise the indexes of built-in
    //   plugins
    graphene::app::application app;
@@ -191,23 +207,34 @@ struct database_fixture {
    signed_transaction trx;
    public_key_type committee_key;
    account_id_type committee_account;
-   fc::ecc::private_key private_key = fc::ecc::private_key::generate();
-   fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
-   public_key_type init_account_pub_key;
+   const fc::ecc::private_key private_key;
+   const fc::ecc::private_key init_account_priv_key;
+   const public_key_type init_account_pub_key;
 
-   optional<fc::temp_directory> data_dir;
+   fc::temp_directory data_dir;
    bool skip_key_index_test = false;
    uint32_t anon_acct_count;
    bool hf1270 = false;
+   bool hf2467 = false; // Note: used by hf core-2281 too, assuming hf core-2281 and core-2467 occur at the same time
+   bool hf2481 = false;
+   bool bsip77 = false;
+   bool hf2595 = false;
 
-    database_fixture(const fc::time_point_sec &initial_timestamp =
-                        fc::time_point_sec(GRAPHENE_TESTING_GENESIS_TIMESTAMP));
-   ~database_fixture();
+   string es_index_prefix; ///< Index prefix for elasticsearch plugin
+   string es_obj_index_prefix; ///< Index prefix for es_objects plugin
+
+   const std::string current_test_name;
+   const std::string current_suite_name;
+
+   database_fixture_base();
+   virtual ~database_fixture_base();
+
+   static void init_genesis( database_fixture_base& fixture );
+   static std::shared_ptr<boost::program_options::variables_map> init_options( database_fixture_base& fixture );
 
    static fc::ecc::private_key generate_private_key(string seed);
    string generate_anon_acct_name();
    static void verify_asset_supplies( const database& db );
-   void open_database();
    void vote_for_committee_and_witnesses(uint16_t num_committee, uint16_t num_witness);
    signed_block generate_block(uint32_t skip = ~0,
                                const fc::ecc::private_key& key = generate_private_key("null_key"),
@@ -252,7 +279,7 @@ struct database_fixture {
    /***
     * @brief helper method to add a price feed
     *
-    * Adds a price feed for asset2, pushes the transaction, and generates the block
+    * Adds a price feed for asset2, pushes the transaction, and generates a block
     *
     * @param publisher who is publishing the feed
     * @param asset1 the base asset
@@ -260,13 +287,14 @@ struct database_fixture {
     * @param asset2 the quote asset
     * @param amount2 the amount of the quote asset
     * @param core_id id of core (helps with core_exchange_rate)
+    * @param icr initial collateral ratio
     */
    void publish_feed(const account_id_type& publisher,
          const asset_id_type& asset1, int64_t amount1,
          const asset_id_type& asset2, int64_t amount2,
          const asset_id_type& core_id);
 
-   void publish_feed(const asset_object& mia, const account_object& by, const price_feed& f);
+   void publish_feed( const asset_object& mia, const account_object& by, const price_feed& f );
 
    const call_order_object* borrow( account_id_type who, asset what, asset collateral,
                                     optional<uint16_t> target_cr = {} )
@@ -282,13 +310,24 @@ struct database_fixture {
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
+   asset_create_operation make_bitasset( const string& name,
+                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
+                                       uint16_t market_fee_percent = 100 /*1%*/,
+                                       uint16_t flags = charge_market_fee,
+                                       uint16_t precision = 2,
+                                       asset_id_type backing_asset = {},
+                                       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY,
+                                       optional<uint16_t> initial_cr = {},
+                                       optional<uint16_t> margin_call_fee_ratio = {} );
    const asset_object& create_bitasset(const string& name,
                                        account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = 2,
                                        asset_id_type backing_asset = {},
-                                       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY );
+                                       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY,
+                                       optional<uint16_t> initial_cr = {},
+                                       optional<uint16_t> margin_call_fee_ratio = {} );
    const asset_object& create_prediction_market(const string& name,
                                        account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
@@ -305,6 +344,7 @@ struct database_fixture {
                                                  additional_asset_options_t options = additional_asset_options_t());
    void issue_uia( const account_object& recipient, asset amount );
    void issue_uia( account_id_type recipient_id, asset amount );
+   void reserve_asset( account_id_type account, asset amount );
 
    const account_object& create_account(
       const string& name,
@@ -335,14 +375,45 @@ struct database_fixture {
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"),
                                         uint32_t skip_flags = ~0);
    const worker_object& create_worker(account_id_type owner, const share_type daily_pay = 1000, const fc::microseconds& duration = fc::days(2));
+   template<typename T>
+   proposal_create_operation make_proposal_create_op( const T& op, account_id_type proposer = GRAPHENE_TEMP_ACCOUNT,
+                                                      uint32_t timeout = 300, optional<uint32_t> review_period = {} ) const
+   {
+      proposal_create_operation cop;
+      cop.fee_paying_account = proposer;
+      cop.expiration_time = db.head_block_time() + timeout;
+      cop.review_period_seconds = review_period;
+      cop.proposed_ops.emplace_back( op );
+      for( auto& o : cop.proposed_ops ) db.current_fee_schedule().set_fee(o.op);
+      return cop;
+   }
+   template<typename T>
+   const proposal_object& propose( const T& op, account_id_type proposer = GRAPHENE_TEMP_ACCOUNT,
+                                   uint32_t timeout = 300, uint32_t review_period = 0 )
+   {
+      proposal_create_operation cop = make_proposal_create_op( op, proposer, timeout, review_period );
+      trx.operations.clear();
+      trx.operations.push_back( cop );
+      for( auto& o : trx.operations ) db.current_fee_schedule().set_fee(o);
+      trx.validate();
+      test::set_expiration( db, trx );
+      processed_transaction ptx = PUSH_TX(db, trx, ~0);
+      const operation_result& op_result = ptx.operation_results.front();
+      trx.operations.clear();
+      verify_asset_supplies(db);
+      return db.get<proposal_object>( op_result.get<object_id_type>() );
+   }
    uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
    digest_type digest( const transaction& tx );
    void sign( signed_transaction& trx, const fc::ecc::private_key& key );
-   const limit_order_object* create_sell_order( account_id_type user, const asset& amount, const asset& recv,
-                                                const time_point_sec order_expiration = time_point_sec::maximum(),
+   limit_order_create_operation make_limit_order_create_op(
+                                                const account_id_type& user, const asset& amount, const asset& recv,
+                                                const time_point_sec& order_expiration = time_point_sec::maximum() ) const;
+   const limit_order_object* create_sell_order( const account_id_type& user, const asset& amount, const asset& recv,
+                                                const time_point_sec& order_expiration = time_point_sec::maximum(),
                                                 const price& fee_core_exchange_rate = price::unit_price() );
    const limit_order_object* create_sell_order( const account_object& user, const asset& amount, const asset& recv,
-                                                const time_point_sec order_expiration = time_point_sec::maximum(),
+                                                const time_point_sec& order_expiration = time_point_sec::maximum(),
                                                 const price& fee_core_exchange_rate = price::unit_price() );
    asset cancel_limit_order( const limit_order_object& order );
    void transfer( account_id_type from, account_id_type to, const asset& amount, const asset& fee = asset() );
@@ -353,7 +424,7 @@ struct database_fixture {
     * finish creating a block
     */
    void enable_fees();
-   void change_fees( const flat_set< fee_parameters >& new_params, uint32_t new_scale = 0 );
+   void change_fees( const fee_parameters::flat_set_type& new_params, uint32_t new_scale = 0 );
    void upgrade_to_lifetime_member( account_id_type account );
    void upgrade_to_lifetime_member( const account_object& account );
    void upgrade_to_annual_member( account_id_type account );
@@ -393,12 +464,45 @@ struct database_fixture {
 
 };
 
-namespace test {
-/// set a reasonable expiration time for the transaction
-void set_expiration( const database& db, transaction& tx );
+template<typename F>
+struct database_fixture_init : database_fixture_base {
+   database_fixture_init()
+   {
+      F::init( *this );
 
-bool _push_block( database& db, const signed_block& b, uint32_t skip_flags = 0 );
-processed_transaction _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags = 0 );
-}
+      asset_id_type mpa1_id(1);
+      BOOST_REQUIRE( mpa1_id(db).is_market_issued() );
+      BOOST_CHECK( mpa1_id(db).bitasset_data(db).asset_id == mpa1_id );
+
+      BOOST_CHECK_EQUAL( account_id_type()(db).creation_block_num, 0 );
+      BOOST_CHECK( account_id_type()(db).creation_time == genesis_state.initial_timestamp );
+
+      BOOST_CHECK_EQUAL( asset_id_type()(db).creation_block_num, 0 );
+      BOOST_CHECK( asset_id_type()(db).creation_time == genesis_state.initial_timestamp );
+
+      BOOST_CHECK_EQUAL( mpa1_id(db).creation_block_num, 0 );
+      BOOST_CHECK( mpa1_id(db).creation_time == genesis_state.initial_timestamp );
+   }
+
+   static void init( database_fixture_init<F>& fixture )
+   { try {
+      fixture.data_dir = fc::temp_directory( graphene::utilities::temp_directory_path() );
+      fc::create_directories( fixture.data_dir.path() );
+      F::init_genesis( fixture );
+      fc::json::save_to_file( fixture.genesis_state, fixture.data_dir.path() / "genesis.json" );
+      auto options = F::init_options( fixture );
+      set_option( *options, "genesis-json", boost::filesystem::path(fixture.data_dir.path() / "genesis.json") );
+      fixture.app.initialize( fixture.data_dir.path(), options );
+      fixture.app.startup();
+
+      fixture.generate_block();
+
+      test::set_expiration( fixture.db, fixture.trx );
+   } FC_LOG_AND_RETHROW() }
+};
+
+struct database_fixture : database_fixture_init<database_fixture>
+{
+};
 
 } }

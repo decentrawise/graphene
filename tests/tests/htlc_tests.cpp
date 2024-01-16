@@ -93,7 +93,7 @@ try {
    // Alice puts a contract on the blockchain
    {
       graphene::chain::htlc_create_operation create_operation;
-      BOOST_TEST_MESSAGE("Alice (who has 100 coins, is transferring 2 coins to Bob");
+      BOOST_TEST_MESSAGE("Alice (who has 100 coins, is transferring 3 coins to Bob");
       create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_BLOCKCHAIN_PRECISION );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 60;
@@ -103,10 +103,9 @@ try {
       create_operation.fee = db.get_global_properties().parameters.current_fees->calculate_fee(create_operation);
       trx.operations.push_back(create_operation);
       sign(trx, alice_private_key);
-      PUSH_TX(db, trx, ~0);
+      processed_transaction alice_trx = PUSH_TX(db, trx, ~0);
       trx.clear();
-      graphene::chain::signed_block blk = generate_block();
-      processed_transaction alice_trx = blk.transactions[0];
+      generate_block();
       alice_htlc_id = alice_trx.operation_results[0].get<object_id_type>();
       generate_block();
    }
@@ -116,7 +115,7 @@ try {
 
    // make sure Bob (or anyone) can see the details of the transaction
    graphene::app::database_api db_api(db);
-   auto obj = db_api.get_objects( {alice_htlc_id }).front();
+   auto obj = db_api.get_objects( { object_id_type(alice_htlc_id) }).front();
    graphene::chain::htlc_object htlc = obj.template as<graphene::chain::htlc_object>(GRAPHENE_MAX_NESTED_OBJECTS);
 
    // someone else attempts to extend it (bob says he's alice, but he's not)
@@ -211,10 +210,9 @@ try {
       create_operation.fee = db.current_fee_schedule().calculate_fee( create_operation );
       trx.operations.push_back( create_operation );
       sign(trx, alice_private_key);
-      PUSH_TX(db, trx, ~0);
+      processed_transaction alice_trx = PUSH_TX(db, trx, ~0);
       trx.clear();
-      graphene::chain::signed_block blk = generate_block();
-      processed_transaction alice_trx = blk.transactions[0];
+      generate_block();
       alice_htlc_id = alice_trx.operation_results[0].get<object_id_type>();
    }
 
@@ -243,7 +241,7 @@ try {
    size_t alice_num_history = get_operation_history(alice_id).size();
    size_t bob_num_history = get_operation_history(bob_id).size();
    size_t joker_num_history = get_operation_history(joker_id).size();
-
+   
    // joker sends a redeem operation to claim the funds for bob
    {
       graphene::chain::htlc_redeem_operation update_operation;
@@ -573,7 +571,7 @@ BOOST_AUTO_TEST_CASE( fee_calculations )
    // redeem
    {
       htlc_redeem_operation::fee_parameters_type redeem_fee;
-      redeem_fee.fee_per_kb = 2;
+      redeem_fee.price_per_kbyte = 2;
       redeem_fee.fee = 2;
       htlc_redeem_operation redeem;
       // no preimage
@@ -614,7 +612,7 @@ try {
    upgrade_to_lifetime_member( nathan );
 
    // create a UIA
-   const asset_id_type uia_id = create_user_issued_asset( "NATHANCOIN", nathan, white_list ).id;
+   const asset_id_type uia_id = create_user_issued_asset( "NATHANCOIN", nathan, white_list ).get_id();
    // Make a whitelist authority
    {
       BOOST_TEST_MESSAGE( "Changing the whitelist authority" );
@@ -703,10 +701,9 @@ try {
       trx.operations.push_back( create_operation );
       sign(trx, alice_private_key);
       // bob can now accept it, so it works
-      PUSH_TX( db, trx, ~0 );
+      processed_transaction alice_trx = PUSH_TX( db, trx, ~0 );
       trx.clear();
-      graphene::chain::signed_block blk = generate_block();
-      processed_transaction alice_trx = blk.transactions[0];
+      generate_block();
       alice_htlc_id = alice_trx.operation_results[0].get<object_id_type>();
    }
 
@@ -779,11 +776,10 @@ try {
       create_operation.fee = db.get_global_properties().parameters.current_fees->calculate_fee(create_operation);
       trx.operations.push_back(create_operation);
       sign(trx, alice_private_key);
-      PUSH_TX(db, trx, ~0);
+      processed_transaction alice_trx = PUSH_TX(db, trx, ~0);
       trx.clear();
       set_expiration( db, trx );
-      graphene::chain::signed_block blk = generate_block();
-      processed_transaction alice_trx = blk.transactions[0];
+      generate_block();
       alice_htlc_id_bob = alice_trx.operation_results[0].get<object_id_type>();
       generate_block();
       set_expiration( db, trx );
@@ -803,11 +799,10 @@ try {
       create_operation.fee = db.get_global_properties().parameters.current_fees->calculate_fee(create_operation);
       trx.operations.push_back(create_operation);
       sign(trx, alice_private_key);
-      PUSH_TX(db, trx, ~0);
+      processed_transaction alice_trx = PUSH_TX(db, trx, ~0);
       trx.clear();
       set_expiration( db, trx );
-      graphene::chain::signed_block blk = generate_block();
-      processed_transaction alice_trx = blk.transactions[0];
+      generate_block();
       alice_htlc_id_carl = alice_trx.operation_results[0].get<object_id_type>();
       generate_block();
       set_expiration( db, trx );
@@ -827,11 +822,10 @@ try {
       create_operation.fee = db.get_global_properties().parameters.current_fees->calculate_fee(create_operation);
       trx.operations.push_back(create_operation);
       sign(trx, alice_private_key);
-      PUSH_TX(db, trx, ~0);
+      processed_transaction alice_trx = PUSH_TX(db, trx, ~0);
       trx.clear();
       set_expiration( db, trx );
-      graphene::chain::signed_block blk = generate_block();
-      processed_transaction alice_trx = blk.transactions[0];
+      generate_block();
       alice_htlc_id_dan = alice_trx.operation_results[0].get<object_id_type>();
       generate_block();
       set_expiration( db, trx );

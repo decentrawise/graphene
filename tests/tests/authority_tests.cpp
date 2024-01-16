@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       pup.proposal = proposal.id;
       pup.fee_paying_account = nathan.id;
       BOOST_TEST_MESSAGE( "Updating the proposal to have nathan's authority" );
-      pup.active_approvals_to_add.insert(nathan.id);
+      pup.active_approvals_to_add.insert(nathan.get_id());
 
       trx.operations = {pup};
       sign( trx,   committee_key  );
@@ -366,8 +366,8 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
 
       trx.clear_signatures();
       pup.active_approvals_to_add.clear();
-      pup.active_approvals_to_add.insert(nathan.id);
-      
+      pup.active_approvals_to_add.insert(nathan.get_id());
+
       trx.operations = {pup};
       sign( trx,   nathan_key3  );
       sign( trx,   nathan_key2  );
@@ -558,7 +558,7 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    pop.proposed_ops.emplace_back(top);
    trx.operations.push_back(pop);
    const proposal_object& prop = db.get<proposal_object>(PUSH_TX( db, trx ).operation_results.front().get<object_id_type>());
-   proposal_id_type pid = prop.id;
+   proposal_id_type pid = prop.get_id();
    BOOST_CHECK(!pid(db).is_authorized_to_execute(db));
 
    ilog( "commitee member approves proposal" );
@@ -658,7 +658,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_two_accounts, database_fixture )
    BOOST_CHECK(!prop.is_authorized_to_execute(db));
 
    {
-      proposal_id_type pid = prop.id;
+      proposal_id_type pid = prop.get_id();
       proposal_update_operation uop;
       uop.proposal = prop.id;
       uop.active_approvals_to_add.insert(nathan.get_id());
@@ -668,7 +668,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_two_accounts, database_fixture )
       PUSH_TX( db, trx );
       trx.clear();
 
-      BOOST_CHECK(db.find_object(pid) != nullptr);
+      BOOST_CHECK(db.find(pid) != nullptr);
       BOOST_CHECK(!prop.is_authorized_to_execute(db));
 
       uop.active_approvals_to_add = {dan.get_id()};
@@ -678,7 +678,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_two_accounts, database_fixture )
       sign( trx, dan_key );
       PUSH_TX( db, trx );
 
-      BOOST_CHECK(db.find_object(pid) == nullptr);
+      BOOST_CHECK(db.find(pid) == nullptr);
    }
 } FC_LOG_AND_RETHROW() }
 
@@ -741,14 +741,14 @@ BOOST_FIXTURE_TEST_CASE( proposal_delete, database_fixture )
    }
 
    {
-      proposal_id_type pid = prop.id;
+      proposal_id_type pid = prop.get_id();
       proposal_delete_operation dop;
       dop.fee_paying_account = nathan.get_id();
       dop.proposal = pid;
       trx.operations.push_back(dop);
       sign( trx, nathan_key );
       PUSH_TX( db, trx );
-      BOOST_CHECK(db.find_object(pid) == nullptr);
+      BOOST_CHECK(db.find(pid) == nullptr);
       BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 100000);
    }
 } FC_LOG_AND_RETHROW() }
@@ -817,7 +817,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_delete, database_fixture )
    }
 
    {
-      proposal_id_type pid = prop.id;
+      proposal_id_type pid = prop.get_id();
       proposal_delete_operation dop;
       dop.fee_paying_account = nathan.get_id();
       dop.proposal = pid;
@@ -825,7 +825,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_delete, database_fixture )
       trx.operations.push_back(dop);
       sign( trx, nathan_key );
       PUSH_TX( db, trx );
-      BOOST_CHECK(db.find_object(pid) == nullptr);
+      BOOST_CHECK(db.find(pid) == nullptr);
       BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 100000);
    }
 } FC_LOG_AND_RETHROW() }
@@ -873,10 +873,10 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
    BOOST_CHECK(!prop.is_authorized_to_execute(db));
 
    {
-      proposal_id_type pid = prop.id;
+      proposal_id_type pid = prop.get_id();
       proposal_update_operation uop;
       uop.fee_paying_account = nathan.get_id();
-      uop.proposal = prop.id;
+      uop.proposal = pid;
       uop.key_approvals_to_add.insert(dan.active.key_auths.begin()->first);
       trx.operations.push_back(uop);
       set_expiration( db, trx );
@@ -914,7 +914,7 @@ BOOST_FIXTURE_TEST_CASE( proposal_owner_authority_complete, database_fixture )
       sign( trx, nathan_key );
       PUSH_TX( db, trx );
       trx.clear();
-      BOOST_CHECK(db.find_object(pid) == nullptr);
+      BOOST_CHECK(db.find(pid) == nullptr);
    }
 } FC_LOG_AND_RETHROW() }
 
@@ -1081,8 +1081,8 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
    ACTORS((nathan)(vikram));
    upgrade_to_lifetime_member(nathan_id);
    upgrade_to_lifetime_member(vikram_id);
-   committee_member_id_type nathan_committee_member = create_committee_member(nathan_id(db)).id;
-   committee_member_id_type vikram_committee_member = create_committee_member(vikram_id(db)).id;
+   committee_member_id_type nathan_committee_member = create_committee_member(nathan_id(db)).get_id();
+   committee_member_id_type vikram_committee_member = create_committee_member(vikram_id(db)).get_id();
 
    //wdump((db.get_balance(account_id_type(), asset_id_type())));
    generate_block();
@@ -1644,7 +1644,7 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
          set_expiration( db, ptx );
          sign( ptx, bob_active_key );
 
-         return PUSH_TX( db, ptx, database::skip_transaction_dupe_check ).operation_results[0].get<object_id_type>();
+         return proposal_id_type { PUSH_TX( db, ptx, database::skip_transaction_dupe_check ).operation_results[0].get<object_id_type>() };
       };
 
       auto approve_proposal = [&](
@@ -1858,6 +1858,30 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
    }
 }
 
+BOOST_AUTO_TEST_CASE( custom_operation_required_auths )
+{
+   try {
+      ACTORS((alice)(bob));
+      fund(alice);
+      enable_fees();
+
+      signed_transaction trx;
+      custom_operation op;
+      op.payer = alice_id;
+      op.required_auths.insert(bob_id);
+      op.fee = op.calculate_fee(db.current_fee_schedule().get<custom_operation>());
+      trx.operations.emplace_back(op);
+      trx.set_expiration(db.head_block_time() + 30);
+      sign(trx, alice_private_key);
+      GRAPHENE_REQUIRE_THROW(db.push_transaction(trx), tx_missing_active_auth);
+      sign(trx, bob_private_key);
+      PUSH_TX(db, trx);
+   } catch (fc::exception& e) {
+      edump((e.to_detail_string()));
+      throw;
+   }
+}
+
 BOOST_FIXTURE_TEST_CASE( owner_delegation_test, database_fixture )
 { try {
    ACTORS( (alice)(bob) );
@@ -2048,7 +2072,7 @@ BOOST_AUTO_TEST_CASE( nested_execution )
       pup.active_approvals_to_add.insert( alice_id );
       pco.proposed_ops.emplace_back( pup );
       trx.operations.push_back( pco );
-      nested.push_back( PUSH_TX( db, trx, ~0 ).operation_results.front().get<object_id_type>() );
+      nested.push_back( proposal_id_type { PUSH_TX( db, trx, ~0 ).operation_results.front().get<object_id_type>() } );
       trx.clear();
       pco.proposed_ops.clear();
    }
@@ -2061,8 +2085,8 @@ BOOST_AUTO_TEST_CASE( nested_execution )
    PUSH_TX( db, trx, ~0 );
 
    for( size_t i = 1; i < nested.size(); i++ )
-      BOOST_CHECK_THROW( db.get<proposal_object>( nested[i] ), fc::assert_exception ); // executed successfully -> object removed
-   db.get<proposal_object>( inner ); // wasn't executed -> object exists, doesn't throw
+      BOOST_CHECK_THROW( db.get( nested[i] ), fc::assert_exception ); // executed successfully -> object removed
+   db.get( inner ); // wasn't executed -> object exists, doesn't throw
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( issue_214 )
@@ -2084,7 +2108,7 @@ BOOST_AUTO_TEST_CASE( issue_214 )
    pop.expiration_time = db.head_block_time() + fc::days(1);
    trx.operations.push_back(pop);
    sign( trx, bob_private_key );
-   const proposal_id_type pid1 = PUSH_TX( db, trx ).operation_results[0].get<object_id_type>();
+   const proposal_id_type pid1 { PUSH_TX( db, trx ).operation_results[0].get<object_id_type>() };
    trx.clear();
 
    // Bob wants to propose that Alice confirm the first proposal
@@ -2109,7 +2133,7 @@ BOOST_AUTO_TEST_CASE( issue_214 )
       set_expiration( db, ntx );
       ntx.operations.push_back(npop);
       sign( ntx, bob_private_key );
-      const proposal_id_type pid1a = PUSH_TX( db, ntx ).operation_results[0].get<object_id_type>();
+      const proposal_id_type pid1a { PUSH_TX( db, ntx ).operation_results[0].get<object_id_type>() };
       ntx.clear();
 
       // But execution after confirming it fails
@@ -2122,14 +2146,14 @@ BOOST_AUTO_TEST_CASE( issue_214 )
       PUSH_TX( db, ntx );
       ntx.clear();
 
-      db.get<proposal_object>( pid1a ); // still exists
+      db.get( pid1a ); // still exists
    }
 
    generate_blocks( HARDFORK_CORE_214_TIME + fc::hours(1) );
    set_expiration( db, trx );
    sign( trx, bob_private_key );
    // after the HF the previously failed tx works too
-   const proposal_id_type pid2 = PUSH_TX( db, trx ).operation_results[0].get<object_id_type>();
+   const proposal_id_type pid2 { PUSH_TX( db, trx ).operation_results[0].get<object_id_type>() };
    trx.clear();
 
    // For completeness, Alice confirms Bob's second proposal
@@ -2141,8 +2165,8 @@ BOOST_AUTO_TEST_CASE( issue_214 )
 
    // Execution of the second proposal should have confirmed the first,
    // which should have been executed by now.
-   BOOST_CHECK_THROW( db.get<proposal_object>(pid1), fc::assert_exception );
-   BOOST_CHECK_THROW( db.get<proposal_object>(pid2), fc::assert_exception );
+   BOOST_CHECK_THROW( db.get(pid1), fc::assert_exception );
+   BOOST_CHECK_THROW( db.get(pid2), fc::assert_exception );
    BOOST_CHECK_EQUAL( top.amount.amount.value, get_balance( bob_id, top.amount.asset_id ) );
 } FC_LOG_AND_RETHROW() }
 
@@ -2202,16 +2226,16 @@ BOOST_AUTO_TEST_CASE( self_approving_proposal )
    pop.fee_paying_account = alice_id;
    pop.expiration_time = db.head_block_time() + fc::days(1);
    trx.operations.push_back(pop);
-   const proposal_id_type pid1 = PUSH_TX( db, trx, ~0 ).operation_results[0].get<object_id_type>();
+   const proposal_id_type pid1 { PUSH_TX( db, trx, ~0 ).operation_results[0].get<object_id_type>() };
    trx.clear();
    BOOST_REQUIRE_EQUAL( 0u, pid1.instance.value );
-   db.get<proposal_object>(pid1);
+   db.get(pid1);
 
    trx.operations.push_back(pup);
    PUSH_TX( db, trx, ~0 );
 
    // Proposal failed and still exists
-   db.get<proposal_object>(pid1);
+   db.get(pid1);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( self_deleting_proposal )
@@ -2233,10 +2257,10 @@ BOOST_AUTO_TEST_CASE( self_deleting_proposal )
    pop.fee_paying_account = alice_id;
    pop.expiration_time = db.head_block_time() + fc::days(1);
    trx.operations.push_back( pop );
-   const proposal_id_type pid1 = PUSH_TX( db, trx, ~0 ).operation_results[0].get<object_id_type>();
+   const proposal_id_type pid1 { PUSH_TX( db, trx, ~0 ).operation_results[0].get<object_id_type>() };
    trx.clear();
    BOOST_REQUIRE_EQUAL( 0u, pid1.instance.value );
-   db.get<proposal_object>(pid1);
+   db.get(pid1);
 
    proposal_update_operation pup;
    pup.fee_paying_account = alice_id;
@@ -2246,7 +2270,7 @@ BOOST_AUTO_TEST_CASE( self_deleting_proposal )
    PUSH_TX( db, trx, ~0 );
 
    // Proposal failed and still exists
-   db.get<proposal_object>(pid1);
+   db.get(pid1);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

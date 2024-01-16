@@ -49,6 +49,21 @@ class amount_in_collateral_index : public secondary_index
       flat_map<asset_id_type, share_type> backing_collateral;
 };
 
+/**
+ *  @brief This secondary index tracks the next ID of all object types.
+ *  @note This is implemented with \c flat_map considering there aren't too many object types in the system thus
+ *        the performance would be acceptable.
+ */
+class next_object_ids_index : public secondary_index
+{
+public:
+   object_id_type get_next_id(uint8_t space_id, uint8_t type_id) const;
+
+private:
+   friend class api_helper_indexes;
+   flat_map<std::pair<uint8_t, uint8_t>, object_id_type> _next_ids;
+};
+
 namespace detail
 {
     class api_helper_indexes_impl;
@@ -57,8 +72,8 @@ namespace detail
 class api_helper_indexes : public graphene::app::plugin
 {
    public:
-      api_helper_indexes();
-      virtual ~api_helper_indexes();
+      explicit api_helper_indexes(graphene::app::application &app);
+      ~api_helper_indexes() override;
 
       std::string plugin_name()const override;
       std::string plugin_description()const override;
@@ -69,10 +84,14 @@ class api_helper_indexes : public graphene::app::plugin
       virtual void plugin_startup() override;
 
       friend class detail::api_helper_indexes_impl;
-      std::unique_ptr<detail::api_helper_indexes_impl> my;
 
    private:
+      std::unique_ptr<detail::api_helper_indexes_impl> my;
       amount_in_collateral_index* amount_in_collateral = nullptr;
+      next_object_ids_index *next_object_ids_idx = nullptr;
+
+      bool _next_ids_map_initialized = false;
+      void refresh_next_ids();
 };
 
 } } //graphene::template

@@ -316,7 +316,7 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
       tx_irrelevant_sig,
       "Unnecessary signature(s) detected"
       );
-} FC_CAPTURE_AND_RETHROW( (ops)(sigs) ) }
+} FC_CAPTURE_AND_RETHROW( (ops)(sigs) ) } // GCOVR_EXCL_LINE
 
 
 const flat_set<public_key_type>& signed_transaction::get_signature_keys( const chain_id_type& chain_id )const
@@ -332,7 +332,7 @@ const flat_set<public_key_type>& signed_transaction::get_signature_keys( const c
    }
    _signees = std::move( result );
    return _signees;
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 
 set<public_key_type> signed_transaction::get_required_signatures(
@@ -401,7 +401,7 @@ set<public_key_type> signed_transaction::minimize_required_signatures(
 
 const transaction_id_type& precomputable_transaction::id()const
 {
-   if( !_tx_id_buffer._hash[0].value() )
+   if( 0 == _tx_id_buffer._hash[0].value() )
       transaction::id();
    return _tx_id_buffer;
 }
@@ -438,7 +438,7 @@ void signed_transaction::verify_authority(
 { try {
    graphene::protocol::verify_authority( operations, get_signature_keys( chain_id ), get_active, get_owner,
                                          allow_non_immediate_owner, max_recursion );
-} FC_CAPTURE_AND_RETHROW( (*this) ) }
+} FC_CAPTURE_AND_RETHROW( (*this) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::protocol
 

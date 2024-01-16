@@ -44,6 +44,7 @@
 #include <fc/crypto/sha1.hpp>
 #include <fc/crypto/sha224.hpp>
 #include <fc/crypto/sha256.hpp>
+#include <fc/crypto/hash160.hpp>
 #include <fc/crypto/elliptic.hpp>
 #include <fc/reflect/reflect.hpp>
 #include <fc/reflect/variant.hpp>
@@ -59,53 +60,57 @@
 #include <graphene/protocol/object_id.hpp>
 #include <graphene/protocol/config.hpp>
 
-#define GRAPHENE_EXTERNAL_SERIALIZATION(ext, type) \
-namespace fc { \
-   ext template void from_variant( const variant& v, type& vo, uint32_t max_depth ); \
-   ext template void to_variant( const type& v, variant& vo, uint32_t max_depth ); \
-namespace raw { \
-   ext template void pack< datastream<size_t>, type >( datastream<size_t>& s, const type& tx, uint32_t _max_depth ); \
-   ext template void pack< sha256::encoder, type >( sha256::encoder& s, const type& tx, uint32_t _max_depth ); \
-   ext template void pack< datastream<char*>, type >( datastream<char*>& s, const type& tx, uint32_t _max_depth ); \
-   ext template void unpack< datastream<const char*>, type >( datastream<const char*>& s, type& tx, uint32_t _max_depth ); \
-} } // fc::raw
+#define GRAPHENE_EXTERNAL_SERIALIZATION_VARIANT(ext, type)                                  \
+    namespace fc                                                                            \
+    {                                                                                       \
+        ext template void from_variant(const variant &v, type &vo, uint32_t max_depth);     \
+        ext template void to_variant(const type &v, variant &vo, uint32_t max_depth);       \
+    }
+
+#define GRAPHENE_EXTERNAL_SERIALIZATION_PACK(ext, type)                                                                                 \
+    namespace fc                                                                                                                        \
+    {                                                                                                                                   \
+        namespace raw                                                                                                                   \
+        {                                                                                                                               \
+            ext template void pack<datastream<size_t>, type>( datastream<size_t> & s, const type &tx, uint32_t _max_depth );            \
+            ext template void pack<sha256::encoder, type>( sha256::encoder & s, const type &tx, uint32_t _max_depth );                  \
+            ext template void pack<datastream<char *>, type>( datastream<char *> & s, const type &tx, uint32_t _max_depth );            \
+            ext template void unpack<datastream<const char *>, type>( datastream<const char *> & s, type &tx, uint32_t _max_depth );    \
+        }                                                                                                                               \
+    }
+
+#define GRAPHENE_EXTERNAL_SERIALIZATION(ext, type)          \
+    GRAPHENE_EXTERNAL_SERIALIZATION_VARIANT(ext, type)      \
+    GRAPHENE_EXTERNAL_SERIALIZATION_PACK(ext, type)
+
 #define GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION(type) GRAPHENE_EXTERNAL_SERIALIZATION(extern, type)
 #define GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION(type) GRAPHENE_EXTERNAL_SERIALIZATION(/*not extern*/, type)
 
-#define FC_REFLECT_DERIVED_NO_TYPENAME( TYPE, INHERITS, MEMBERS ) \
-namespace fc { \
-template<> struct reflector<TYPE> {\
-    typedef TYPE type; \
-    typedef std::true_type is_defined; \
-    enum  member_count_enum {  \
-      local_member_count = 0  BOOST_PP_SEQ_FOR_EACH( FC_REFLECT_MEMBER_COUNT, +, MEMBERS ),\
-      total_member_count = local_member_count BOOST_PP_SEQ_FOR_EACH( FC_REFLECT_BASE_MEMBER_COUNT, +, INHERITS )\
-    }; \
-    FC_REFLECT_DERIVED_IMPL_INLINE( TYPE, INHERITS, MEMBERS ) \
-}; \
-} // fc
+#define GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION_VARIANT(type)     \
+    GRAPHENE_EXTERNAL_SERIALIZATION_VARIANT(/*not extern*/, type)
+#define GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION_PACK(type)        \
+    GRAPHENE_EXTERNAL_SERIALIZATION_PACK(/*not extern*/, type)
 
 #define GRAPHENE_NAME_TO_OBJECT_TYPE(x, prefix, name) BOOST_PP_CAT(prefix, BOOST_PP_CAT(name, _object_type))
 #define GRAPHENE_NAME_TO_ID_TYPE(x, y, name) BOOST_PP_CAT(name, _id_type)
-#define GRAPHENE_DECLARE_ID(x, space_prefix_seq, name) \
-    using BOOST_PP_CAT(name, _id_type) = object_id<BOOST_PP_TUPLE_ELEM(2, 0, space_prefix_seq), \
-                            GRAPHENE_NAME_TO_OBJECT_TYPE(x, BOOST_PP_TUPLE_ELEM(2, 1, space_prefix_seq), name)>;
+#define GRAPHENE_DECLARE_ID(x, space_prefix_seq, name)                                                                                      \
+    using BOOST_PP_CAT(name, _id_type) = object_id<BOOST_PP_TUPLE_ELEM(2, 0, space_prefix_seq),                                             \
+                                                   GRAPHENE_NAME_TO_OBJECT_TYPE(x, BOOST_PP_TUPLE_ELEM(2, 1, space_prefix_seq), name)>;
 #define GRAPHENE_REFLECT_ID(x, id_namespace, name) FC_REFLECT_TYPENAME(graphene::id_namespace::name)
 
-#define GRAPHENE_DEFINE_IDS(id_namespace, object_space, object_type_prefix, names_seq) \
-   namespace graphene { namespace id_namespace { \
-   \
-   enum BOOST_PP_CAT(object_type_prefix, object_type) { \
-      BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(GRAPHENE_NAME_TO_OBJECT_TYPE, object_type_prefix, names_seq)) \
-   }; \
-   \
-   BOOST_PP_SEQ_FOR_EACH(GRAPHENE_DECLARE_ID, (object_space, object_type_prefix), names_seq) \
-   \
-   } } \
-   \
-   FC_REFLECT_ENUM(graphene::id_namespace::BOOST_PP_CAT(object_type_prefix, object_type), \
-                   BOOST_PP_SEQ_TRANSFORM(GRAPHENE_NAME_TO_OBJECT_TYPE, object_type_prefix, names_seq)) \
-   BOOST_PP_SEQ_FOR_EACH(GRAPHENE_REFLECT_ID, id_namespace, BOOST_PP_SEQ_TRANSFORM(GRAPHENE_NAME_TO_ID_TYPE, , names_seq))
+#define GRAPHENE_DEFINE_IDS(id_namespace, object_space, object_type_prefix, names_seq)                                          \
+    namespace graphene { namespace id_namespace {                                                                               \
+                                                                                                                                \
+            enum BOOST_PP_CAT(object_type_prefix, object_type) {                                                                \
+                BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(GRAPHENE_NAME_TO_OBJECT_TYPE, object_type_prefix, names_seq))          \
+            };                                                                                                                  \
+                                                                                                                                \
+            BOOST_PP_SEQ_FOR_EACH(GRAPHENE_DECLARE_ID, (object_space, object_type_prefix), names_seq)                           \
+    } }                                                                                                                         \
+                                                                                                                                \
+    FC_REFLECT_ENUM(graphene::id_namespace::BOOST_PP_CAT(object_type_prefix, object_type),                                      \
+                    BOOST_PP_SEQ_TRANSFORM(GRAPHENE_NAME_TO_OBJECT_TYPE, object_type_prefix, names_seq))                        \
+    BOOST_PP_SEQ_FOR_EACH(GRAPHENE_REFLECT_ID, id_namespace, BOOST_PP_SEQ_TRANSFORM(GRAPHENE_NAME_TO_ID_TYPE, , names_seq))
 
 namespace graphene { namespace protocol {
 using namespace graphene::db;
@@ -144,7 +149,26 @@ using private_key_type = fc::ecc::private_key;
 using chain_id_type = fc::sha256;
 using ratio_type = boost::rational<int32_t>;
 
+/**
+ * @note
+ * If one of the following bits is set in asset issuer permissions,
+ * it means the asset issuer (or owner for bitassets) has the permission to update
+ * the corresponding flag, parameters or perform certain actions.
+ * - @ref charge_market_fee
+ * - @ref white_list
+ * - @ref override_authority
+ * - @ref transfer_restricted
+ * - @ref disable_force_settle
+ * - @ref global_settle
+ * - @ref disable_confidential
+ * - @ref witness_fed_asset
+ * - @ref committee_fed_asset
+ */
 enum asset_issuer_permission_flags {
+    // If one of the following bits is set in asset issuer permissions,
+    // it means the asset issuer (or owner for bitassets) has the permission to update
+    // the corresponding flag, parameters or perform certain actions.
+    // Note: This comment is copied and reformatted above for better Doxygen documentation formatting.
     charge_market_fee    = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
     white_list           = 0x02, /**< accounts must be whitelisted in order to hold this asset */
     override_authority   = 0x04, /**< issuer may transfer asset back to himself */
@@ -155,7 +179,9 @@ enum asset_issuer_permission_flags {
     witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
     committee_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
 };
-const static uint32_t ASSET_ISSUER_PERMISSION_MASK =
+
+/// The bits that can be used in asset issuer permissions for non-UIA assets
+const static uint16_t ASSET_ISSUER_PERMISSION_MASK =
         charge_market_fee
         | white_list
         | override_authority
@@ -165,7 +191,9 @@ const static uint32_t ASSET_ISSUER_PERMISSION_MASK =
         | disable_confidential
         | witness_fed_asset
         | committee_fed_asset;
-const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK =
+
+/// The bits that can be used in asset issuer permissions for UIA assets
+const static uint16_t UIA_ASSET_ISSUER_PERMISSION_MASK =
         charge_market_fee
         | white_list
         | override_authority
@@ -235,24 +263,25 @@ void from_variant( const fc::variant& var, std::shared_ptr<const graphene::proto
 
 } // fc::raw
 
+/// Object types in the Protocol Space (enum object_type (1.x.x))
 GRAPHENE_DEFINE_IDS(protocol, protocol_ids, /*protocol objects are not prefixed*/,
-                    (null)
-                    (base)
-                    (account)
-                    (asset)
-                    (force_settlement)
-                    (committee_member)
-                    (witness)
-                    (limit_order)
-                    (call_order)
-                    (custom)
-                    (proposal)
-                    (operation_history)
-                    (withdraw_permission)
-                    (vesting_balance)
-                    (worker)
-                    (balance)
-                    (htlc))
+                    /* 1.0.x  */ (null) // no data
+                    /* 1.1.x  */ (base) // no data
+                    /* 1.2.x  */ (account)
+                    /* 1.3.x  */ (asset)
+                    /* 1.4.x  */ (force_settlement)
+                    /* 1.5.x  */ (committee_member)
+                    /* 1.6.x  */ (witness)
+                    /* 1.7.x  */ (limit_order)
+                    /* 1.8.x  */ (call_order)
+                    /* 1.9.x  */ (custom) // unused
+                    /* 1.10.x */ (proposal)
+                    /* 1.11.x */ (operation_history) // strictly speaking it is not in protocol
+                    /* 1.12.x */ (withdraw_permission)
+                    /* 1.13.x */ (vesting_balance)
+                    /* 1.14.x */ (worker)
+                    /* 1.15.x */ (balance)
+                    /* 1.16.x */ (htlc))
 
 FC_REFLECT(graphene::protocol::public_key_type, (key_data))
 FC_REFLECT(graphene::protocol::public_key_type::binary_key, (data)(check))

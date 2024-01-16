@@ -27,7 +27,7 @@ struct reward_database_fixture : database_fixture
    using whitelist_market_fee_sharing_t = fc::optional<flat_set<account_id_type>>;
 
    reward_database_fixture()
-      : database_fixture(HARDFORK_1268_TIME - 100)
+      : database_fixture()
    {
    }
 
@@ -245,6 +245,10 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
 {
    try
    {
+      // handle small percentages
+      generate_blocks(HARDFORK_453_TIME + 10);
+      set_expiration(db, trx);
+
       ACTORS((registrar)(alicereferrer)(bobreferrer)(izzy)(jill));
 
       auto register_account = [&](const string& name, const account_object& referrer) -> const account_object&
@@ -266,10 +270,10 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       auto alice = register_account("alice", alicereferrer);
       auto bob = register_account("bob", bobreferrer);
 
-      transfer( committee_account, alice.id, core_asset(1000000) );
-      transfer( committee_account, bob.id, core_asset(1000000) );
-      transfer( committee_account, izzy_id, core_asset(1000000) );
-      transfer( committee_account, jill_id, core_asset(1000000) );
+      transfer( committee_account, alice.get_id(), core_asset(1000000) );
+      transfer( committee_account, bob.get_id(),   core_asset(1000000) );
+      transfer( committee_account, izzy_id,        core_asset(1000000) );
+      transfer( committee_account, jill_id,        core_asset(1000000) );
 
       constexpr auto izzycoin_reward_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_reward_percent = 20*GRAPHENE_1_PERCENT;
@@ -277,8 +281,8 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       constexpr auto izzycoin_market_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_market_percent = 20*GRAPHENE_1_PERCENT;
 
-      asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id, izzycoin_market_percent ).id;
-      asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, jillcoin_market_percent ).id;
+      asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id, izzycoin_market_percent ).get_id();
+      asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, jillcoin_market_percent ).get_id();
 
       generate_blocks_past_hf1268();
 
@@ -312,12 +316,12 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       enable_fees();
 
       // Alice and Bob create some coins
-      borrow( alice.id, _izzy( 1500), core_asset( 600000) );
-      borrow( bob.id, _jill(2000), core_asset(180000) );
+      borrow( alice.get_id(), _izzy( 1500),  core_asset( 600000) );
+      borrow( bob.get_id(),   _jill(2000),   core_asset(180000) );
 
       // Alice and Bob place orders which match
-      create_sell_order( alice.id, _izzy(1000), _jill(1500) ); // Alice is willing to sell her 1000 Izzy's for 1.5 Jill
-      create_sell_order( bob.id, _jill(1500), _izzy(1000) );   // Bob is buying up to 1500 Izzy's for up to 0.6 Jill
+      create_sell_order( alice.get_id(),  _izzy(1000), _jill(1500) );   // Alice is willing to sell her 1000 Izzy's for 1.5 Jill
+      create_sell_order( bob.get_id(),    _jill(1500), _izzy(1000) );   // Bob is buying up to 1500 Izzy's for up to 0.6 Jill
 
       // 1000 Izzys and 1500 Jills are matched, so the fees should be
       //   100 Izzy (10%) and 300 Jill (20%).
@@ -835,7 +839,7 @@ BOOST_AUTO_TEST_CASE( create_vesting_balance_with_instant_vesting_policy_after_h
    set_expiration( db, trx );
 
    processed_transaction ptx = PUSH_TX( db, trx, ~0 );
-   const vesting_balance_id_type& vbid = ptx.operation_results.back().get<object_id_type>();
+   const vesting_balance_id_type vbid { ptx.operation_results.back().get<object_id_type>() };
 
    auto withdraw = [&](const asset& amount) {
       vesting_balance_withdraw_operation withdraw_op;
@@ -932,12 +936,12 @@ BOOST_AUTO_TEST_CASE(white_list_asset_rewards_test)
       price price(asset(1, asset_id_type(1)), asset(1));
       constexpr auto izzycoin_market_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_market_percent = 20*GRAPHENE_1_PERCENT;
-      const asset_id_type izzycoin_id = create_user_issued_asset( "IZZYCOIN", izzy, charge_market_fee|white_list, price, 0, izzycoin_market_percent ).id;
-      const asset_id_type jillcoin_id = create_user_issued_asset( "JILLCOIN", jill, charge_market_fee|white_list, price, 0, jillcoin_market_percent ).id;
+      const asset_id_type izzycoin_id = create_user_issued_asset( "IZZYCOIN", izzy, charge_market_fee|white_list, price, 0, izzycoin_market_percent ).get_id();
+      const asset_id_type jillcoin_id = create_user_issued_asset( "JILLCOIN", jill, charge_market_fee|white_list, price, 0, jillcoin_market_percent ).get_id();
 
       // Alice and Bob create some coins
       issue_uia( alice, izzycoin_id(db).amount( 200000 ) );
-      issue_uia( bob, jillcoin_id(db).amount( 200000 ) );
+      issue_uia( bob,   jillcoin_id(db).amount( 200000 ) );
 
       generate_blocks_past_hf1268();
 
@@ -958,8 +962,8 @@ BOOST_AUTO_TEST_CASE(white_list_asset_rewards_test)
       BOOST_CHECK( !(is_authorized_asset( db, aliceregistrar_id(db), jillcoin_id(db) )) );
 
       // Alice and Bob place orders which match
-      create_sell_order( alice.id, izzycoin_id(db).amount(1000), jillcoin_id(db).amount(1500) ); // Alice is willing to sell her 1000 Izzy's for 1.5 Jill
-      create_sell_order(   bob.id, jillcoin_id(db).amount(1500), izzycoin_id(db).amount(1000) );   // Bob is buying up to 1500 Izzy's for up to 0.6 Jill
+      create_sell_order( alice.get_id(), izzycoin_id(db).amount(1000), jillcoin_id(db).amount(1500) );   // Alice is willing to sell her 1000 Izzy's for 1.5 Jill
+      create_sell_order(   bob.get_id(), jillcoin_id(db).amount(1500), izzycoin_id(db).amount(1000) );   // Bob is buying up to 1500 Izzy's for up to 0.6 Jill
 
       // 1000 Izzys and 1500 Jills are matched, so the fees should be
       //   100 Izzy (10%) and 300 Jill (20%).

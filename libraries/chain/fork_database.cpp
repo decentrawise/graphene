@@ -92,7 +92,7 @@ void  fork_database::_push_block(const item_ptr& item)
       _head = item;
       uint32_t min_num = _head->num - std::min( _max_size, _head->num );
       auto& num_idx = _index.get<block_num>();
-      while( num_idx.size() && (*num_idx.begin())->num < min_num )
+      while( !num_idx.empty() && (*num_idx.begin())->num < min_num )
          num_idx.erase( num_idx.begin() );
    }
 }
@@ -187,7 +187,7 @@ pair<fork_database::branch_type,fork_database::branch_type>
       result.second.push_back(second_branch);
    }
    return result;
-} FC_CAPTURE_AND_RETHROW( (first)(second) ) }
+} FC_CAPTURE_AND_RETHROW( (first)(second) ) } // GCOVR_EXCL_LINE
 
 void fork_database::set_head(shared_ptr<fork_item> h)
 {

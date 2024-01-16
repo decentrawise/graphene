@@ -199,13 +199,13 @@ void database::pay_workers( share_type& budget )
 
 void database::update_active_witnesses()
 { try {
-   assert( _witness_count_histogram_buffer.size() > 0 );
-   share_type stake_target = (_total_voting_stake-_witness_count_histogram_buffer[0]) / 2;
+   assert( !_witness_count_histogram_buffer.empty() );
+   share_type stake_target = (_total_voting_stake-_witness_count_histogram_buffer[0]) / (size_t)2;
 
    /// accounts that vote for 0 or 1 witness do not get to express an opinion on
    /// the number of witnesses to have (they abstain and are non-voting accounts)
 
-   share_type stake_tally = 0; 
+   share_type stake_tally = 0;
 
    size_t witness_count = 0;
    if( stake_target > 0 )
@@ -219,7 +219,8 @@ void database::update_active_witnesses()
 
    const chain_property_object& cpo = get_chain_properties();
 
-   witness_count = std::max( witness_count*2+1, (size_t)cpo.immutable_parameters.min_witness_count );
+   witness_count = std::max( (witness_count * (size_t)2) + 1,
+                             (size_t)cpo.immutable_parameters.min_witness_count );
    auto wits = sort_votable_objects<witness_index>( witness_count );
 
    const global_property_object& gpo = get_global_properties();
@@ -265,16 +266,18 @@ void database::update_active_witnesses()
 
          // total_votes is 64 bits. Subtract the number of leading low bits from 64 to get the number of useful bits,
          // then I want to keep the most significant 16 bits of what's left.
-         int8_t bits_to_drop = std::max(int(boost::multiprecision::detail::find_msb(total_votes)) - 15, 0);
+         uint64_t votes_msb = boost::multiprecision::detail::find_msb(total_votes);
+         constexpr uint8_t bits_to_keep_minus_one = 15;
+         uint64_t bits_to_drop = (votes_msb > bits_to_keep_minus_one) ? (votes_msb - bits_to_keep_minus_one) : 0;
          for( const auto& weight : weights )
          {
             // Ensure that everyone has at least one vote. Zero weights aren't allowed.
-            uint16_t votes = std::max((weight.second >> bits_to_drop), uint64_t(1) );
+            uint16_t votes = std::max((uint16_t)(weight.second >> bits_to_drop), uint16_t(1) );
             a.active.account_auths[weight.first] += votes;
             a.active.weight_threshold += votes;
          }
 
-         a.active.weight_threshold /= 2;
+         a.active.weight_threshold /= (size_t)2;
          a.active.weight_threshold += 1;
       }
       else
@@ -293,16 +296,16 @@ void database::update_active_witnesses()
       std::transform(wits.begin(), wits.end(),
                      std::inserter(gp.active_witnesses, gp.active_witnesses.end()),
                      [](const witness_object& w) {
-         return w.id;
+         return w.get_id();
       });
    });
 
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 void database::update_active_committee_members()
 { try {
-   assert( _committee_count_histogram_buffer.size() > 0 );
-   share_type stake_target = (_total_voting_stake-_committee_count_histogram_buffer[0]) / 2;
+   assert( !_committee_count_histogram_buffer.empty() );
+   share_type stake_target = (_total_voting_stake-_committee_count_histogram_buffer[0]) / (size_t)2;
 
    /// accounts that vote for 0 or 1 committee member do not get to express an opinion on
    /// the number of committee members to have (they abstain and are non-voting accounts)
@@ -319,7 +322,8 @@ void database::update_active_committee_members()
 
    const chain_property_object& cpo = get_chain_properties();
 
-   committee_member_count = std::max( committee_member_count*2+1, (size_t)cpo.immutable_parameters.min_committee_member_count );
+   committee_member_count = std::max( (committee_member_count * (size_t)2) + 1,
+                                      (size_t)cpo.immutable_parameters.min_committee_member_count );
    auto committee_members = sort_votable_objects<committee_member_index>( committee_member_count );
 
    auto update_committee_member_total_votes = [this]( const committee_member_object& cm ) {
@@ -364,18 +368,21 @@ void database::update_active_committee_members()
                total_votes += _vote_tally_buffer[cm.vote_id];
             }
 
-            // total_votes is 64 bits. Subtract the number of leading low bits from 64 to get the number of useful bits,
+            // total_votes is 64 bits.
+            // Subtract the number of leading low bits from 64 to get the number of useful bits,
             // then I want to keep the most significant 16 bits of what's left.
-            int8_t bits_to_drop = std::max(int(boost::multiprecision::detail::find_msb(total_votes)) - 15, 0);
+            uint64_t votes_msb = boost::multiprecision::detail::find_msb(total_votes);
+            constexpr uint8_t bits_to_keep_minus_one = 15;
+            uint64_t bits_to_drop = (votes_msb > bits_to_keep_minus_one) ? (votes_msb - bits_to_keep_minus_one) : 0;
             for( const auto& weight : weights )
             {
                // Ensure that everyone has at least one vote. Zero weights aren't allowed.
-               uint16_t votes = std::max((weight.second >> bits_to_drop), uint64_t(1) );
+               uint16_t votes = std::max((uint16_t)(weight.second >> bits_to_drop), uint16_t(1) );
                a.active.account_auths[weight.first] += votes;
                a.active.weight_threshold += votes;
             }
 
-            a.active.weight_threshold /= 2;
+            a.active.weight_threshold /= (size_t)2;
             a.active.weight_threshold += 1;
          }
          else
@@ -396,9 +403,9 @@ void database::update_active_committee_members()
       gp.active_committee_members.clear();
       std::transform(committee_members.begin(), committee_members.end(),
                      std::inserter(gp.active_committee_members, gp.active_committee_members.begin()),
-                     [](const committee_member_object& d) { return d.id; });
+                     [](const committee_member_object& d) { return d.get_id(); });
    });
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
 {
@@ -439,7 +446,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    //   be able to use the entire reserve
    budget_u128 += ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS) - 1);
    budget_u128 >>= GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS;
-   if( budget_u128 < reserve.value )
+   if( budget_u128 < static_cast<fc::uint128_t>(reserve.value) )
       rec.total_budget = share_type(static_cast<uint64_t>(budget_u128));
    else
       rec.total_budget = reserve;
@@ -472,7 +479,8 @@ void database::process_budget()
       //    voting on changes to block interval).
       //
       assert( gpo.parameters.block_interval > 0 );
-      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval;
+      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1)
+                                 / gpo.parameters.block_interval;
 
       // blocks_to_maint > 0 because time_to_maint > 0,
       // which means numerator is at least equal to block_interval
@@ -489,10 +497,11 @@ void database::process_budget()
 
       fc::uint128_t worker_budget_u128 = gpo.parameters.worker_budget_per_day.value;
       worker_budget_u128 *= uint64_t(time_to_maint);
-      worker_budget_u128 /= 60*60*24;
+      constexpr uint64_t seconds_per_day = 86400;
+      worker_budget_u128 /= seconds_per_day;
 
       share_type worker_budget;
-      if( worker_budget_u128 >= available_funds.value )
+      if( worker_budget_u128 >= static_cast<fc::uint128_t>(available_funds.value) )
          worker_budget = available_funds;
       else
          worker_budget = static_cast<uint64_t>(worker_budget_u128);
@@ -510,7 +519,11 @@ void database::process_budget()
          - rec.from_accumulated_fees
          - rec.from_unused_witness_budget;
 
-      modify(core, [&]( asset_dynamic_data_object& _core )
+      modify(core, [&rec
+#ifndef NDEBUG
+                    ,&witness_budget,&worker_budget,&leftover_worker_funds,&dpo
+#endif
+                   ] ( asset_dynamic_data_object& _core )
       {
          _core.current_supply = (_core.current_supply + rec.supply_delta );
 
@@ -524,7 +537,7 @@ void database::process_budget()
          _core.accumulated_fees = 0;
       });
 
-      modify(dpo, [&]( dynamic_global_property_object& _dpo )
+      modify(dpo, [&witness_budget, &now]( dynamic_global_property_object& _dpo )
       {
          // Since initial witness_budget was rolled into
          // available_funds, we replace it with witness_budget
@@ -533,7 +546,7 @@ void database::process_budget()
          _dpo.last_budget_time = now;
       });
 
-      create< budget_record_object >( [&]( budget_record_object& _rec )
+      create< budget_record_object >( [this,&rec]( budget_record_object& _rec )
       {
          _rec.time = head_block_time();
          _rec.record = rec;
@@ -566,8 +579,7 @@ void visit_special_authorities( const database& db, Visitor visit )
 
 void update_top_n_authorities( database& db )
 {
-   visit_special_authorities( db,
-   [&]( const account_object& acct, bool is_owner, const special_authority& auth )
+   visit_special_authorities( db, [&db]( const account_object& acct, bool is_owner, const special_authority& auth )
    {
       if( auth.is_type< top_holders_special_authority >() )
       {
@@ -593,11 +605,12 @@ void update_top_n_authorities( database& db )
                 break;
          }
 
-         db.modify( acct, [&]( account_object& a )
+         db.modify( acct, [&vc,&is_owner]( account_object& a )
          {
             vc.finish( is_owner ? a.owner : a.active );
             if( !vc.is_empty() )
-               a.top_n_control_flags |= (is_owner ? account_object::top_n_control_owner : account_object::top_n_control_active);
+               a.top_n_control_flags |= (is_owner ? account_object::top_n_control_owner
+                                                  : account_object::top_n_control_active);
          } );
       }
    } );
@@ -611,7 +624,8 @@ void split_fba_balance(
    uint16_t designated_asset_issuer_pct
 )
 {
-   FC_ASSERT( uint32_t(network_pct) + uint32_t(designated_asset_buyback_pct) + uint32_t(designated_asset_issuer_pct) == GRAPHENE_100_PERCENT );
+   FC_ASSERT( uint32_t(network_pct) + designated_asset_buyback_pct + designated_asset_issuer_pct
+              == GRAPHENE_100_PERCENT );
    const fba_accumulator_object& fba = fba_accumulator_id_type( fba_id )(db);
    if( fba.accumulated_fba_fees == 0 )
       return;
@@ -620,12 +634,13 @@ void split_fba_balance(
 
    if( !fba.is_configured(db) )
    {
-      ilog( "${n} core given to network at block ${b} due to non-configured FBA", ("n", fba.accumulated_fba_fees)("b", db.head_block_time()) );
-      db.modify( core_dd, [&]( asset_dynamic_data_object& _core_dd )
+      ilog( "${n} core given to network at block ${b} due to non-configured FBA",
+            ("n", fba.accumulated_fba_fees)("b", db.head_block_time()) );
+      db.modify( core_dd, [&fba]( asset_dynamic_data_object& _core_dd )
       {
          _core_dd.current_supply -= fba.accumulated_fba_fees;
       } );
-      db.modify( fba, [&]( fba_accumulator_object& _fba )
+      db.modify( fba, []( fba_accumulator_object& _fba )
       {
          _fba.accumulated_fba_fees = 0;
       } );
@@ -676,7 +691,7 @@ void split_fba_balance(
       db.push_applied_operation(vop);
    }
 
-   db.modify( fba, [&]( fba_accumulator_object& _fba )
+   db.modify( fba, []( fba_accumulator_object& _fba )
    {
       _fba.accumulated_fba_fees = 0;
    } );
@@ -684,15 +699,18 @@ void split_fba_balance(
 
 void distribute_fba_balances( database& db )
 {
-   split_fba_balance( db, fba_accumulator_id_transfer_to_blind  , 20*GRAPHENE_1_PERCENT, 60*GRAPHENE_1_PERCENT, 20*GRAPHENE_1_PERCENT );
-   split_fba_balance( db, fba_accumulator_id_blind_transfer     , 20*GRAPHENE_1_PERCENT, 60*GRAPHENE_1_PERCENT, 20*GRAPHENE_1_PERCENT );
-   split_fba_balance( db, fba_accumulator_id_transfer_from_blind, 20*GRAPHENE_1_PERCENT, 60*GRAPHENE_1_PERCENT, 20*GRAPHENE_1_PERCENT );
+   constexpr uint16_t twenty_percent = 20 * GRAPHENE_1_PERCENT;
+   constexpr uint16_t sixty_percent  =  60 * GRAPHENE_1_PERCENT;
+   split_fba_balance( db, fba_accumulator_id_transfer_to_blind  , twenty_percent, sixty_percent, twenty_percent );
+   split_fba_balance( db, fba_accumulator_id_blind_transfer     , twenty_percent, sixty_percent, twenty_percent );
+   split_fba_balance( db, fba_accumulator_id_transfer_from_blind, twenty_percent, sixty_percent, twenty_percent );
 }
 
 void create_buyback_orders( database& db )
 {
    const auto& bbo_idx = db.get_index_type< buyback_index >().indices().get<by_id>();
-   const auto& bal_idx = db.get_index_type< primary_index< account_balance_index > >().get_secondary_index< balances_by_account_index >();
+   const auto& bal_idx = db.get_index_type< primary_index< account_balance_index > >()
+                           .get_secondary_index< balances_by_account_index >();
 
    for( const buyback_object& bbo : bbo_idx )
    {
@@ -703,11 +721,12 @@ void create_buyback_orders( database& db )
 
       if( !buyback_account.allowed_assets.valid() )
       {
-         wlog( "skipping buyback account ${b} at block ${n} because allowed_assets does not exist", ("b", buyback_account)("n", db.head_block_num()) );
+         wlog( "skipping buyback account ${b} at block ${n} because allowed_assets does not exist",
+               ("b", buyback_account)("n", db.head_block_num()) );
          continue;
       }
 
-      for( const auto& entry : bal_idx.get_account_balances( buyback_account.id ) )
+      for( const auto& entry : bal_idx.get_account_balances( buyback_account.get_id() ) )
       {
          const auto* it = entry.second;
          asset_id_type asset_to_sell = it->asset_type;
@@ -718,7 +737,8 @@ void create_buyback_orders( database& db )
             continue;
          if( buyback_account.allowed_assets->find( asset_to_sell ) == buyback_account.allowed_assets->end() )
          {
-            wlog( "buyback account ${b} not selling disallowed holdings of asset ${a} at block ${n}", ("b", buyback_account)("a", asset_to_sell)("n", db.head_block_num()) );
+            wlog( "buyback account ${b} not selling disallowed holdings of asset ${a} at block ${n}",
+                  ("b", buyback_account)("a", asset_to_sell)("n", db.head_block_num()) );
             continue;
          }
 
@@ -731,11 +751,11 @@ void create_buyback_orders( database& db )
             create_vop.fee = asset( 0, asset_id_type() );
             create_vop.seller = buyback_account.id;
             create_vop.amount_to_sell = asset( amount_to_sell, asset_to_sell );
-            create_vop.min_to_receive = asset( 1, asset_to_buy.id );
+            create_vop.min_to_receive = asset( 1, asset_to_buy.get_id() );
             create_vop.expiration = time_point_sec::maximum();
             create_vop.fill_or_kill = false;
 
-            limit_order_id_type order_id = db.apply_operation( buyback_context, create_vop ).get< object_id_type >();
+            limit_order_id_type order_id{ db.apply_operation( buyback_context, create_vop ).get< object_id_type >() };
 
             if( db.find( order_id ) != nullptr )
             {
@@ -749,9 +769,12 @@ void create_buyback_orders( database& db )
          }
          catch( const fc::exception& e )
          {
-            // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
-            wlog( "Skipping buyback processing selling ${as} for ${ab} for buyback account ${b} at block ${n}; exception was ${e}",
-                  ("as", asset_to_sell)("ab", asset_to_buy)("b", buyback_account)("n", db.head_block_num())("e", e.to_detail_string()) );
+            // we can in fact get here,
+            // e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
+            wlog( "Skipping buyback processing selling ${as} for ${ab} for buyback account ${b} at block ${n}; "
+                  "exception was ${e}",
+                  ("as", asset_to_sell)("ab", asset_to_buy)("b", buyback_account)
+                  ("n", db.head_block_num())("e", e.to_detail_string()) );
             continue;
          }
       }
@@ -792,19 +815,27 @@ void deprecate_annual_members( database& db )
 
 void database::process_bids( const asset_bitasset_data_object& bad )
 {
-   if( bad.is_prediction_market ) return;
-   if( bad.current_feed.settlement_price.is_null() ) return;
+   if( bad.is_prediction_market || bad.current_feed.settlement_price.is_null() )
+      return;
 
-   asset_id_type to_revive_id = (asset( 0, bad.options.short_backing_asset ) * bad.settlement_price).asset_id;
+   asset_id_type to_revive_id = bad.asset_id;
    const asset_object& to_revive = to_revive_id( *this );
    const asset_dynamic_data_object& bdd = to_revive.dynamic_data( *this );
 
+   if( 0 == bdd.current_supply ) // shortcut
+   {
+      _cancel_bids_and_revive_mpa( to_revive, bad );
+      return;
+   }
+
    const auto& bid_idx = get_index_type< collateral_bid_index >().indices().get<by_price>();
-   const auto start = bid_idx.lower_bound( boost::make_tuple( to_revive_id, price::max( bad.options.short_backing_asset, to_revive_id ), collateral_bid_id_type() ) );
+   const auto start = bid_idx.lower_bound( to_revive_id );
+   auto end = bid_idx.upper_bound( to_revive_id );
 
    share_type covered = 0;
    auto itr = start;
-   while( covered < bdd.current_supply && itr != bid_idx.end() && itr->inv_swan_price.quote.asset_id == to_revive_id )
+   auto revive_ratio = bad.current_feed.maintenance_collateral_ratio;
+   while( covered < bdd.current_supply && itr != end )
    {
       const collateral_bid_object& bid = *itr;
       asset debt_in_bid = bid.inv_swan_price.quote;
@@ -812,17 +843,18 @@ void database::process_bids( const asset_bitasset_data_object& bad )
          debt_in_bid.amount = bdd.current_supply;
       asset total_collateral = debt_in_bid * bad.settlement_price;
       total_collateral += bid.inv_swan_price.base;
-      price call_price = price::call_price( debt_in_bid, total_collateral, bad.current_feed.maintenance_collateral_ratio );
+      price call_price = price::call_price( debt_in_bid, total_collateral, revive_ratio );
       if( ~call_price >= bad.current_feed.settlement_price ) break;
       covered += debt_in_bid.amount;
       ++itr;
    }
    if( covered < bdd.current_supply ) return;
 
-   const auto end = itr;
+   end = itr;
    share_type to_cover = bdd.current_supply;
    share_type remaining_fund = bad.settlement_fund;
-   for( itr = start; itr != end; )
+   itr = start;
+   while( itr != end )
    {
       const collateral_bid_object& bid = *itr;
       ++itr;
@@ -895,12 +927,13 @@ void match_call_orders( database& db )
    wlog( "Matching call orders at block ${n}", ("n",db.head_block_num()) );
    const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
    auto itr = asset_idx.lower_bound( true /** market issued */ );
-   while( itr != asset_idx.end() )
+   auto itr_end = asset_idx.end();
+   while( itr != itr_end )
    {
       const asset_object& a = *itr;
       ++itr;
       // be here, next_maintenance_time should have been updated already
-      db.check_call_orders( a, true, false ); // allow black swan, and call orders are taker
+      db.check_call_orders( a ); // allow black swan, and call orders are taker
    }
    wlog( "Done matching call orders at block ${n}", ("n",db.head_block_num()) );
 }
@@ -911,27 +944,28 @@ void database::process_bitassets()
    uint32_t head_epoch_seconds = head_time.sec_since_epoch();
    bool after_hf_core_518 = ( head_time >= HARDFORK_CORE_518_TIME ); // clear expired feeds
 
-   const auto update_bitasset = [this,head_time,head_epoch_seconds,after_hf_core_518]( asset_bitasset_data_object &o )
+   const auto& update_bitasset = [this,&head_time,head_epoch_seconds,after_hf_core_518]
+                                 ( asset_bitasset_data_object &o )
    {
       o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
 
-      // clear expired feeds
-      if( after_hf_core_518 )
+      // clear expired feeds if smartcoin (witness_fed or committee_fed) && check overflow
+      if( after_hf_core_518 && o.options.feed_lifetime_sec < head_epoch_seconds
+            && ( 0 != ( o.asset_id(*this).options.flags & ( witness_fed_asset | committee_fed_asset ) ) ) )
       {
-         const auto &asset = get( o.asset_id );
-         auto flags = asset.options.flags;
-         if ( ( flags & ( witness_fed_asset | committee_fed_asset ) ) &&
-              o.options.feed_lifetime_sec < head_epoch_seconds ) // if smartcoin && check overflow
+         fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
+         auto itr = o.feeds.rbegin();
+         auto end = o.feeds.rend();
+         while( itr != end ) // loop feeds
          {
-            fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
-            for( auto itr = o.feeds.rbegin(); itr != o.feeds.rend(); ) // loop feeds
-            {
-               auto feed_time = itr->second.first;
-               std::advance( itr, 1 );
-               if( feed_time < calculated )
-                  o.feeds.erase( itr.base() ); // delete expired feed
-            }
+            auto feed_time = itr->second.first;
+            std::advance( itr, 1 );
+            if( feed_time < calculated )
+               o.feeds.erase( itr.base() ); // delete expired feed
          }
+         // Note: we don't update current_feed here, and the update_expired_feeds() call is a bit too late,
+         //       so theoretically there could be an inconsistency between active feeds and current_feed.
+         //       And note that the next step "process_bids()" is based on current_feed.
       }
    };
 
@@ -945,6 +979,9 @@ void database::process_bitassets()
 
 /****
  * @brief a one-time data process to correct max_supply
+ *
+ * NOTE: while exceeding max_supply happened in mainnet, it seemed to have corrected
+ * itself before HF 1465. But this method must remain to correct some assets in testnet
  */
 void process_hf_1465( database& db )
 {
@@ -952,19 +989,21 @@ void process_hf_1465( database& db )
    wlog( "Processing hard fork core-1465 at block ${n}", ("n",head_num) );
    // for each market issued asset
    const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   for( auto asset_itr = asset_idx.lower_bound(true); asset_itr != asset_idx.end(); ++asset_itr )
+   const auto asset_end = asset_idx.end();
+   for( auto asset_itr = asset_idx.lower_bound(true); asset_itr != asset_end; ++asset_itr )
    {
       const auto& current_asset = *asset_itr;
       graphene::chain::share_type current_supply = current_asset.dynamic_data(db).current_supply;
       graphene::chain::share_type max_supply = current_asset.options.max_supply;
       if (current_supply > max_supply && max_supply != GRAPHENE_MAX_SHARE_SUPPLY)
       {
-         wlog( "Adjusting max_supply of ${asset} because current_supply (${current_supply}) is greater than ${old}.", 
-               ("asset", current_asset.symbol) 
+         wlog( "Adjusting max_supply of ${asset} because current_supply (${current_supply}) is greater than ${old}.",
+               ("asset", current_asset.symbol)
                ("current_supply", current_supply.value)
                ("old", max_supply));
          db.modify<asset_object>( current_asset, [current_supply](asset_object& obj) {
-            obj.options.max_supply = graphene::chain::share_type(std::min(current_supply.value, GRAPHENE_MAX_SHARE_SUPPLY));
+            obj.options.max_supply = graphene::chain::share_type(std::min(current_supply.value,
+                                                                          GRAPHENE_MAX_SHARE_SUPPLY));
          });
       }
    }
@@ -1143,9 +1182,10 @@ void process_hf_935( database& db )
    }
 }
 
-void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
+void database::perform_chain_maintenance(const signed_block& next_block)
 {
    const auto& gpo = get_global_properties();
+   const auto& dgpo = get_dynamic_global_properties();
 
    distribute_fba_balances(*this);
    create_buyback_orders(*this);
@@ -1213,7 +1253,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             d._total_voting_stake += voting_stake;
          }
       }
-   } tally_helper(*this, gpo);
+   };
+   
+   vote_tally_helper tally_helper(*this, gpo);
 
    perform_account_maintenance( tally_helper );
 
@@ -1223,20 +1265,19 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    private:
       vector<uint64_t>& target;
    };
-   clear_canary a(_witness_count_histogram_buffer),
-                b(_committee_count_histogram_buffer),
-                c(_vote_tally_buffer);
+   clear_canary a(_witness_count_histogram_buffer);
+   clear_canary b(_committee_count_histogram_buffer);
+   clear_canary c(_vote_tally_buffer);
 
    update_top_n_authorities(*this);
    update_active_witnesses();
    update_active_committee_members();
    update_worker_votes();
 
-   const auto& dgpo = get_dynamic_global_properties();
-   
    modify(gpo, [&dgpo](global_property_object& p) {
       // Remove scaling of account registration fee
-      p.parameters.get_mutable_fees().get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
+      p.parameters.get_mutable_fees().get<account_create_operation>().basic_fee >>=
+            p.parameters.account_fee_scale_bitshifts *
             (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
 
       if( p.pending_parameters )
@@ -1272,7 +1313,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          // So this k suffices.
          //
          auto y = (head_block_time() - next_maintenance_time).to_seconds() / maintenance_interval;
-         next_maintenance_time += (y+1) * maintenance_interval;
+         next_maintenance_time += (uint32_t)( (y+1) * maintenance_interval );
       }
    }
 
@@ -1285,7 +1326,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       to_update_and_match_call_orders_for_hf_343 = true;
 
    // Process inconsistent price feeds
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_868_890_TIME) && (next_maintenance_time > HARDFORK_CORE_868_890_TIME) )
+   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_868_890_TIME)
+         && (next_maintenance_time > HARDFORK_CORE_868_890_TIME) )
       process_hf_868_890( *this, to_update_and_match_call_orders_for_hf_343 );
 
    // Explicitly call check_call_orders of all markets

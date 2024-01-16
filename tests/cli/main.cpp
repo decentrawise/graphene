@@ -28,10 +28,13 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/witness/witness.hpp>
+// #include <graphene/witness/witness.hpp>
+#include <graphene/api_helper_indexes/api_helper_indexes.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
+#include <graphene/custom_operations/custom_operations_plugin.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/wallet/wallet.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #include <fc/thread/thread.hpp>
 #include <fc/network/http/websocket.hpp>
@@ -42,29 +45,20 @@
 
 #include <fc/crypto/aes.hpp>
 
-#ifdef _WIN32
-   #ifndef _WIN32_WINNT
-      #define _WIN32_WINNT 0x0501
-   #endif
-   #include <winsock2.h>
-   #include <WS2tcpip.h>
-#else
-   #include <sys/socket.h>
-   #include <netinet/ip.h>
-   #include <sys/types.h>
-#endif
 #include <thread>
 
 #include <boost/filesystem/path.hpp>
 
-#define BOOST_TEST_MODULE Test Application
-#include <boost/test/included/unit_test.hpp>
+#include "../common/init_unit_test_suite.hpp"
+#include "../common/genesis_file_util.hpp"
+#include "../common/program_options_util.hpp"
+#include "../common/utils.hpp"
 
+#ifdef _WIN32
 /*****
  * Global Initialization for Windows
  * ( sets up Winsock stuf )
  */
-#ifdef _WIN32
 int sockInit(void)
 {
    WSADATA wsa_data;
@@ -80,38 +74,10 @@ int sockQuit(void)
  * Helper Methods
  *********************/
 
-#include "../common/genesis_file_util.hpp"
-
 using std::exception;
 using std::cerr;
 
 #define INVOKE(test) ((struct test*)this)->test_method();
-
-//////
-/// @brief attempt to find an available port on localhost
-/// @returns an available port number, or -1 on error
-/////
-int get_available_port()
-{
-   struct sockaddr_in sin;
-   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-   if (socket_fd == -1)
-      return -1;
-   sin.sin_family = AF_INET;
-   sin.sin_port = 0;
-   sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-   if (::bind(socket_fd, (struct sockaddr*)&sin, sizeof(struct sockaddr_in)) == -1)
-      return -1;
-   socklen_t len = sizeof(sin);
-   if (getsockname(socket_fd, (struct sockaddr *)&sin, &len) == -1)
-      return -1;
-#ifdef _WIN32
-   closesocket(socket_fd);
-#else
-   close(socket_fd);
-#endif
-   return ntohs(sin.sin_port);
-}
 
 ///////////
 /// @brief Start the application
@@ -120,31 +86,32 @@ int get_available_port()
 /// @returns the application object
 //////////
 std::shared_ptr<graphene::app::application> start_application(fc::temp_directory& app_dir, int& server_port_number) {
-   std::shared_ptr<graphene::app::application> app1(new graphene::app::application{});
+   auto app1 = std::make_shared<graphene::app::application>();
 
    app1->register_plugin<graphene::account_history::account_history_plugin>(true);
    app1->register_plugin< graphene::market_history::market_history_plugin >(true);
-   app1->register_plugin< graphene::witness_plugin::witness_plugin >(true);
+   // app1->register_plugin< graphene::witness_plugin::witness_plugin >(true);
    app1->register_plugin< graphene::grouped_orders::grouped_orders_plugin>(true);
-   app1->startup_plugins();
-   boost::program_options::variables_map cfg;
-#ifdef _WIN32
-   sockInit();
-#endif
-   server_port_number = get_available_port();
-   cfg.emplace(
-      "rpc-endpoint",
-      boost::program_options::variable_value(string("127.0.0.1:" + std::to_string(server_port_number)), false)
-   );
-   cfg.emplace("genesis-json", boost::program_options::variable_value(create_genesis_file(app_dir), false));
-   cfg.emplace("seed-nodes", boost::program_options::variable_value(string("[]"), false));
-   app1->initialize(app_dir.path(), cfg);
+   app1->register_plugin<graphene::api_helper_indexes::api_helper_indexes>(true);
+   app1->register_plugin<graphene::custom_operations::custom_operations_plugin>(true);
 
-   app1->initialize_plugins(cfg);
-   app1->startup_plugins();
+   auto sharable_cfg = std::make_shared<boost::program_options::variables_map>();
+   auto& cfg = *sharable_cfg;
+   server_port_number = get_available_port();
+   auto p2p_port_number = server_port_number;
+   for (size_t i = 0; i < 10 && p2p_port_number == server_port_number; ++i)
+   {
+      p2p_port_number = get_available_port();
+   }
+   set_option( cfg, "rpc-endpoint", string("127.0.0.1:" + std::to_string(server_port_number)));
+   set_option( cfg, "p2p-endpoint", string("0.0.0.0:" + std::to_string(p2p_port_number)));
+   set_option( cfg, "genesis-json", create_genesis_file(app_dir));
+   set_option( cfg, "seed-nodes", string("[]"));
+   set_option( cfg, "custom-operations-start-block", uint32_t(1));
+   app1->initialize(app_dir.path(), sharable_cfg);
 
    app1->startup();
-   fc::usleep(fc::milliseconds(500));
+
    return app1;
 }
 
@@ -311,14 +278,6 @@ struct cli_fixture
    ~cli_fixture()
    {
       BOOST_TEST_MESSAGE("Cleanup cli_wallet::boost_fixture_test_case");
-
-      // wait for everything to finish up
-      fc::usleep(fc::seconds(1));
-
-      app1->shutdown();
-#ifdef _WIN32
-      sockQuit();
-#endif
    }
 };
 
@@ -476,7 +435,7 @@ BOOST_FIXTURE_TEST_CASE( cli_get_signed_transaction_signers, cli_fixture )
 
       const auto &test_acc = con.wallet_api_ptr->get_account("test");
       flat_set<public_key_type> expected_signers = {test_bki.pub_key};
-      vector<flat_set<account_id_type> > expected_key_refs{{test_acc.id, test_acc.id}};
+      vector<flat_set<account_id_type> > expected_key_refs{{test_acc.get_id(), test_acc.get_id()}};
 
       auto signers = con.wallet_api_ptr->get_transaction_signers(signed_trx);
       BOOST_CHECK(signers == expected_signers);
@@ -532,7 +491,7 @@ BOOST_FIXTURE_TEST_CASE( cli_get_available_transaction_signers, cli_fixture )
       vector<flat_set<account_id_type> > expected_key_refs;
       expected_key_refs.push_back(flat_set<account_id_type>());
       expected_key_refs.push_back(flat_set<account_id_type>());
-      expected_key_refs.push_back({test_acc.id});
+      expected_key_refs.push_back({test_acc.get_id()});
 
       auto key_refs = con.wallet_api_ptr->get_key_references({expected_signers.begin(), expected_signers.end()});
       std::sort(key_refs.begin(), key_refs.end());
@@ -650,8 +609,8 @@ BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
       // then confirm that balances are received, and then analyze the range
       // prooofs to make sure the mantissa length does not reveal approximate
       // balance (issue #480).
-      std::map<std::string, share_type> to_list = {{"alice",100000000000},
-                                                   {"bob",    1000000000}};
+      std::map<std::string, share_type> to_list = {{"alice",100000000000LL},
+                                                   {"bob",    1000000000LL}};
       vector<blind_confirmation> bconfs;
       asset_object core_asset = W.get_asset("1.3.0");
       BOOST_TEST_MESSAGE("Sending blind transactions to alice and bob");
@@ -860,7 +819,6 @@ BOOST_AUTO_TEST_CASE( cli_multisig_transaction )
       edump((e.to_detail_string()));
       throw;
    }
-   app1->shutdown();
 }
 
 graphene::wallet::plain_keys decrypt_keys( const std::string& password, const vector<char>& cipher_keys )
@@ -1017,53 +975,57 @@ BOOST_AUTO_TEST_CASE( cli_create_htlc )
       uint32_t timelock = fc::days(1).to_seconds();
       graphene::chain::signed_transaction result_tx 
             = con.wallet_api_ptr->htlc_create("alice", "bob", 
-            "3", "1.3.0", "SHA256", hash_str, preimage_string.size(), timelock, true);
+            "3", "1.3.0", "SHA256", hash_str, preimage_string.size(), timelock, "", true);
 
       // normally, a wallet would watch block production, and find the transaction. Here, we can cheat:
       std::string alice_htlc_id_as_string;
+      htlc_id_type alice_htlc_id;
       {
          BOOST_TEST_MESSAGE("The system is generating a block");
          graphene::chain::signed_block result_block;
          BOOST_CHECK(generate_block(app1, result_block));
 
          // get the ID:
-         htlc_id_type htlc_id = result_block.transactions[result_block.transactions.size()-1].operation_results[0].get<object_id_type>();
+         htlc_id_type htlc_id { result_block.transactions[result_block.transactions.size()-1].operation_results[0].get<object_id_type>() };
+         alice_htlc_id = htlc_id;
          alice_htlc_id_as_string = (std::string)(object_id_type)htlc_id;
          BOOST_TEST_MESSAGE("Alice shares the HTLC ID with Bob. The HTLC ID is: " + alice_htlc_id_as_string);
       }
 
       // Bob can now look over Alice's HTLC, to see if it is what was agreed to.
       BOOST_TEST_MESSAGE("Bob retrieves the HTLC Object by ID to examine it.");
-      auto alice_htlc = con.wallet_api_ptr->get_htlc(alice_htlc_id_as_string);
+      auto alice_htlc = con.wallet_api_ptr->get_htlc(alice_htlc_id);
       BOOST_TEST_MESSAGE("The HTLC Object is: " + fc::json::to_pretty_string(alice_htlc));
 
       // Bob likes what he sees, so he creates an HTLC, using the info he retrieved from Alice's HTLC
       con.wallet_api_ptr->htlc_create("bob", "alice",
-            "3", "BOBCOIN", "SHA256", hash_str, preimage_string.size(), timelock, true);
+            "3", "BOBCOIN", "SHA256", hash_str, preimage_string.size(), timelock, "", true);
 
       // normally, a wallet would watch block production, and find the transaction. Here, we can cheat:
       std::string bob_htlc_id_as_string;
+      htlc_id_type bob_htlc_id;
       {
          BOOST_TEST_MESSAGE("The system is generating a block");
          graphene::chain::signed_block result_block;
          BOOST_CHECK(generate_block(app1, result_block));
 
          // get the ID:
-         htlc_id_type htlc_id = result_block.transactions[result_block.transactions.size()-1].operation_results[0].get<object_id_type>();
+         htlc_id_type htlc_id { result_block.transactions[result_block.transactions.size()-1].operation_results[0].get<object_id_type>() };
+         bob_htlc_id = htlc_id;
          bob_htlc_id_as_string = (std::string)(object_id_type)htlc_id;
          BOOST_TEST_MESSAGE("Bob shares the HTLC ID with Alice. The HTLC ID is: " + bob_htlc_id_as_string);
       }
 
       // Alice can now look over Bob's HTLC, to see if it is what was agreed to:
       BOOST_TEST_MESSAGE("Alice retrieves the HTLC Object by ID to examine it.");
-      auto bob_htlc = con.wallet_api_ptr->get_htlc(bob_htlc_id_as_string);
+      auto bob_htlc = con.wallet_api_ptr->get_htlc(bob_htlc_id);
       BOOST_TEST_MESSAGE("The HTLC Object is: " + fc::json::to_pretty_string(bob_htlc));
 
       // Alice likes what she sees, so uses her preimage to get her BOBCOIN
       {
          BOOST_TEST_MESSAGE("Alice uses her preimage to retrieve the BOBCOIN");
          std::string secret = "My Secret";
-         con.wallet_api_ptr->htlc_redeem(bob_htlc_id_as_string, "alice", secret, true);
+         con.wallet_api_ptr->htlc_redeem(bob_htlc_id, "alice", secret, true);
          BOOST_TEST_MESSAGE("The system is generating a block");
          BOOST_CHECK(generate_block(app1));
       }
@@ -1073,7 +1035,7 @@ BOOST_AUTO_TEST_CASE( cli_create_htlc )
       {
          BOOST_TEST_MESSAGE("Bob uses Alice's preimage to retrieve the BOBCOIN");
          std::string secret = "My Secret";
-         con.wallet_api_ptr->htlc_redeem(alice_htlc_id_as_string, "bob", secret, true);
+         con.wallet_api_ptr->htlc_redeem(alice_htlc_id, "bob", secret, true);
          BOOST_TEST_MESSAGE("The system is generating a block");
          BOOST_CHECK(generate_block(app1));
       }
@@ -1084,7 +1046,6 @@ BOOST_AUTO_TEST_CASE( cli_create_htlc )
       edump((e.to_detail_string()));
       throw;
    }
-   app1->shutdown();
 }
 
 static string encapsulate( const graphene::wallet::signed_message& msg )

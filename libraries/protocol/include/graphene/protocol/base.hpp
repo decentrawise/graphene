@@ -35,7 +35,7 @@ namespace graphene { namespace protocol {
    /**
     *  @defgroup operations Operations
     *  @ingroup transactions Transactions
-    *  @brief A set of valid comands for mutating the globally shared state.
+    *  @brief A set of valid commands for mutating the globally shared state.
     *
     *  An operation can be thought of like a function that will modify the global
     *  shared state of the blockchain.  The members of each struct are like function
@@ -59,7 +59,7 @@ namespace graphene { namespace protocol {
     *
     *    We have stipulated that the current account balance may be entirely calculated from
     *    just the subset of operations that are relevant to that account.  There should be
-    *    no need to process the entire blockchain inorder to know your account's balance.
+    *    no need to process the entire blockchain in order to know your account's balance.
     *
     *  @subsection fee_calculation Explicit Fee Principle
     *
@@ -83,46 +83,64 @@ namespace graphene { namespace protocol {
     *  @{
     */
 
-   struct void_result{};
-   typedef fc::static_variant<void_result,object_id_type,asset> operation_result;
+   struct void_result {};
+
+   struct generic_operation_result
+   {
+      flat_set<object_id_type> new_objects;
+      flat_set<object_id_type> updated_objects;
+      flat_set<object_id_type> removed_objects;
+   };
+
+   using operation_result = fc::static_variant<
+      void_result,
+      object_id_type,
+      asset,
+      generic_operation_result
+   >;
 
    struct base_operation
    {
+      virtual ~base_operation() = default;
       template<typename T>
       share_type calculate_fee(const T& params)const
       {
          return params.fee;
       }
-      void get_required_authorities( vector<authority>& )const{}
-      void get_required_active_authorities( flat_set<account_id_type>& )const{}
-      void get_required_owner_authorities( flat_set<account_id_type>& )const{}
-      void validate()const{}
+      virtual void get_required_authorities( vector<authority>& )const{ /* do nothing by default */ }
+      virtual void get_required_active_authorities( flat_set<account_id_type>& )const{ /* do nothing by default */ }
+      virtual void get_required_owner_authorities( flat_set<account_id_type>& )const{ /* do nothing by default */ }
+      virtual void validate()const{ /* do nothing by default */ }
       fc::optional< fc::future<void> > validate_parallel( uint32_t skip )const;
 
       static uint64_t calculate_data_fee( uint64_t bytes, uint64_t price_per_kbyte );
    };
 
    /**
-    *  For future expansion many structus include a single member of type
+    *  For future expansion many structs include a single member of type
     *  extensions_type that can be changed when updating a protocol.  You can
     *  always add new types to a static_variant without breaking backward
-    *  compatibility.   
+    *  compatibility.
     */
-   typedef static_variant<void_t>      future_extensions;
+   using future_extensions = static_variant<void_t>;
 
    /**
     *  A flat_set is used to make sure that only one extension of
-    *  each type is added and that they are added in order.  
-    *  
-    *  @note static_variant compares only the type tag and not the 
+    *  each type is added and that they are added in order.
+    *
+    *  @note static_variant compares only the type tag and not the
     *  content.
     */
-   typedef flat_set<future_extensions> extensions_type;
+   using extensions_type = future_extensions::flat_set_type;
 
    ///@}
 
 } } // graphene::protocol
 
-FC_REFLECT_TYPENAME( graphene::protocol::operation_result )
-FC_REFLECT_TYPENAME( graphene::protocol::future_extensions )
-FC_REFLECT( graphene::protocol::void_result, )
+FC_REFLECT_TYPENAME(graphene::protocol::operation_result)
+FC_REFLECT_TYPENAME(graphene::protocol::future_extensions)
+FC_REFLECT_TYPENAME(graphene::protocol::extensions_type)
+FC_REFLECT(graphene::protocol::void_result, )
+FC_REFLECT(graphene::protocol::generic_operation_result, (new_objects)(updated_objects)(removed_objects))
+
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION(graphene::protocol::generic_operation_result) // impl in operations.cpp

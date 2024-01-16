@@ -46,7 +46,7 @@ BOOST_FIXTURE_TEST_SUITE( uia_tests, database_fixture )
 BOOST_AUTO_TEST_CASE( create_advanced_uia )
 {
    try {
-      asset_id_type test_asset_id = db.get_index<asset_object>().get_next_id();
+      asset_id_type test_asset_id { db.get_index<asset_object>().get_next_id() };
       asset_create_operation creator;
       creator.issuer = account_id_type();
       creator.fee = asset();
@@ -143,11 +143,11 @@ BOOST_AUTO_TEST_CASE( override_transfer_test2 )
 BOOST_AUTO_TEST_CASE( issue_whitelist_uia )
 {
    try {
-      account_id_type izzy_id = create_account("izzy").id;
+      account_id_type izzy_id = create_account("izzy").get_id();
       const asset_id_type uia_id = create_user_issued_asset(
-         "ADVANCED", izzy_id(db), white_list ).id;
-      account_id_type nathan_id = create_account("nathan").id;
-      account_id_type vikram_id = create_account("vikram").id;
+         "ADVANCED", izzy_id(db), white_list ).get_id();
+      account_id_type nathan_id = create_account("nathan").get_id();
+      account_id_type vikram_id = create_account("vikram").get_id();
       trx.clear();
 
       asset_issue_operation op;
@@ -217,15 +217,15 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       const asset_object& advanced = get_asset("ADVANCED");
       const account_object& nathan = get_account("nathan");
       const account_object& dan = create_account("dan");
-      account_id_type izzy_id = get_account("izzy").id;
+      account_id_type izzy_id = get_account("izzy").get_id();
       upgrade_to_lifetime_member(dan);
       trx.clear();
 
       BOOST_TEST_MESSAGE( "Atempting to transfer asset ADVANCED from nathan to dan when dan is not whitelisted, should fail" );
       transfer_operation op;
       op.fee = advanced.amount(0);
-      op.from = nathan.id;
-      op.to = dan.id;
+      op.from = nathan.get_id();
+      op.to = dan.get_id();
       op.amount = advanced.amount(100); //({advanced.amount(0), nathan.id, dan.id, advanced.amount(100)});
       trx.operations.push_back(op);
       //Fail because dan is not whitelisted.
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       BOOST_TEST_MESSAGE( "Adding dan to whitelist for asset ADVANCED" );
       account_whitelist_operation wop;
       wop.authorizing_account = izzy_id;
-      wop.account_to_list = dan.id;
+      wop.account_to_list = dan.get_id();
       wop.new_listing = account_whitelist_operation::white_listed;
       trx.operations.back() = wop;
       PUSH_TX( db, trx, ~0 );
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
          BOOST_TEST_MESSAGE( "Changing the blacklist authority" );
          asset_update_operation uop;
          uop.issuer = izzy_id;
-         uop.asset_to_update = advanced.id;
+         uop.asset_to_update = advanced.get_id();
          uop.new_options = advanced.options;
          uop.new_options.blacklist_authorities.insert(izzy_id);
          trx.operations.back() = uop;
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       }
 
       wop.new_listing |= account_whitelist_operation::black_listed;
-      wop.account_to_list = nathan.id;
+      wop.account_to_list = nathan.get_id();
       trx.operations.back() = wop;
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK( !(is_authorized_asset( db, nathan, advanced )) );
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
 
       BOOST_TEST_MESSAGE( "Attempting to burn from nathan after blacklisting, should fail" );
       asset_reserve_operation burn;
-      burn.payer = nathan.id;
+      burn.payer = nathan.get_id();
       burn.amount_to_reserve = advanced.amount(10);
       trx.operations.back() = burn;
       //Fail because nathan is blacklisted
@@ -287,13 +287,13 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
          BOOST_TEST_MESSAGE( "Changing the blacklist authority to dan" );
          asset_update_operation op;
          op.issuer = izzy_id;
-         op.asset_to_update = advanced.id;
+         op.asset_to_update = advanced.get_id();
          op.new_options = advanced.options;
          op.new_options.blacklist_authorities.clear();
-         op.new_options.blacklist_authorities.insert(dan.id);
+         op.new_options.blacklist_authorities.insert(dan.get_id());
          trx.operations.back() = op;
          PUSH_TX( db, trx, ~0 );
-         BOOST_CHECK(advanced.options.blacklist_authorities.find(dan.id) != advanced.options.blacklist_authorities.end());
+         BOOST_CHECK(advanced.options.blacklist_authorities.find(dan.get_id()) != advanced.options.blacklist_authorities.end());
       }
 
       BOOST_TEST_MESSAGE( "Attempting to transfer from dan back to nathan" );
@@ -303,8 +303,8 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       BOOST_CHECK_EQUAL(get_balance(dan, advanced), 50);
 
       BOOST_TEST_MESSAGE( "Blacklisting nathan by dan" );
-      wop.authorizing_account = dan.id;
-      wop.account_to_list = nathan.id;
+      wop.authorizing_account = dan.get_id();
+      wop.account_to_list = nathan.get_id();
       wop.new_listing = account_whitelist_operation::black_listed;
       trx.operations.back() = wop;
       PUSH_TX( db, trx, ~0 );
@@ -316,12 +316,12 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
 
       //Remove nathan from committee's whitelist, add him to dan's. This should not authorize him to hold ADVANCED.
       wop.authorizing_account = izzy_id;
-      wop.account_to_list = nathan.id;
+      wop.account_to_list = nathan.get_id();
       wop.new_listing = account_whitelist_operation::no_listing;
       trx.operations.back() = wop;
       PUSH_TX( db, trx, ~0 );
-      wop.authorizing_account = dan.id;
-      wop.account_to_list = nathan.id;
+      wop.authorizing_account = dan.get_id();
+      wop.account_to_list = nathan.get_id();
       wop.new_listing = account_whitelist_operation::white_listed;
       trx.operations.back() = wop;
       PUSH_TX( db, trx, ~0 );
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       BOOST_CHECK(!is_authorized_asset( db, nathan, advanced ));
       GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
 
-      burn.payer = dan.id;
+      burn.payer = dan.get_id();
       burn.amount_to_reserve = advanced.amount(10);
       trx.operations.back() = burn;
       PUSH_TX(db, trx, ~0);

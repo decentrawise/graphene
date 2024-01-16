@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Abit More, and contributors.
+ * Copyright (c) 2023 Indie Protocol contributors.
  *
  * The MIT License
  *
@@ -63,7 +63,7 @@ std::string uint128_amount_to_string( const fc::uint128_t& amount, const uint8_t
       ss << s.substr( 0, pos + 1 );
    }
    return ss.str();
-} FC_CAPTURE_AND_RETHROW( (amount)(precision) ) }
+} FC_CAPTURE_AND_RETHROW( (amount)(precision) ) } // GCOVR_EXCL_LINE
 
 std::string price_to_string( const graphene::protocol::price& _price,
                              const uint8_t base_precision,
@@ -87,7 +87,7 @@ std::string price_to_string( const graphene::protocol::price& _price,
                                                                      / new_price.quote.amount.value;
 
    return uint128_amount_to_string( price128, 19 + base_precision - quote_precision );
-} FC_CAPTURE_AND_RETHROW( (_price)(base_precision)(quote_precision) ) }
+} FC_CAPTURE_AND_RETHROW( (_price)(base_precision)(quote_precision) ) } // GCOVR_EXCL_LINE
 
 std::string price_to_string( const graphene::protocol::price& _price,
                              const graphene::chain::asset_object& _base,
@@ -99,7 +99,7 @@ std::string price_to_string( const graphene::protocol::price& _price,
       return price_to_string( ~_price, _base.precision, _quote.precision );
    else
       FC_ASSERT( !"bad parameters" );
-} FC_CAPTURE_AND_RETHROW( (_price)(_base)(_quote) ) }
+} FC_CAPTURE_AND_RETHROW( (_price)(_base)(_quote) ) } // GCOVR_EXCL_LINE
 
 std::string price_diff_percent_string( const graphene::protocol::price& old_price,
                                        const graphene::protocol::price& new_price )
@@ -150,6 +150,6 @@ std::string price_diff_percent_string( const graphene::protocol::price& old_pric
       return diff_str;
    else
       return "-" + diff_str;
-} FC_CAPTURE_AND_RETHROW( (old_price)(new_price) ) }
+} FC_CAPTURE_AND_RETHROW( (old_price)(new_price) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::app

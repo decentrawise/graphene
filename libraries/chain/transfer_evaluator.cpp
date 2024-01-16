@@ -79,7 +79,7 @@ void_result transfer_evaluator::do_apply( const transfer_operation& o )
    db().adjust_balance( o.from, -o.amount );
    db().adjust_balance( o.to, o.amount );
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 
@@ -106,13 +106,13 @@ void_result override_transfer_evaluator::do_evaluate( const override_transfer_op
               "", ("total_transfer",op.amount)("balance",d.get_balance(from_account, asset_type).amount) );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result override_transfer_evaluator::do_apply( const override_transfer_operation& o )
 { try {
    db().adjust_balance( o.from, -o.amount );
    db().adjust_balance( o.to, o.amount );
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::chain

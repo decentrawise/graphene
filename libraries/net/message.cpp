@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 BitShares Blockchain Foundation, and contributors.
+ * Copyright (c) 2023 Indie Protocol contributors.
  *
  * The MIT License
  *

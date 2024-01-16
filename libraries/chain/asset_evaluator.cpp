@@ -63,9 +63,9 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    // Check that all authorities do exist
    for( auto id : op.common_options.whitelist_authorities )
-      d.get_object(id);
+      d.get(id);
    for( auto id : op.common_options.blacklist_authorities )
-      d.get_object(id);
+      d.get(id);
 
    auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
    auto asset_symbol_itr = asset_indx.find( op.symbol );
@@ -115,12 +115,12 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    }
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void asset_create_evaluator::pay_fee()
 {
    fee_is_odd = core_fee_paid.value & 1;
-   core_fee_paid -= core_fee_paid.value/2;
+   core_fee_paid -= core_fee_paid.value / (int64_t)2;
    generic_evaluator::pay_fee();
 }
 
@@ -155,7 +155,7 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          }).id;
 
    const asset_object& new_asset =
-     d.create<asset_object>( [&op,next_asset_id,&dyn_asset,bit_asset_id]( asset_object& a ) {
+     d.create<asset_object>( [&op,next_asset_id,&dyn_asset,bit_asset_id,&d]( asset_object& a ) {
          a.issuer = op.issuer;
          a.symbol = op.symbol;
          a.precision = op.precision;
@@ -167,11 +167,13 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          a.dynamic_asset_data_id = dyn_asset.id;
          if( op.bitasset_opts.valid() )
             a.bitasset_data_id = bit_asset_id;
+         a.creation_block_num = d._current_block_num;
+         a.creation_time      = d._current_block_time;
       });
    FC_ASSERT( new_asset.id == next_asset_id, "Unexpected object database error, object id mismatch" );
 
    return new_asset.id;
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
 { try {
@@ -188,7 +190,7 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
    FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.options.max_supply );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
 { try {
@@ -199,7 +201,7 @@ void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation& o )
 { try {
@@ -220,7 +222,7 @@ void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation&
    FC_ASSERT( (asset_dyn_data->current_supply - o.amount_to_reserve.amount) >= 0 );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o )
 { try {
@@ -231,7 +233,7 @@ void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o 
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool_operation& o)
 { try {
@@ -242,7 +244,7 @@ void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool
    asset_dyn_data = &a.dynamic_asset_data_id(d);
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_operation& o)
 { try {
@@ -253,11 +255,11 @@ void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_op
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 static void validate_new_issuer( const database& d, const asset_object& a, account_id_type new_issuer )
 { try {
-   FC_ASSERT(d.find_object(new_issuer));
+   FC_ASSERT(d.find(new_issuer), "New issuer account does not exist");
    if( a.is_market_issued() && new_issuer == GRAPHENE_COMMITTEE_ACCOUNT )
    {
       const asset_object& backing = a.bitasset_data(d).options.short_backing_asset(d);
@@ -270,7 +272,7 @@ static void validate_new_issuer( const database& d, const asset_object& a, accou
          FC_ASSERT( backing.get_id() == asset_id_type(),
                     "May not create a blockchain-controlled market asset which is not backed by CORE.");
    }
-} FC_CAPTURE_AND_RETHROW( (a)(new_issuer) ) }
+} FC_CAPTURE_AND_RETHROW( (a)(new_issuer) ) } // GCOVR_EXCL_LINE
 
 void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 { try {
@@ -310,13 +312,13 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 
    FC_ASSERT( o.new_options.whitelist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
    for( auto id : o.new_options.whitelist_authorities )
-      d.get_object(id);
+      d.get(id);
    FC_ASSERT( o.new_options.blacklist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
    for( auto id : o.new_options.blacklist_authorities )
-      d.get_object(id);
+      d.get(id);
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW((o)) } // GCOVR_EXCL_LINE
 
 void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
 { try {
@@ -355,7 +357,7 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_update_issuer_evaluator::do_evaluate(const asset_update_issuer_operation& o)
 { try {
@@ -371,7 +373,7 @@ void_result asset_update_issuer_evaluator::do_evaluate(const asset_update_issuer
               ("o.issuer", o.issuer)("a.issuer", a.issuer) );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW((o)) } // GCOVR_EXCL_LINE
 
 void_result asset_update_issuer_evaluator::do_apply(const asset_update_issuer_operation& o)
 { try {
@@ -381,7 +383,7 @@ void_result asset_update_issuer_evaluator::do_apply(const asset_update_issuer_op
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 /****************
  * Loop through assets, looking for ones that are backed by the asset being changed. When found,
@@ -627,7 +629,7 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
    asset_to_update = &asset_obj;
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 /*******
  * @brief Apply requested changes to bitasset options
@@ -764,10 +766,10 @@ void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_updat
 
    // Make sure all producers exist. Check these after asset because account lookup is more expensive
    for( auto id : o.new_feed_producers )
-      d.get_object(id);
+      d.get(id);
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_feed_producers_evaluator::operation_type& o)
 { try {
@@ -805,7 +807,7 @@ void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_f
    d.check_call_orders( *asset_to_update, true, false, &bitasset_to_update );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_global_settle_evaluator::do_evaluate(const asset_global_settle_evaluator::operation_type& op)
 { try {
@@ -829,14 +831,14 @@ void_result asset_global_settle_evaluator::do_evaluate(const asset_global_settle
              "Cannot force settle at supplied price: least collateralized short lacks sufficient collateral to settle.");
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result asset_global_settle_evaluator::do_apply(const asset_global_settle_evaluator::operation_type& op)
 { try {
    database& d = db();
    d.globally_settle_asset( *asset_to_settle, op.settle_price );
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result asset_settle_evaluator::do_evaluate(const asset_settle_evaluator::operation_type& op)
 { try {
@@ -854,7 +856,7 @@ void_result asset_settle_evaluator::do_evaluate(const asset_settle_evaluator::op
    FC_ASSERT(d.get_balance(d.get(op.account), *asset_to_settle) >= op.amount);
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::operation_type& op)
 { try {
@@ -913,7 +915,7 @@ operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::
          s.settlement_date = d.head_block_time() + asset_to_settle->bitasset_data(d).options.force_settlement_delay_sec;
       }).id;
    }
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {
@@ -971,7 +973,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    bitasset_ptr = &bitasset;
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW((o)) } // GCOVR_EXCL_LINE
 
 void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_operation& o)
 { try {
@@ -1026,7 +1028,7 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    }
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW((o)) } // GCOVR_EXCL_LINE
 
 
 
@@ -1034,7 +1036,7 @@ void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_oper
 { try {
    FC_ASSERT( o.amount_to_claim.asset_id(db()).issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operation& o )
@@ -1052,7 +1054,7 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
    d.adjust_balance( o.issuer, o.amount_to_claim );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 void_result asset_claim_pool_evaluator::do_evaluate( const asset_claim_pool_operation& o )
@@ -1060,7 +1062,7 @@ void_result asset_claim_pool_evaluator::do_evaluate( const asset_claim_pool_oper
     FC_ASSERT( o.asset_id(db()).issuer == o.issuer, "Asset fee pool may only be claimed by the issuer" );
 
     return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result asset_claim_pool_evaluator::do_apply( const asset_claim_pool_operation& o )
 { try {
@@ -1077,7 +1079,7 @@ void_result asset_claim_pool_evaluator::do_apply( const asset_claim_pool_operati
     d.adjust_balance( o.issuer, o.amount_to_claim );
 
     return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 } } // graphene::chain

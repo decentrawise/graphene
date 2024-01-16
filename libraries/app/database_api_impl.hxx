@@ -21,22 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
-#include <graphene/app/database_api.hpp>
+#pragma once
 
 #include <fc/bloom_filter.hpp>
+#include "database_api_helper.hxx"
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
 namespace graphene { namespace app {
 
-typedef std::map< std::pair<graphene::chain::asset_id_type, graphene::chain::asset_id_type>,
-                  std::vector<fc::variant> > market_queue_type;
+using market_queue_type = std::map< std::pair<graphene::chain::asset_id_type, graphene::chain::asset_id_type>,
+                                    std::vector<fc::variant> >;
 
-class database_api_impl : public std::enable_shared_from_this<database_api_impl>
+class database_api_impl : public std::enable_shared_from_this<database_api_impl>, public database_api_helper
 {
    public:
-      explicit database_api_impl( graphene::chain::database& db, const application_options* app_options );
+      database_api_impl( graphene::chain::database& db, const application_options* app_options );
       virtual ~database_api_impl();
 
       // Objects
@@ -50,8 +50,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void cancel_all_subscriptions(bool reset_callback, bool reset_market_subscriptions);
 
       // Blocks and transactions
-      optional<block_header> get_block_header(uint32_t block_num)const;
-      map<uint32_t, optional<block_header>> get_block_header_batch(const vector<uint32_t> block_nums)const;
+      optional<maybe_signed_block_header> get_block_header( uint32_t block_num, bool with_witness_signature )const;
+      map<uint32_t, optional<maybe_signed_block_header>> get_block_header_batch(
+            const vector<uint32_t>& block_nums, bool with_witness_signatures )const;
       optional<signed_block> get_block(uint32_t block_num)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
@@ -61,23 +62,23 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
+      object_id_type get_next_object_id( uint8_t space_id, uint8_t type_id, bool with_pending_transactions )const;
 
       // Keys
       vector<flat_set<account_id_type>> get_key_references( vector<public_key_type> key )const;
       bool is_public_key_registered(string public_key) const;
 
       // Accounts
-      account_id_type get_account_id_from_string(const std::string& name_or_id)const;
       vector<optional<account_object>> get_accounts( const vector<std::string>& account_names_or_ids,
                                                      optional<bool> subscribe )const;
-      std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids,
-                                                       optional<bool> subscribe );
+      map<string, full_account, std::less<>> get_full_accounts( const vector<string>& names_or_ids,
+                                                                const optional<bool>& subscribe );
       optional<account_object> get_account_by_name( string name )const;
       vector<account_id_type> get_account_references( const std::string account_id_or_name )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
-      map<string,account_id_type> lookup_accounts( const string& lower_bound_name,
+      map<string, account_id_type, std::less<>> lookup_accounts( const string& lower_bound_name,
                                                    uint32_t limit,
-                                                   optional<bool> subscribe )const;
+                                                   const optional<bool>& subscribe )const;
       uint64_t get_account_count()const;
 
       // Balances
@@ -90,7 +91,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Assets
       uint64_t get_asset_count()const;
-      asset_id_type get_asset_id_from_string(const std::string& symbol_or_id)const;
       vector<optional<extended_asset_object>> get_assets( const vector<std::string>& asset_symbols_or_ids,
                                                           optional<bool> subscribe )const;
       vector<extended_asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
@@ -101,6 +101,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders( const std::string& a, const std::string& b,
                                                            uint32_t limit)const;
+      vector<limit_order_object>         get_limit_orders_by_account( const string& account_name_or_id,
+                                                                      const optional<uint32_t>& limit,
+                                                                      const optional<limit_order_id_type>& start_id );
       vector<limit_order_object>         get_account_limit_orders( const string& account_name_or_id,
                                                                    const string &base,
                                                                    const string &quote, uint32_t limit,
@@ -113,7 +116,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<force_settlement_object>    get_settle_orders_by_account(const std::string& account_name_or_id,
                                                                       force_settlement_id_type start,
                                                                       uint32_t limit)const;
-      vector<call_order_object>          get_margin_positions( const std::string account_id_or_name )const;
       vector<collateral_bid_object>      get_collateral_bids( const std::string& asset,
                                                               uint32_t limit, uint32_t start)const;
 
@@ -125,33 +127,34 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
                                                      bool skip_order_book = false )const;
       market_volume                      get_24_volume( const string& base, const string& quote )const;
       order_book                         get_order_book( const string& base, const string& quote,
-                                                         unsigned limit = 50 )const;
+                                                         uint32_t limit )const;
       vector<market_ticker>              get_top_markets( uint32_t limit )const;
       vector<market_trade>               get_trade_history( const string& base, const string& quote,
                                                             fc::time_point_sec start, fc::time_point_sec stop,
-                                                            unsigned limit = 100 )const;
+                                                            uint32_t limit )const;
       vector<market_trade>               get_trade_history_by_sequence( const string& base, const string& quote,
                                                                         int64_t start, fc::time_point_sec stop,
-                                                                        unsigned limit = 100 )const;
+                                                                        uint32_t limit )const;
 
       // Witnesses
       vector<optional<witness_object>> get_witnesses(const vector<witness_id_type>& witness_ids)const;
-      fc::optional<witness_object> get_witness_by_account(const std::string account_id_or_name)const;
-      map<string, witness_id_type> lookup_witness_accounts(const string& lower_bound_name, uint32_t limit)const;
+      fc::optional<witness_object> get_witness_by_account(const std::string& account_id_or_name)const;
+      map<string, witness_id_type, std::less<>> lookup_witness_accounts(
+            const string& lower_bound_name, uint32_t limit )const;
       uint64_t get_witness_count()const;
 
       // Committee members
       vector<optional<committee_member_object>> get_committee_members(
             const vector<committee_member_id_type>& committee_member_ids )const;
       fc::optional<committee_member_object> get_committee_member_by_account(
-            const std::string account_id_or_name )const;
-      map<string, committee_member_id_type> lookup_committee_member_accounts(
+            const std::string& account_id_or_name )const;
+      map<string, committee_member_id_type, std::less<>> lookup_committee_member_accounts(
             const string& lower_bound_name, uint32_t limit )const;
       uint64_t get_committee_count()const;
 
       // Workers
-      vector<worker_object> get_all_workers()const;
-      vector<optional<worker_object>> get_workers_by_account(const std::string account_id_or_name)const;
+      vector<worker_object> get_all_workers( const optional<bool>& is_expired )const;
+      vector<worker_object> get_workers_by_account(const std::string& account_id_or_name)const;
       uint64_t get_worker_count()const;
 
       // Votes
@@ -159,7 +162,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
-      std::string get_transaction_hex_without_sig(const signed_transaction& trx)const;
+      std::string get_transaction_hex_without_sig(const transaction& trx)const;
 
       set<public_key_type> get_required_signatures( const signed_transaction& trx,
                                                     const flat_set<public_key_type>& available_keys )const;
@@ -200,9 +203,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Accounts
       ////////////////////////////////////////////////
 
-      const account_object* get_account_from_string( const std::string& name_or_id,
-                                                     bool throw_if_not_found = true ) const;
-
       ////////////////////////////////////////////////
       // Assets
       ////////////////////////////////////////////////
@@ -210,7 +210,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<class ASSET>
       extended_asset_object extend_asset( ASSET&& a )const
       {
-         asset_id_type id = a.id;
+         asset_id_type id = a.get_id();
          extended_asset_object result = extended_asset_object( std::forward<ASSET>( a ) );
          if( amount_in_collateral_index )
          {
@@ -221,8 +221,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          return result;
       }
 
-      const asset_object* get_asset_from_string( const std::string& symbol_or_id,
-                                                 bool throw_if_not_found = true ) const;
       // helper function
       vector<optional<extended_asset_object>> get_assets( const vector<asset_id_type>& asset_ids,
                                                           optional<bool> subscribe = optional<bool>() )const;
@@ -269,7 +267,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          if( !_subscribe_callback )
             return;
 
-         vector<char> key = get_subscription_key( item );
+         vector<char> key = get_subscription_key( object_id_type(item) );
          if( !_subscribe_filter.contains( key.data(), key.size() ) )
          {
             _subscribe_filter.insert( key.data(), key.size() );
@@ -282,7 +280,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          if( !_subscribe_callback )
             return false;
 
-         vector<char> key = get_subscription_key( item );
+         vector<char> key = get_subscription_key( object_id_type(item) );
          return _subscribe_filter.contains( key.data(), key.size() );
       }
 
@@ -357,10 +355,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> > _market_subscriptions;
 
-      graphene::chain::database& _db;
-      const application_options* _app_options = nullptr;
-
       const graphene::api_helper_indexes::amount_in_collateral_index* amount_in_collateral_index;
+      const graphene::api_helper_indexes::next_object_ids_index* next_object_ids_index;
 };
 
 } } // graphene::app

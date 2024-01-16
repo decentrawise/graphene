@@ -27,6 +27,30 @@
 
 namespace graphene { namespace app {
 
+order::order( const string& _price,
+              const string& _quote,
+              const string& _base,
+              const limit_order_id_type& _id,
+              const account_id_type& _oid,
+              const string& _oname,
+              const time_point_sec& _exp )
+: price( _price ),
+  quote( _quote ),
+  base( _base ),
+  id( _id ),
+  owner_id( _oid ),
+  owner_name( _oname ),
+  expiration( _exp )
+{
+   // Nothing to do
+}
+
+order_book::order_book( const string& _base, const string& _quote )
+: base( _base ), quote( _quote )
+{
+   // Do nothing else
+}
+
 market_ticker::market_ticker(const market_ticker_object& mto,
                              const fc::time_point_sec& now,
                              const asset_object& asset_base,
@@ -34,12 +58,16 @@ market_ticker::market_ticker(const market_ticker_object& mto,
                              const order_book& orders)
 {
    time = now;
+   mto_id = mto.id;
    base = asset_base.symbol;
    quote = asset_quote.symbol;
    percent_change = "0";
    lowest_ask = "0";
+   lowest_ask_base_size = "0";
+   lowest_ask_quote_size = "0";
    highest_bid = "0";
-
+   highest_bid_base_size = "0";
+   highest_bid_quote_size = "0";
    fc::uint128_t bv;
    fc::uint128_t qv;
    price latest_price = asset( mto.latest_base, mto.base ) / asset( mto.latest_quote, mto.quote );
@@ -68,9 +96,19 @@ market_ticker::market_ticker(const market_ticker_object& mto,
    quote_volume = uint128_amount_to_string( qv, asset_quote.precision );
 
    if(!orders.asks.empty())
-      lowest_ask = orders.asks[0].price;
+   {
+       lowest_ask = orders.asks[0].price;
+       lowest_ask_base_size = orders.asks[0].base;
+       lowest_ask_quote_size = orders.asks[0].quote;
+   }
+
    if(!orders.bids.empty())
-      highest_bid = orders.bids[0].price;
+   {
+       highest_bid = orders.bids[0].price;
+       highest_bid_base_size = orders.bids[0].base;
+       highest_bid_quote_size = orders.bids[0].quote;
+   }
+
 }
 
 market_ticker::market_ticker(const fc::time_point_sec& now,
@@ -82,10 +120,20 @@ market_ticker::market_ticker(const fc::time_point_sec& now,
    quote = asset_quote.symbol;
    latest = "0";
    lowest_ask = "0";
+   lowest_ask_base_size = "0";
+   lowest_ask_quote_size = "0";
    highest_bid = "0";
+   highest_bid_base_size = "0";
+   highest_bid_quote_size = "0";
    percent_change = "0";
    base_volume = "0";
    quote_volume = "0";
+}
+
+maybe_signed_block_header::maybe_signed_block_header( const signed_block_header& bh, bool with_witness_signature )
+: block_header( bh ), // Slice intentionally
+  witness_signature( with_witness_signature ? bh.witness_signature : optional<signature_type>() )
+{ // Nothing else to do
 }
 
 } } // graphene::app

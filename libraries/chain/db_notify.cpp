@@ -19,14 +19,16 @@
 #include <graphene/chain/impacted.hpp>
 
 using namespace fc;
-using namespace graphene::chain;
+namespace graphene { namespace chain { namespace detail {
 
 // TODO:  Review all of these, especially no-ops
 struct get_impacted_account_visitor
 {
    flat_set<account_id_type>& _impacted;
-   get_impacted_account_visitor( flat_set<account_id_type>& impact ):_impacted(impact) {}
-   typedef void result_type;
+
+   get_impacted_account_visitor( flat_set<account_id_type>& impact ): _impacted(impact) {}
+   
+   using result_type = void;
 
    void operator()( const transfer_operation& op )
    {
@@ -283,20 +285,25 @@ struct get_impacted_account_visitor
    }
 };
 
-void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
+} // namespace detail
+
+// Declared in impacted.hpp
+void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
 {
-  get_impacted_account_visitor vtor = get_impacted_account_visitor( result );
+  detail::get_impacted_account_visitor vtor( result );
   op.visit( vtor );
 }
 
-void graphene::chain::transaction_get_impacted_accounts( const transaction& tx, flat_set<account_id_type>& result )
+// Declared in impacted.hpp, although only used in this file
+void transaction_get_impacted_accounts( const transaction& tx, flat_set<account_id_type>& result )
 {
   for( const auto& op : tx.operations )
     operation_get_impacted_accounts( op, result );
 }
 
-void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accounts )
+static void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accounts )
 {
+   FC_ASSERT( obj != nullptr, "Internal error: get_relevant_accounts called with nullptr" ); // This should not happen
    if( obj->id.space() == protocol_ids )
    {
       switch( (object_type)obj->id.type() )
@@ -305,7 +312,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
         case base_object_type:
            return;
         case account_object_type:{
-           accounts.insert( obj->id );
+           accounts.insert( account_id_type(obj->id) );
            break;
         } case asset_object_type:{
            const auto& aobj = dynamic_cast<const asset_object*>(obj);
@@ -414,8 +421,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
            } case impl_block_summary_object_type:
               break;
-             case impl_account_transaction_history_object_type: {
-              const auto& aobj = dynamic_cast<const account_transaction_history_object*>(obj);
+             case impl_account_history_object_type: {
+              const auto& aobj = dynamic_cast<const account_history_object*>(obj);
               FC_ASSERT( aobj != nullptr );
               accounts.insert( aobj->account );
               break;
@@ -441,8 +448,6 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
    }
 } // end get_relevant_accounts( const object* obj, flat_set<account_id_type>& accounts )
 
-namespace graphene { namespace chain {
-
 void database::notify_applied_block( const signed_block& block )
 {
    GRAPHENE_TRY_NOTIFY( applied_block, block )
@@ -462,7 +467,8 @@ void database::notify_changed_objects()
       // New
       if( !new_objects.empty() )
       {
-        vector<object_id_type> new_ids;  new_ids.reserve(head_undo.new_ids.size());
+        vector<object_id_type> new_ids;
+        new_ids.reserve(head_undo.new_ids.size());
         flat_set<account_id_type> new_accounts_impacted;
         for( const auto& item : head_undo.new_ids )
         {
@@ -472,14 +478,15 @@ void database::notify_changed_objects()
             get_relevant_accounts(obj, new_accounts_impacted);
         }
 
-        if( new_ids.size() )
+        if( !new_ids.empty() )
            GRAPHENE_TRY_NOTIFY( new_objects, new_ids, new_accounts_impacted)
       }
 
       // Changed
       if( !changed_objects.empty() )
       {
-        vector<object_id_type> changed_ids;  changed_ids.reserve(head_undo.old_values.size());
+        vector<object_id_type> changed_ids;
+        changed_ids.reserve(head_undo.old_values.size());
         flat_set<account_id_type> changed_accounts_impacted;
         for( const auto& item : head_undo.old_values )
         {
@@ -487,15 +494,17 @@ void database::notify_changed_objects()
           get_relevant_accounts(item.second.get(), changed_accounts_impacted);
         }
 
-        if( changed_ids.size() )
+        if( !changed_ids.empty() )
            GRAPHENE_TRY_NOTIFY( changed_objects, changed_ids, changed_accounts_impacted)
       }
 
       // Removed
       if( !removed_objects.empty() )
       {
-        vector<object_id_type> removed_ids; removed_ids.reserve( head_undo.removed.size() );
-        vector<const object*> removed; removed.reserve( head_undo.removed.size() );
+        vector<object_id_type> removed_ids;
+        removed_ids.reserve( head_undo.removed.size() );
+        vector<const object*> removed;
+        removed.reserve( head_undo.removed.size() );
         flat_set<account_id_type> removed_accounts_impacted;
         for( const auto& item : head_undo.removed )
         {
@@ -505,10 +514,13 @@ void database::notify_changed_objects()
           get_relevant_accounts(obj, removed_accounts_impacted);
         }
 
-        if( removed_ids.size() )
+        if( !removed_ids.empty() )
            GRAPHENE_TRY_NOTIFY( removed_objects, removed_ids, removed, removed_accounts_impacted)
       }
    }
-} FC_CAPTURE_AND_LOG( (0) ) }
+} catch( const graphene::chain::plugin_exception& e ) {
+   elog( "Caught plugin exception: ${e}", ("e", e.to_detail_string() ) );
+   throw;
+} FC_CAPTURE_AND_LOG( (0) ) } // GCOVR_EXCL_LINE
 
-} }
+} } // namespace graphene::chain

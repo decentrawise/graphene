@@ -85,7 +85,7 @@ struct swan_fixture : database_fixture {
 
         set_feed( 1, 2 );
         // this sell order is designed to trigger a black swan
-        limit_order_id_type oid = create_sell_order( borrower2(), swan().amount(1), back().amount(3) )->id;
+        limit_order_id_type oid = create_sell_order( borrower2(), swan().amount(1), back().amount(3) )->get_id();
 
         FC_ASSERT( get_balance(borrower(),  swan()) == amount1 );
         FC_ASSERT( get_balance(borrower2(), swan()) == amount2 - 1 );
@@ -163,6 +163,9 @@ BOOST_AUTO_TEST_CASE( black_swan )
       BOOST_TEST_MESSAGE( "Verify that we cannot borrow after black swan" );
       GRAPHENE_REQUIRE_THROW( borrow(borrower(), swan().amount(1000), back().amount(2000)), fc::exception )
       trx.operations.clear();
+
+      generate_block();
+
 } catch( const fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -190,16 +193,16 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
          {
             int64_t bal = get_balance( *actor, core );
             if( bal < init_balance )
-               transfer( committee_account, actor->id, asset(init_balance - bal) );
+               transfer( committee_account, actor->get_id(), asset(init_balance - bal) );
             else if( bal > init_balance )
-               transfer( actor->id, committee_account, asset(bal - init_balance) );
+               transfer( actor->get_id(), committee_account, asset(bal - init_balance) );
          }
       };
 
       auto setup_asset = [&]() -> const asset_object&
       {
          const asset_object& bitusd = create_bitasset("USDBIT"+fc::to_string(trial)+"X", feeder_id);
-         update_feed_producers( bitusd, {feeder.id} );
+         update_feed_producers( bitusd, {feeder.get_id()} );
          BOOST_CHECK( !bitusd.bitasset_data(db).has_settlement() );
          trial++;
          return bitusd;
@@ -267,16 +270,16 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
          set_price( bitusd, bitusd.amount(40) / core.amount(1000) ); // $0.04
          borrow( borrower, bitusd.amount(100), asset(5000) );    // 2x collat
          transfer( borrower, seller, bitusd.amount(100) );
-         limit_order_id_type oid_019 = create_sell_order( seller, bitusd.amount(39), core.amount(2000) )->id;   // this order is at $0.019, we should not be able to match against it
-         limit_order_id_type oid_020 = create_sell_order( seller, bitusd.amount(40), core.amount(2000) )->id;   // this order is at $0.020, we should be able to match against it
+         limit_order_id_type oid_019 = create_sell_order( seller, bitusd.amount(39), core.amount(2000) )->get_id();   // this order is at $0.019, we should not be able to match against it
+         limit_order_id_type oid_020 = create_sell_order( seller, bitusd.amount(40), core.amount(2000) )->get_id();   // this order is at $0.020, we should be able to match against it
          set_price( bitusd, bitusd.amount(21) / core.amount(1000) ); // $0.021
          //
          // We attempt to match against $0.019 order and black swan,
          // and this is intended behavior.  See discussion in ticket.
          //
          BOOST_CHECK( bitusd.bitasset_data(db).has_settlement() );
-         BOOST_CHECK( db.find_object( oid_019 ) != nullptr );
-         BOOST_CHECK( db.find_object( oid_020 ) == nullptr );
+         BOOST_CHECK( db.find( oid_019 ) != nullptr );
+         BOOST_CHECK( db.find( oid_020 ) == nullptr );
       }
 
    } catch( const fc::exception& e) {
@@ -301,6 +304,17 @@ BOOST_AUTO_TEST_CASE( revive_recovered )
       BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
       set_feed( 701, 800 );
       BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+
+      graphene::app::database_api db_api( db, &( app.get_options() ));
+      auto swan_symbol = _swan(db).symbol;
+      vector<call_order_object> calls = db_api.get_call_orders(swan_symbol, 100);
+      BOOST_REQUIRE_EQUAL( 1u, calls.size() );
+      BOOST_CHECK( calls[0].borrower == swan().issuer );
+      BOOST_CHECK_EQUAL( calls[0].debt.value, 1400 );
+      BOOST_CHECK_EQUAL( calls[0].collateral.value, 2800 );
+
+      generate_block();
+
 } catch( const fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -345,7 +359,7 @@ BOOST_AUTO_TEST_CASE( recollateralize )
       update_feed_producers(bitcny, {_feedproducer});
       price_feed feed;
       feed.settlement_price = bitcny.amount(1) / asset(1);
-      publish_feed( bitcny.id, _feedproducer, feed );
+      publish_feed( bitcny.get_id(), _feedproducer, feed );
       borrow( borrower2(), bitcny.amount(100), asset(1000) );
 
       // can't bid wrong collateral type
@@ -380,7 +394,7 @@ BOOST_AUTO_TEST_CASE( recollateralize )
       bid_collateral( borrower2(), back().amount(2100), swan().amount(1399) );
 
       // check get_collateral_bids
-      graphene::app::database_api db_api(db);
+      graphene::app::database_api db_api(db, &(app.get_options()));
       GRAPHENE_REQUIRE_THROW( db_api.get_collateral_bids(back().symbol, 100, 0), fc::assert_exception );
       auto swan_symbol = _swan(db).symbol;
       vector<collateral_bid_object> bids = db_api.get_collateral_bids(swan_symbol, 100, 1);
@@ -483,7 +497,7 @@ BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
 
       set_feed( 1, 2 );
       // this sell order is designed to trigger a black swan
-      limit_order_id_type oid = create_sell_order( borrower2(), swan().amount(1), back().amount(3) )->id;
+      limit_order_id_type oid = create_sell_order(borrower2(), swan().amount(1), back().amount(3))->get_id();
       BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
 
       cancel_limit_order( oid(db) );
@@ -501,7 +515,7 @@ BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
       // revive
       wait_for_maintenance();
       BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
-      graphene::app::database_api db_api(db);
+      graphene::app::database_api db_api(db, &(app.get_options()));
       auto swan_symbol = _swan(db).symbol;
       vector<collateral_bid_object> bids = db_api.get_collateral_bids(swan_symbol, 100, 0);
       BOOST_CHECK( bids.empty() );

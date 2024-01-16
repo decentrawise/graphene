@@ -12,6 +12,8 @@ moc_*
 genesis.json
 hardfork.hpp
 
+.vscode
+
 build
 
 libraries/utilities/git_revision.cpp

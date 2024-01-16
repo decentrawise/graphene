@@ -37,33 +37,37 @@ namespace graphene { namespace chain {
     * This object is stored in the database while an HTLC is active. The HTLC will
     * become inactive at expiration or when unlocked via the preimage.
     */
-   class htlc_object : public graphene::db::abstract_object<htlc_object> {
-      public:
-         // uniquely identify this object in the database
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = htlc_object_type;
+   class htlc_object : public graphene::db::abstract_object<htlc_object, protocol_ids, htlc_object_type>
+   {
+   public:
 
-         struct transfer_info {
-            account_id_type from;
-            account_id_type to;
-            share_type amount;
-            asset_id_type asset_id;
-         } transfer;
-         struct condition_info {
-            struct hash_lock_info {  
-               htlc_hash preimage_hash;
-               uint16_t preimage_size;
-            } hash_lock;
-            struct time_lock_info {
-               fc::time_point_sec expiration;
-            } time_lock;
-         } conditions;
+      struct transfer_info {
+         account_id_type from;
+         account_id_type to;
+         share_type amount;
+         asset_id_type asset_id;
+      };
+      struct condition_info {
+         struct hash_lock_info {
+            htlc_hash preimage_hash;
+            uint16_t preimage_size;
+         };
+         struct time_lock_info {
+            fc::time_point_sec expiration;
+         };
+         hash_lock_info hash_lock;
+         time_lock_info time_lock;
+      };
+
+      transfer_info transfer;
+      condition_info conditions;
+      fc::optional<memo_data> memo;
 
       /****
        * Index helper for timelock
        */
       struct timelock_extractor {
-         typedef fc::time_point_sec result_type;
+         using result_type = fc::time_point_sec;
          const result_type& operator()(const htlc_object& o)const { return o.conditions.time_lock.expiration; }
       };
 
@@ -71,7 +75,7 @@ namespace graphene { namespace chain {
        * Index helper for from
        */
       struct from_extractor {
-         typedef account_id_type result_type;
+         using result_type = account_id_type;
          const result_type& operator()(const htlc_object& o)const { return o.transfer.from; }
       };
 
@@ -79,15 +83,15 @@ namespace graphene { namespace chain {
        * Index helper for to
        */
       struct to_extractor {
-         typedef account_id_type result_type;
-         const result_type& operator()(const htlc_object& o)const { return o.transfer.to; }
+         using result_type = account_id_type;
+         const result_type &operator()(const htlc_object &o) const { return o.transfer.to; }
       };
    };
 
    struct by_from_id;
    struct by_expiration;
    struct by_to_id;
-   typedef multi_index_container<
+   using htlc_object_multi_index_type = multi_index_container<
          htlc_object,
          indexed_by<
             ordered_unique< tag< by_id >, member< object, object_id_type, &object::id > >,
@@ -107,10 +111,9 @@ namespace graphene { namespace chain {
                   htlc_object::to_extractor,
                   member< object, object_id_type, &object::id > > >
       >
+   >;
 
-   > htlc_object_index_type;
-
-   typedef generic_index< htlc_object, htlc_object_index_type > htlc_index;
+   using htlc_index = generic_index< htlc_object, htlc_object_multi_index_type >;
 
 } } // namespace graphene::chain
 

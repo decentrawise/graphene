@@ -60,7 +60,7 @@ void block_database::open( const fc::path& dbdir )
      _block_num_to_pos.open( _index_filename.generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
      _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
    }
-} FC_CAPTURE_AND_RETHROW( (dbdir) ) }
+} FC_CAPTURE_AND_RETHROW( (dbdir) ) } // GCOVR_EXCL_LINE
 
 bool block_database::is_open()const
 {
@@ -115,7 +115,7 @@ void block_database::remove( const block_id_type& id )
       _block_num_to_pos.seekp( sizeof(e) * int64_t(block_header::num_from_id(id)) );
       _block_num_to_pos.write( (char*)&e, sizeof(e) );
    }
-} FC_CAPTURE_AND_RETHROW( (id) ) }
+} FC_CAPTURE_AND_RETHROW( (id) ) } // GCOVR_EXCL_LINE
 
 bool block_database::contains( const block_id_type& id )const
 {

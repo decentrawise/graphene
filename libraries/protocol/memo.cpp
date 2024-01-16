@@ -35,12 +35,15 @@ void memo_data::set_message(const fc::ecc::private_key& priv, const fc::ecc::pub
    {
       from = priv.get_public_key();
       to = pub;
-      if( custom_nonce == 0 )
+      if( 0 == custom_nonce )
       {
          uint64_t entropy = fc::sha224::hash(fc::ecc::private_key::generate())._hash[0].value();
-         entropy <<= 32;
-         entropy                                                     &= 0xff00000000000000;
-         nonce = (fc::time_point::now().time_since_epoch().count()   &  0x00ffffffffffffff) | entropy;
+         constexpr uint64_t half_size = 32;
+         constexpr uint64_t high_bits = 0xff00000000000000ULL;
+         constexpr uint64_t low_bits = 0x00ffffffffffffffULL;
+         entropy <<= half_size;
+         entropy &= high_bits;
+         nonce = ((uint64_t)(fc::time_point::now().time_since_epoch().count()) & low_bits) | entropy;
       } else
          nonce = custom_nonce;
       auto secret = priv.get_shared_secret(pub);

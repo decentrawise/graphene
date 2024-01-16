@@ -47,14 +47,14 @@ void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_o
 
    if( _sell_asset->options.whitelist_markets.size() )
    {
-      GRAPHENE_ASSERT( _sell_asset->options.whitelist_markets.find(_receive_asset->id)
+      GRAPHENE_ASSERT( _sell_asset->options.whitelist_markets.find(_receive_asset->get_id())
                           != _sell_asset->options.whitelist_markets.end(),
                        limit_order_create_market_not_whitelisted,
                        "This market has not been whitelisted by the selling asset", );
    }
    if( _sell_asset->options.blacklist_markets.size() )
    {
-      GRAPHENE_ASSERT( _sell_asset->options.blacklist_markets.find(_receive_asset->id)
+      GRAPHENE_ASSERT( _sell_asset->options.blacklist_markets.find(_receive_asset->get_id())
                           == _sell_asset->options.blacklist_markets.end(),
                        limit_order_create_market_blacklisted,
                        "This market has been blacklisted by the selling asset", );
@@ -74,7 +74,7 @@ void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_o
                     ("balance",d.get_balance(*_seller,*_sell_asset))("amount_to_sell",op.amount_to_sell) );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void limit_order_create_evaluator::convert_fee()
 {
@@ -123,7 +123,7 @@ object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_o
        obj.deferred_fee = _deferred_fee;
        obj.deferred_paid_fee = _deferred_paid_fee;
    });
-   limit_order_id_type order_id = new_order_object.id; // save this because we may remove the object by filling it
+   object_id_type order_id = new_order_object.id; // save this because we may remove the object by filling it
    bool filled;
    if( db().get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_625_TIME )
       filled = db().apply_order_before_hardfork_625( new_order_object );
@@ -136,7 +136,7 @@ object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_o
                     ("op",op) );
 
    return order_id;
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result limit_order_cancel_evaluator::do_evaluate(const limit_order_cancel_operation& o)
 { try {
@@ -155,7 +155,7 @@ void_result limit_order_cancel_evaluator::do_evaluate(const limit_order_cancel_o
                     ("oid", o.order) );
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 asset limit_order_cancel_evaluator::do_apply(const limit_order_cancel_operation& o)
 { try {
@@ -176,7 +176,7 @@ asset limit_order_cancel_evaluator::do_apply(const limit_order_cancel_operation&
    }
 
    return refunded;
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result call_order_update_evaluator::do_evaluate(const call_order_update_operation& o)
 { try {
@@ -231,7 +231,7 @@ void_result call_order_update_evaluator::do_evaluate(const call_order_update_ope
    //       which is now removed since the check is implicitly done later by `adjust_balance()` in `do_apply()`.
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 object_id_type call_order_update_evaluator::do_apply(const call_order_update_operation& o)
@@ -267,7 +267,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
    auto& call_idx = d.get_index_type<call_order_index>().indices().get<by_account>();
    auto itr = call_idx.find( boost::make_tuple(o.funding_account, o.delta_debt.asset_id) );
    const call_order_object* call_obj = nullptr;
-   call_order_id_type call_order_id;
+   object_id_type call_order_id;
 
    optional<price> old_collateralization;
    optional<share_type> old_debt;
@@ -331,7 +331,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
       //       the first call order may be unable to be updated if the second one is undercollateralized.
       if( d.check_call_orders( *_debt_asset, false, false, _bitasset_data ) ) // don't allow black swan, not for new limit order
       {
-         call_obj = d.find(call_order_id);
+         call_obj = d.find<call_order_object>(call_order_id);
          // before hard fork core-583: if we filled at least one call order, we are OK if we totally filled.
          // after hard fork core-583: we want to allow increasing collateral
          //   Note: increasing collateral won't get the call order itself matched (instantly margin called)
@@ -345,7 +345,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
       }
       else
       {
-         call_obj = d.find(call_order_id);
+         call_obj = d.find<call_order_object>(call_order_id);
          // we know no black swan event has occurred
          FC_ASSERT( call_obj, "no margin call was executed and yet the call object was deleted" );
          if( d.head_block_time() <= HARDFORK_CORE_583_TIME )
@@ -387,7 +387,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
    }
 
    return call_order_id;
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result bid_collateral_evaluator::do_evaluate(const bid_collateral_operation& o)
 { try {
@@ -424,7 +424,7 @@ void_result bid_collateral_evaluator::do_evaluate(const bid_collateral_operation
        FC_ASSERT( o.debt_covered.amount > 0, "Can't find bid to cancel?!");
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 void_result bid_collateral_evaluator::do_apply(const bid_collateral_operation& o)
@@ -446,6 +446,6 @@ void_result bid_collateral_evaluator::do_apply(const bid_collateral_operation& o
    // Note: CORE asset in collateral_bid_object is not counted in account_stats.total_core_in_orders
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::chain

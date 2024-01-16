@@ -67,12 +67,12 @@ void_result assert_evaluator::do_evaluate( const assert_operation& o )
       p.visit( predicate_evaluator( _db ) );
    }
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result assert_evaluator::do_apply( const assert_operation& o )
 { try {
    // assert_operation is always a no-op
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::chain

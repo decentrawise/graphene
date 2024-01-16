@@ -39,6 +39,7 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <fc/crypto/digest.hpp>
+#include <fc/io/fstream.hpp>
 
 #include "../common/database_fixture.hpp"
 
@@ -584,7 +585,7 @@ BOOST_AUTO_TEST_CASE( undo_pending )
 
          signed_transaction trx;
          set_expiration( db, trx );
-         account_id_type nathan_id = account_idx.get_next_id();
+         account_id_type nathan_id { account_idx.get_next_id() };
          account_create_operation cop;
          cop.registrar = GRAPHENE_TEMP_ACCOUNT;
          cop.name = "nathan";
@@ -638,7 +639,7 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
 
       signed_transaction trx;
       set_expiration( db1, trx );
-      account_id_type nathan_id = account_idx.get_next_id();
+      account_id_type nathan_id { account_idx.get_next_id() };
       account_create_operation cop;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;
       cop.name = "nathan";
@@ -699,7 +700,7 @@ BOOST_AUTO_TEST_CASE( duplicate_transactions )
 
       signed_transaction trx;
       set_expiration( db1, trx );
-      account_id_type nathan_id = account_idx.get_next_id();
+      account_id_type nathan_id { account_idx.get_next_id() };
       account_create_operation cop;
       cop.name = "nathan";
       cop.owner = authority(1, init_account_pub_key, 1);
@@ -752,7 +753,7 @@ BOOST_AUTO_TEST_CASE( tapos )
       trx.set_expiration( db1.head_block_time() ); //db1.get_slot_time(1) );
       trx.set_reference_block( db1.head_block_id() );
 
-      account_id_type nathan_id = account_idx.get_next_id();
+      account_id_type nathan_id { account_idx.get_next_id() };
       account_create_operation cop;
       cop.registrar = init1.id;
       cop.name = "nathan";
@@ -1239,7 +1240,13 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
       fc::temp_directory data_dir2( graphene::utilities::temp_directory_path() );
 
       database db2;
-      db2.open(data_dir2.path(), make_genesis, "TEST");
+      {
+         std::string genesis_json;
+         fc::read_file_contents( data_dir.path() / "genesis.json", genesis_json );
+         genesis_state_type genesis = fc::json::from_string( genesis_json ).as<genesis_state_type>( 50 );
+         genesis.initial_chain_id = fc::sha256::hash( genesis_json );
+         db2.open(data_dir2.path(), [&genesis] () { return genesis; }, "TEST");
+      }
       BOOST_CHECK( db.get_chain_id() == db2.get_chain_id() );
 
       while( db2.head_block_num() < db.head_block_num() )
@@ -1512,7 +1519,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       account_object sam_account_object = create_account( "sam", sam_key );
 
       // upgrade sam to LTM
-      upgrade_to_lifetime_member(sam_account_object.id);
+      upgrade_to_lifetime_member(sam_account_object.get_id());
 
       //Get a sane head block time
       generate_block( skip_flags );
@@ -1573,7 +1580,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       // we can only undo in blocks
       generate_block( skip_flags );
 
-      std::cout << "update_account_keys:  this test will take a few minutes...\n";
+      BOOST_TEST_MESSAGE("update_account_keys:  this test will take a few minutes...");
 
       // Originally we had a loop here to go from use_address=0 to 1
       // Live chain do not allow this so it had to be removed: https://github.com/bitshares/bitshares-core/issues/565
@@ -1582,7 +1589,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       {
          for( int num_active_keys=1; num_active_keys<=2; num_active_keys++ )
          {
-            std::cout << 0 << num_owner_keys << num_active_keys << "\n";
+            // std::cout << 0 << num_owner_keys << num_active_keys << "\n";
             for( const vector< int >& key_sched_before : possible_key_sched )
             {
                auto it = key_sched_before.begin();
@@ -1618,9 +1625,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
                   database::skip_transaction_dupe_check |
                   database::skip_transaction_signatures
                );
-               account_id_type alice_account_id =
-                  ptx_create.operation_results[0]
-                  .get< object_id_type >();
+               account_id_type alice_account_id { ptx_create.operation_results[0].get< object_id_type >() };
 
                generate_block( skip_flags );
                for( const vector< int >& key_sched_after : possible_key_sched )

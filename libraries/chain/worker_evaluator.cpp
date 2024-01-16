@@ -40,7 +40,7 @@ void_result worker_create_evaluator::do_evaluate(const worker_create_evaluator::
    FC_ASSERT(o.work_begin_date >= d.head_block_time());
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 struct worker_init_visitor
@@ -102,7 +102,7 @@ object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::
       w.worker.set_which(o.initializer.which());
       o.initializer.visit( worker_init_visitor( w, d ) );
    }).id;
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void refund_worker_type::pay_worker(share_type pay, database& db)
 {

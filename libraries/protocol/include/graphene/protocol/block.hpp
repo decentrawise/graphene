@@ -39,7 +39,9 @@ namespace graphene { namespace protocol {
       //       More info in https://github.com/bitshares/bitshares-core/issues/1136
       extensions_type               extensions;
 
-      static uint32_t num_from_id(const block_id_type& id);
+      virtual ~block_header() = default;
+
+      static uint32_t num_from_id(const block_id_type &id);
    };
 
    class signed_block_header : public block_header
@@ -51,6 +53,9 @@ namespace graphene { namespace protocol {
       bool                       validate_signee( const fc::ecc::public_key& expected_signee )const;
 
       signature_type             witness_signature;
+
+      signed_block_header() = default;
+      explicit signed_block_header( const block_header& header ) : block_header( header ) {}
    protected:
       mutable fc::ecc::public_key _signee;
       mutable block_id_type       _block_id;

@@ -12,14 +12,15 @@ if( GRAPHENE_DISABLE_UNITY_BUILD )
         db_balance.cpp
         db_block.cpp
         db_debug.cpp
+        db_genesis.cpp
         db_getter.cpp
         db_init.cpp
         db_maint.cpp
         db_management.cpp
         db_market.cpp
+        db_notify.cpp
         db_update.cpp
         db_witness_schedule.cpp
-        db_notify.cpp
       )
    message( STATUS "Graphene database unity build disabled" )
 else( GRAPHENE_DISABLE_UNITY_BUILD )
@@ -78,8 +79,25 @@ target_link_libraries( graphene_chain fc graphene_db graphene_protocol )
 target_include_directories( graphene_chain
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
+set( GRAPHENE_CHAIN_BIG_FILES
+     db_init.cpp
+     db_genesis.cpp
+     db_block.cpp
+     db_maint.cpp
+     db_market.cpp
+     database.cpp
+     block_database.cpp
+   )
+
 if(MSVC)
-  set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+  set_source_files_properties( ${GRAPHENE_CHAIN_BIG_FILES} PROPERTIES COMPILE_FLAGS "/bigobj" )
+else( MSVC )
+   if( MINGW )
+      # Note: Even with the big-obj property and the -Os property set,
+      #       "string table overflow" and "File too big" errors may still occur on database.cpp.
+      #       Can set GRAPHENE_DISABLE_UNITY_BUILD to ON to get around the issue.
+      set_source_files_properties( ${GRAPHENE_CHAIN_BIG_FILES} PROPERTIES COMPILE_FLAGS -Wa,-mbig-obj )
+   endif( MINGW )
 endif(MSVC)
 
 INSTALL( TARGETS

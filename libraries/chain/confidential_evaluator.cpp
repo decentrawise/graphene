@@ -46,7 +46,7 @@ void_result transfer_to_blind_evaluator::do_evaluate( const transfer_to_blind_op
          a.first(d); // verify all accounts exist and are valid
    }
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 
 void_result transfer_to_blind_evaluator::do_apply( const transfer_to_blind_operation& o ) 
@@ -67,7 +67,7 @@ void_result transfer_to_blind_evaluator::do_apply( const transfer_to_blind_opera
       });
    }
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void transfer_to_blind_evaluator::pay_fee()
 {
@@ -91,7 +91,7 @@ void_result transfer_from_blind_evaluator::do_evaluate( const transfer_from_blin
       FC_ASSERT( itr->owner == in.owner );
    }
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result transfer_from_blind_evaluator::do_apply( const transfer_from_blind_operation& o ) 
 { try {
@@ -111,7 +111,7 @@ void_result transfer_from_blind_evaluator::do_apply( const transfer_from_blind_o
       FC_ASSERT( obj.confidential_supply >= 0 );
    });
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void transfer_from_blind_evaluator::pay_fee()
 {
@@ -140,7 +140,7 @@ void_result blind_transfer_evaluator::do_evaluate( const blind_transfer_operatio
       FC_ASSERT( itr->owner == in.owner );
    }
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void_result blind_transfer_evaluator::do_apply( const blind_transfer_operation& o ) 
 { try {
@@ -168,7 +168,7 @@ void_result blind_transfer_evaluator::do_apply( const blind_transfer_operation& 
    });
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+} FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
 void blind_transfer_evaluator::pay_fee()
 {

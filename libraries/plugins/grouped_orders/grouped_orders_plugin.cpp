@@ -34,9 +34,8 @@ namespace detail
 class grouped_orders_plugin_impl
 {
    public:
-      grouped_orders_plugin_impl(grouped_orders_plugin& _plugin)
-      :_self( _plugin ) {}
-      virtual ~grouped_orders_plugin_impl();
+      explicit grouped_orders_plugin_impl(grouped_orders_plugin &_plugin)
+          : _self(_plugin) {}
 
       graphene::chain::database& database()
       {
@@ -185,24 +184,24 @@ void limit_order_group_index::object_inserted( const object& objct )
          }
       }
    }
-} FC_CAPTURE_AND_RETHROW( (objct) ); }
+} FC_CAPTURE_AND_RETHROW( (objct) ); } // GCOVR_EXCL_LINE
 
 void limit_order_group_index::object_removed( const object& objct )
 { try {
    const limit_order_object& o = static_cast<const limit_order_object&>( objct );
    remove_order( o );
-} FC_CAPTURE_AND_RETHROW( (objct) ); }
+} FC_CAPTURE_AND_RETHROW( (objct) ); } // GCOVR_EXCL_LINE
 
 void limit_order_group_index::about_to_modify( const object& objct )
 { try {
    const limit_order_object& o = static_cast<const limit_order_object&>( objct );
    remove_order( o, false );
-} FC_CAPTURE_AND_RETHROW( (objct) ); }
+} FC_CAPTURE_AND_RETHROW( (objct) ); } // GCOVR_EXCL_LINE
 
 void limit_order_group_index::object_modified( const object& objct )
 { try {
    object_inserted( objct );
-} FC_CAPTURE_AND_RETHROW( (objct) ); }
+} FC_CAPTURE_AND_RETHROW( (objct) ); } // GCOVR_EXCL_LINE
 
 void limit_order_group_index::remove_order( const limit_order_object& o, bool remove_empty )
 {
@@ -235,20 +234,16 @@ void limit_order_group_index::remove_order( const limit_order_object& o, bool re
    }
 }
 
-grouped_orders_plugin_impl::~grouped_orders_plugin_impl()
-{}
-
 } // end namespace detail
 
-
-grouped_orders_plugin::grouped_orders_plugin() :
-   my( new detail::grouped_orders_plugin_impl(*this) )
+grouped_orders_plugin::grouped_orders_plugin(graphene::app::application& app) :
+   plugin(app),
+   my( std::make_unique<detail::grouped_orders_plugin_impl>(*this) )
 {
+   // Nothing else to do
 }
 
-grouped_orders_plugin::~grouped_orders_plugin()
-{
-}
+grouped_orders_plugin::~grouped_orders_plugin() = default;
 
 std::string grouped_orders_plugin::plugin_name()const
 {
@@ -281,10 +276,14 @@ void grouped_orders_plugin::plugin_initialize(const boost::program_options::vari
 
    database().add_secondary_index< primary_index<limit_order_index>, detail::limit_order_group_index >( my->_tracked_groups );
 
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 void grouped_orders_plugin::plugin_startup()
 {
+   auto &groups = *database().add_secondary_index< primary_index<limit_order_index>,
+                                                   detail::limit_order_group_index >(my->_tracked_groups);
+   for (const auto &order : database().get_index_type<limit_order_index>().indices())
+      groups.object_inserted(order);
 }
 
 const flat_set<uint16_t>& grouped_orders_plugin::tracked_groups() const

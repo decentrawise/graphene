@@ -160,7 +160,7 @@ asset asset_object::amount_from_string(string amount_string) const
       satoshis *= -1;
 
    return amount(satoshis);
-} FC_CAPTURE_AND_RETHROW( (amount_string) ) }
+} FC_CAPTURE_AND_RETHROW( (amount_string) ) } // GCOVR_EXCL_LINE
 
 string asset_object::amount_to_string(share_type amount) const
 {

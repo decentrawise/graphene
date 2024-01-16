@@ -35,6 +35,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
+#include <graphene/chain/witness_schedule_object.hpp>
 
 #include <graphene/protocol/fee_schedule.hpp>
 
@@ -61,7 +62,7 @@ bool database::is_known_transaction( const transaction_id_type& id )const
 block_id_type  database::get_block_id_for_num( uint32_t block_num )const
 { try {
    return _block_id_to_block.fetch_block_id( block_num );
-} FC_CAPTURE_AND_RETHROW( (block_num) ) }
+} FC_CAPTURE_AND_RETHROW( (block_num) ) } // GCOVR_EXCL_LINE
 
 optional<signed_block> database::fetch_block_by_id( const block_id_type& id )const
 {
@@ -90,7 +91,8 @@ const signed_transaction& database::get_recent_transaction(const transaction_id_
 
 std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of_fork) const
 {
-  pair<fork_database::branch_type, fork_database::branch_type> branches = _fork_db.fetch_branch_from(head_block_id(), head_of_fork);
+  pair<fork_database::branch_type, fork_database::branch_type> branches
+        = _fork_db.fetch_branch_from(head_block_id(), head_of_fork);
   if( !((branches.first.back()->previous_id() == branches.second.back()->previous_id())) )
   {
      edump( (head_of_fork)
@@ -130,10 +132,18 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
 bool database::_push_block(const signed_block& new_block)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
-   // TODO: If the block is greater than the head block and before the next maintenance interval
-   // verify that the block signer is in the current set of active witnesses.
 
-   shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
+   const auto now = fc::time_point::now().sec_since_epoch();
+   if( _fork_db.head() && new_block.timestamp.sec_since_epoch() > now - 86400 )
+   {
+      // verify that the block signer is in the current set of active witnesses.
+      shared_ptr<fork_item> prev_block = _fork_db.fetch_block( new_block.previous );
+      GRAPHENE_ASSERT( prev_block, unlinkable_block_exception, "block does not link to known chain" );
+      if( prev_block->scheduled_witnesses && 0 == (skip&(skip_witness_schedule_check|skip_witness_signature)) )
+         verify_signing_witness( new_block, *prev_block );
+   }
+
+   const shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
    //If the head block from the longest chain does not build off of the current head, we need to switch forks.
    if( new_head->data.previous != head_block_id() )
    {
@@ -159,6 +169,7 @@ bool database::_push_block(const signed_block& new_block)
                try {
                   undo_database::session session = _undo_db.start_undo_session();
                   apply_block( (*ritr)->data, skip );
+                  update_witnesses( **ritr );
                   _block_id_to_block.store( (*ritr)->id, (*ritr)->data );
                   session.commit();
                }
@@ -169,7 +180,8 @@ bool database::_push_block(const signed_block& new_block)
                   // remove the rest of branches.first from the fork_db, those blocks are invalid
                   while( ritr != branches.first.rend() )
                   {
-                     ilog( "removing block from fork_db #${n} ${id}", ("n",(*ritr)->data.block_num())("id",(*ritr)->id) );
+                     ilog( "removing block from fork_db #${n} ${id}",
+                           ("n",(*ritr)->data.block_num())("id",(*ritr)->id) );
                      _fork_db.remove( (*ritr)->id );
                      ++ritr;
                   }
@@ -203,6 +215,8 @@ bool database::_push_block(const signed_block& new_block)
    try {
       auto session = _undo_db.start_undo_session();
       apply_block(new_block, skip);
+      if( new_block.timestamp.sec_since_epoch() > now - 86400 )
+         update_witnesses( *new_head );
       _block_id_to_block.store(new_block.id(), new_block);
       session.commit();
    } catch ( const fc::exception& e ) {
@@ -212,7 +226,36 @@ bool database::_push_block(const signed_block& new_block)
    }
 
    return false;
-} FC_CAPTURE_AND_RETHROW( (new_block) ) }
+} FC_CAPTURE_AND_RETHROW( (new_block) ) } // GCOVR_EXCL_LINE
+
+void database::verify_signing_witness( const signed_block& new_block, const fork_item& fork_entry )const
+{
+   FC_ASSERT( new_block.timestamp >= fork_entry.next_block_time );
+   uint32_t slot_num = ( new_block.timestamp - fork_entry.next_block_time ).to_seconds() / block_interval();
+   uint64_t index = ( fork_entry.next_block_aslot + slot_num ) % fork_entry.scheduled_witnesses->size();
+   const auto& scheduled_witness = (*fork_entry.scheduled_witnesses)[index];
+   FC_ASSERT( new_block.witness == scheduled_witness.first, "Witness produced block at wrong time",
+              ("block witness",new_block.witness)("scheduled",scheduled_witness)("slot_num",slot_num) );
+   FC_ASSERT( new_block.validate_signee( scheduled_witness.second ) );
+}
+
+void database::update_witnesses( fork_item& fork_entry )const
+{
+   if( fork_entry.scheduled_witnesses ) return;
+
+   const dynamic_global_property_object& dpo = get_dynamic_global_properties();
+   fork_entry.next_block_aslot = dpo.current_aslot + 1;
+   fork_entry.next_block_time = get_slot_time( 1 );
+
+   const witness_schedule_object& wso = get_witness_schedule_object();
+   fork_entry.scheduled_witnesses = std::make_shared< vector< pair< witness_id_type, public_key_type > > >();
+   fork_entry.scheduled_witnesses->reserve( wso.current_shuffled_witnesses.size() );
+   for( size_t i = 0; i < wso.current_shuffled_witnesses.size(); ++i )
+   {
+       const auto& witness = wso.current_shuffled_witnesses[i](*this);
+       fork_entry.scheduled_witnesses->emplace_back( wso.current_shuffled_witnesses[i], witness.signing_key );
+   }
+}
 
 /**
  * Attempts to push the transaction into the pending queue
@@ -233,7 +276,7 @@ processed_transaction database::push_transaction( const precomputable_transactio
       result = _push_transaction( trx );
    } );
    return result;
-} FC_CAPTURE_AND_RETHROW( (trx) ) }
+} FC_CAPTURE_AND_RETHROW( (trx) ) } // GCOVR_EXCL_LINE
 
 processed_transaction database::_push_transaction( const precomputable_transaction& trx )
 {
@@ -266,18 +309,23 @@ processed_transaction database::validate_transaction( const signed_transaction& 
    return _apply_transaction( trx );
 }
 
-class push_proposal_nesting_guard {
+class undo_session_nesting_guard {
 public:
-   push_proposal_nesting_guard( uint32_t& nesting_counter, const database& db )
+   undo_session_nesting_guard( uint32_t& nesting_counter, const database& db )
       : orig_value(nesting_counter), counter(nesting_counter)
    {
-      FC_ASSERT( counter < db.get_global_properties().active_witnesses.size() * 2, "Max proposal nesting depth exceeded!" );
-      counter++;
+      FC_ASSERT( counter < db.get_global_properties().active_witnesses.size() * 2,
+                 "Max undo session nesting depth exceeded!" );
+      ++counter;
    }
-   ~push_proposal_nesting_guard()
+   ~undo_session_nesting_guard()
    {
-      if( --counter != orig_value )
-         elog( "Unexpected proposal nesting count value: ${n} != ${o}", ("n",counter)("o",orig_value) );
+      --counter;
+      // GCOVR_EXCL_START
+      // Defensive code, should not happen
+      if( counter != orig_value )
+         elog( "Unexpected undo session nesting count value: ${n} != ${o}", ("n",counter)("o",orig_value) );
+      // GCOVR_EXCL_STOP
    }
 private:
     const uint32_t  orig_value;
@@ -293,14 +341,15 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
    processed_transaction ptrx(proposal.proposed_transaction);
    eval_state._trx = &ptrx;
    size_t old_applied_ops_size = _applied_ops.size();
+   auto old_vop = _current_virtual_op;
 
    try {
-      push_proposal_nesting_guard guard( _push_proposal_nesting_depth, *this );
+      undo_session_nesting_guard guard( _undo_session_nesting_depth, *this );
       if( _undo_db.size() >= _undo_db.max_size() )
          _undo_db.set_max_size( _undo_db.size() + 1 );
       auto session = _undo_db.start_undo_session(true);
       for( auto& op : proposal.proposed_transaction.operations )
-         eval_state.operation_results.emplace_back(apply_operation(eval_state, op));
+         eval_state.operation_results.emplace_back(apply_operation(eval_state, op)); // This is a virtual operation
       remove(proposal);
       session.merge();
    } catch ( const fc::exception& e ) {
@@ -314,6 +363,7 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
       }
       else
       {
+         _current_virtual_op = old_vop;
          _applied_ops.resize( old_applied_ops_size );
       }
       wlog( "${e}", ("e",e.to_detail_string() ) );
@@ -322,7 +372,7 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
 
    ptrx.operation_results = std::move(eval_state.operation_results);
    return ptrx;
-} FC_CAPTURE_AND_RETHROW( (proposal) ) }
+} FC_CAPTURE_AND_RETHROW( (proposal) ) } // GCOVR_EXCL_LINE
 
 signed_block database::generate_block(
    fc::time_point_sec when,
@@ -337,7 +387,7 @@ signed_block database::generate_block(
       result = _generate_block( when, witness_id, block_signing_private_key );
    } );
    return result;
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 signed_block database::_generate_block(
    fc::time_point_sec when,
@@ -368,7 +418,7 @@ signed_block database::_generate_block(
    _pending_tx_session.reset();
 
    // Check witness signing key
-   if( !(skip & skip_witness_signature) )
+   if( 0 == (skip & skip_witness_signature) )
    {
       // Note: if this check failed (which won't happen in normal situations),
       // we would have temporarily broken the invariant that
@@ -378,9 +428,10 @@ signed_block database::_generate_block(
       FC_ASSERT( witness_id(*this).signing_key == block_signing_private_key.get_public_key() );
    }
 
-   static const size_t max_partial_block_header_size = fc::raw::pack_size( signed_block_header() )
-                                                       - fc::raw::pack_size( witness_id_type() ) // witness_id
-                                                       + 3; // max space to store size of transactions (out of block header),
+   static const size_t max_partial_block_header_size = ( fc::raw::pack_size( signed_block_header() )
+                                                       - fc::raw::pack_size( witness_id_type() ) ) // witness_id
+                                                       + 3; // max space to store size of transactions
+                                                            // (out of block header),
                                                             // +3 means 3*7=21 bits so it's practically safe
    const size_t max_block_header_size = max_partial_block_header_size + fc::raw::pack_size( witness_id );
    auto maximum_block_size = get_global_properties().parameters.maximum_block_size;
@@ -406,6 +457,9 @@ signed_block database::_generate_block(
       {
          auto temp_session = _undo_db.start_undo_session();
          processed_transaction ptx = _apply_transaction( tx );
+         // Clear results to save disk space and network bandwidth.
+         // This may break client applications which rely on the results.
+         ptx.operation_results.clear();
 
          // We have to recompute pack_size(ptx) because it may be different
          // than pack_size(tx) (i.e. if one or more results increased
@@ -448,13 +502,14 @@ signed_block database::_generate_block(
    pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();
    pending_block.witness = witness_id;
 
-   if( !(skip & skip_witness_signature) )
+   if( 0 == (skip & skip_witness_signature) )
       pending_block.sign( block_signing_private_key );
 
-   push_block( pending_block, skip | skip_transaction_signatures ); // skip authority check when pushing self-generated blocks
+   push_block( pending_block, skip | skip_transaction_signatures ); // skip authority check when pushing
+                                                                    // self-generated blocks
 
    return pending_block;
-} FC_CAPTURE_AND_RETHROW( (witness_id) ) }
+} FC_CAPTURE_AND_RETHROW( (witness_id) ) } // GCOVR_EXCL_LINE
 
 /**
  * Removes the most recent block from the database and
@@ -473,24 +528,24 @@ void database::pop_block()
       FC_ASSERT( fork_db_head, "Trying to pop() block that's not in fork database!?" );
    }
    pop_undo();
-   _popped_tx.insert( _popped_tx.begin(), fork_db_head->data.transactions.begin(), fork_db_head->data.transactions.end() );
-} FC_CAPTURE_AND_RETHROW() }
+   _popped_tx.insert( _popped_tx.begin(),
+                      fork_db_head->data.transactions.begin(),
+                      fork_db_head->data.transactions.end() );
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 void database::clear_pending()
 { try {
    assert( (_pending_tx.size() == 0) || _pending_tx_session.valid() );
    _pending_tx.clear();
    _pending_tx_session.reset();
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
-uint32_t database::push_applied_operation( const operation& op )
+uint32_t database::push_applied_operation( const operation& op, bool is_virtual /* = true */ )
 {
-   _applied_ops.emplace_back(op);
-   operation_history_object& oh = *(_applied_ops.back());
-   oh.block_num    = _current_block_num;
-   oh.trx_in_block = _current_trx_in_block;
-   oh.op_in_trx    = _current_op_in_trx;
-   oh.virtual_op   = _current_virtual_op++;
+   _applied_ops.emplace_back( operation_history_object( op, _current_block_num, _current_trx_in_block,
+                                                        _current_op_in_trx, _current_virtual_op, is_virtual, _current_block_time ) );
+   // TODO: Maybe? if (is_virtual) ++_current_virtual_op; - failing index uniqueness of operation_history_object?
+   ++_current_virtual_op;
    return _applied_ops.size() - 1;
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
@@ -514,7 +569,7 @@ const vector<optional< operation_history_object > >& database::get_applied_opera
 void database::apply_block( const signed_block& next_block, uint32_t skip )
 {
    auto block_num = next_block.block_num();
-   if( _checkpoints.size() && _checkpoints.rbegin()->second != block_id_type() )
+   if( !_checkpoints.empty() && _checkpoints.rbegin()->second != block_id_type() )
    {
       auto itr = _checkpoints.find( block_num );
       if( itr != _checkpoints.end() )
@@ -537,7 +592,7 @@ void database::_apply_block( const signed_block& next_block )
    uint32_t skip = get_node_properties().skip_flags;
    _applied_ops.clear();
 
-   if( !(skip & skip_block_size_check) )
+   if( 0 == (skip & skip_block_size_check) )
    {
       FC_ASSERT( fc::raw::pack_size(next_block) <= get_global_properties().parameters.maximum_block_size );
    }
@@ -550,7 +605,6 @@ void database::_apply_block( const signed_block& next_block )
               ("id",next_block.id()) );
 
    const witness_object& signing_witness = validate_block_header(skip, next_block);
-   const auto& global_props = get_global_properties();
    const auto& dynamic_global_props = get_dynamic_global_properties();
    bool maint_needed = (dynamic_global_props.next_maintenance_time <= next_block.timestamp);
 
@@ -559,13 +613,16 @@ void database::_apply_block( const signed_block& next_block )
    // For virtual operations that are derived directly from a real operation,
    //     use the real operation's (block_num,trx_in_block,op_in_trx), virtual_op starts from 1.
    // For virtual operations created after processed all transactions,
-   //     trx_in_block = the_block.trsanctions.size(), op_in_trx is 0, virtual_op starts from 0.
+   //     trx_in_block = the_block.transactions.size(), op_in_trx is 0, virtual_op starts from 0.
    _current_block_num    = next_block_num;
    _current_trx_in_block = 0;
 
+   _current_block_time   = next_block.timestamp;
+
    _issue_453_affected_assets.clear();
 
-   for( const auto& trx : next_block.transactions )
+   signed_block processed_block( next_block ); // make a copy
+   for( auto& trx : processed_block.transactions )
    {
       /* We do not need to push the undo state for each transaction
        * because they either all apply and are valid or the
@@ -573,7 +630,7 @@ void database::_apply_block( const signed_block& next_block )
        * for transactions when validating broadcast transactions or
        * when building a block.
        */
-      apply_transaction( trx, skip );
+      trx.operation_results = apply_transaction( trx, skip ).operation_results;
       ++_current_trx_in_block;
    }
 
@@ -587,12 +644,13 @@ void database::_apply_block( const signed_block& next_block )
 
    // Are we at the maintenance interval?
    if( maint_needed )
-      perform_chain_maintenance(next_block, global_props);
+      perform_chain_maintenance( next_block );
 
    create_block_summary(next_block);
    clear_expired_transactions();
    clear_expired_proposals();
    clear_expired_orders();
+   clear_expired_force_settlements();
    clear_expired_htlcs();
    update_expired_feeds();       // this will update expired feeds and some core exchange rates
    update_core_exchange_rates(); // this will update remaining core exchange rates
@@ -609,14 +667,17 @@ void database::_apply_block( const signed_block& next_block )
       apply_debug_updates();
 
    // notify observers that the block has been applied
-   notify_applied_block( next_block ); //emit
+   notify_applied_block( processed_block ); //emit
    _applied_ops.clear();
 
    notify_changed_objects();
-} FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
+} FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  } // GCOVR_EXCL_LINE
 
-
-
+/**
+ * @note if a @c processed_transaction is passed in, it is cast into @c signed_transaction here.
+ *       It also means that the @c operation_results field is ignored by consensus, although it
+ *       is a part of block data.
+ */
 processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
    processed_transaction result;
@@ -635,7 +696,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    auto& trx_idx = get_mutable_index_type<transaction_index>();
    const chain_id_type& chain_id = get_chain_id();
-   if( !(skip & skip_transaction_dupe_check) )
+   if( 0 == (skip & skip_transaction_dupe_check) )
    {
       GRAPHENE_ASSERT( trx_idx.indices().get<by_trx_id>().find(trx.id()) == trx_idx.indices().get<by_trx_id>().end(),
                        duplicate_transaction,
@@ -646,23 +707,20 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    const chain_parameters& chain_parameters = get_global_properties().parameters;
    eval_state._trx = &trx;
 
-   if( !(skip & skip_transaction_signatures) )
+   if( 0 == (skip & skip_transaction_signatures) )
    {
       bool allow_non_immediate_owner = ( head_block_time() >= HARDFORK_CORE_584_TIME );
-      auto get_active = [&]( account_id_type id ) { return &id(*this).active; };
-      auto get_owner  = [&]( account_id_type id ) { return &id(*this).owner;  };
-      trx.verify_authority( chain_id,
-                            get_active,
-                            get_owner,
-                            allow_non_immediate_owner,
-                            get_global_properties().parameters.max_authority_depth );
+      auto get_active = [this]( account_id_type id ) { return &id(*this).active; };
+      auto get_owner  = [this]( account_id_type id ) { return &id(*this).owner;  };
+      trx.verify_authority(chain_id, get_active, get_owner, allow_non_immediate_owner,
+                           get_global_properties().parameters.max_authority_depth);
    }
 
    //Skip all manner of expiration and TaPoS checking if we're on block 1; It's impossible that the transaction is
    //expired, and TaPoS makes no sense as no blocks exist.
    if( BOOST_LIKELY(head_block_num() > 0) )
    {
-      if( !(skip & skip_tapos_check) )
+      if( 0 == (skip & skip_tapos_check) )
       {
          const auto& tapos_block_summary = block_summary_id_type( trx.ref_block_num )(*this);
 
@@ -675,14 +733,14 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
       FC_ASSERT( trx.expiration <= now + chain_parameters.maximum_time_until_expiration, "",
                  ("trx.expiration",trx.expiration)("now",now)("max_til_exp",chain_parameters.maximum_time_until_expiration));
       FC_ASSERT( now <= trx.expiration, "", ("now",now)("trx.exp",trx.expiration) );
-      if ( !(skip & skip_block_size_check ) ) // don't waste time on replay
+      if ( 0 == (skip & skip_block_size_check ) ) // don't waste time on replay
          FC_ASSERT( head_block_time() <= HARDFORK_CORE_1573_TIME
                || trx.get_packed_size() <= chain_parameters.maximum_transaction_size,
                "Transaction exceeds maximum transaction size." );
    }
 
    //Insert transaction into unique transactions database.
-   if( !(skip & skip_transaction_dupe_check) )
+   if( 0 == (skip & skip_transaction_dupe_check) )
    {
       create<transaction_history_object>([&trx](transaction_history_object& transaction) {
          transaction.trx_id = trx.id();
@@ -698,15 +756,16 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    for( const auto& op : ptrx.operations )
    {
       _current_virtual_op = 0;
-      eval_state.operation_results.emplace_back(apply_operation(eval_state, op));
+      eval_state.operation_results.emplace_back(apply_operation(eval_state, op, false)); // This is NOT a virtual op
       ++_current_op_in_trx;
    }
    ptrx.operation_results = std::move(eval_state.operation_results);
 
    return ptrx;
-} FC_CAPTURE_AND_RETHROW( (trx) ) }
+} FC_CAPTURE_AND_RETHROW( (trx) ) } // GCOVR_EXCL_LINE
 
-operation_result database::apply_operation(transaction_evaluation_state& eval_state, const operation& op)
+operation_result database::apply_operation( transaction_evaluation_state& eval_state, const operation& op,
+                                            bool is_virtual /* = true */ )
 { try {
    int i_which = op.which();
    uint64_t u_which = uint64_t( i_which );
@@ -714,11 +773,11 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    FC_ASSERT( u_which < _operation_evaluators.size(), "No registered evaluator for operation ${op}", ("op",op) );
    unique_ptr<op_evaluator>& eval = _operation_evaluators[ u_which ];
    FC_ASSERT( eval, "No registered evaluator for operation ${op}", ("op",op) );
-   auto op_id = push_applied_operation( op );
+   auto op_id = push_applied_operation( op, is_virtual );
    auto result = eval->evaluate( eval_state, op, true );
    set_applied_operation_result( op_id, result );
    return result;
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 const witness_object& database::validate_block_header( uint32_t skip, const signed_block& next_block )const
 {
@@ -726,10 +785,10 @@ const witness_object& database::validate_block_header( uint32_t skip, const sign
    FC_ASSERT( head_block_time() < next_block.timestamp, "", ("head_block_time",head_block_time())("next",next_block.timestamp)("blocknum",next_block.block_num()) );
    const witness_object& witness = next_block.witness(*this);
 
-   if( !(skip&skip_witness_signature) ) 
+   if( 0 == (skip&skip_witness_signature) )
       FC_ASSERT( next_block.validate_signee( witness.signing_key ) );
 
-   if( !(skip&skip_witness_schedule_check) )
+   if( 0 == (skip&skip_witness_schedule_check) )
    {
       uint32_t slot_num = get_slot_at_time( next_block.timestamp );
       FC_ASSERT( slot_num > 0 );
@@ -772,11 +831,11 @@ void database::_precompute_parallel( const Trx* trx, const size_t count, const u
    for( size_t i = 0; i < count; ++i, ++trx )
    {
       trx->validate(); // TODO - parallelize wrt confidential operations
-      if ( !(skip & skip_block_size_check) )
+      if( 0 == (skip & skip_block_size_check) )
          trx->get_packed_size();
-      if( !(skip&skip_transaction_dupe_check) )
+      if( 0 == (skip&skip_transaction_dupe_check) )
          trx->id();
-      if( !(skip&skip_transaction_signatures) )
+      if( 0 == (skip&skip_transaction_signatures) )
          trx->get_signature_keys( get_chain_id() );
    }
 }
@@ -796,15 +855,16 @@ fc::future<void> database::precompute_parallel( const signed_block& block, const
          for( size_t base = 0; base < block.transactions.size(); base += chunk_size )
             workers.push_back( fc::do_parallel( [this,&block,base,chunk_size,skip] () {
                _precompute_parallel( &block.transactions[base],
-                                     base + chunk_size < block.transactions.size() ? chunk_size : block.transactions.size() - base,
+                                     ( ( base + chunk_size ) < block.transactions.size() ) ? chunk_size
+                                                 : ( block.transactions.size() - base ),
                                      skip );
             }) );
       }
    }
 
-   if( !(skip&skip_witness_signature) )
+   if( 0 == (skip&skip_witness_signature) )
       workers.push_back( fc::do_parallel( [&block] () { block.signee(); } ) );
-   if( !(skip&skip_merkle_check) )
+   if( 0 == (skip&skip_merkle_check) )
       block.calculate_merkle_root();
    block.id();
 

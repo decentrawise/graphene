@@ -301,7 +301,7 @@ share_type call_order_object::get_max_debt_to_cover( price match_price,
          return to_cover.amount;
    }
 
-} FC_CAPTURE_AND_RETHROW( (*this)(feed_price)(match_price)(maintenance_collateral_ratio) ) }
+} FC_CAPTURE_AND_RETHROW( (*this)(feed_price)(match_price)(maintenance_collateral_ratio) ) } // GCOVR_EXCL_LINE
 
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::limit_order_object,
                     (graphene::db::object),

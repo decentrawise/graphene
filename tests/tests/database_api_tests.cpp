@@ -66,7 +66,12 @@ BOOST_AUTO_TEST_CASE(is_registered)
       /***
        * Assert
        */
-      graphene::app::database_api db_api(db);
+      graphene::app::database_api db_api1(db);
+      BOOST_CHECK_THROW( db_api1.is_public_key_registered((string) nathan_public), fc::exception );
+
+      graphene::app::application_options opt = app.get_options();
+      opt.has_api_helper_indexes_plugin = true;
+      graphene::app::database_api db_api( db, &opt );
 
       BOOST_CHECK(db_api.is_public_key_registered((string) nathan_public));
       BOOST_CHECK(db_api.is_public_key_registered((string) dan_public));
@@ -143,9 +148,9 @@ BOOST_AUTO_TEST_CASE( get_signatures_non_immediate_owner )
       const account_object& nathan = create_account("nathan", nathan_key1.get_public_key() );
       const account_object& ashley = create_account("ashley", ashley_key1.get_public_key() );
       const account_object& oliver = create_account("oliver", oliver_key1.get_public_key() );
-      account_id_type nathan_id = nathan.id;
-      account_id_type ashley_id = ashley.id;
-      account_id_type oliver_id = oliver.id;
+      account_id_type nathan_id = nathan.get_id();
+      account_id_type ashley_id = ashley.get_id();
+      account_id_type oliver_id = oliver.get_id();
 
       try {
          account_update_operation op;
@@ -755,7 +760,7 @@ BOOST_AUTO_TEST_CASE( get_required_signatures_partially_signed_or_not )
 
 BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
 {
-   object_id_type uia_object_id = create_user_issued_asset( "UIATEST" ).get_id();
+   object_id_type uia_object_id = create_user_issued_asset( "UIATEST" ).id;
 
    uint32_t objects_changed = 0;
    auto callback = [&]( const variant& v )
@@ -768,7 +773,7 @@ BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
 
    // subscribe to an account which has same instance ID as UIATEST
    vector<string> collision_ids;
-   collision_ids.push_back( string( object_id_type( account_id_type( uia_object_id ) ) ) );
+   collision_ids.push_back( string( object_id_type( account_id_type( uia_object_id.instance() ) ) ) );
    db_api.get_accounts( collision_ids );
 
    generate_block();
@@ -896,7 +901,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
 #undef SUB_NOTIF_TEST_START_ID_DISABLE_AUTO_SUB
 
       vector<object_id_type> account_ids;
-      account_ids.push_back( alice_id );
+      account_ids.push_back( alice.id );
       db_api1.get_objects( account_ids );         // db_api1  subscribe to Alice
       db_api11.get_objects( account_ids, true );  // db_api11 subscribe to Alice
       db_api21.get_objects( account_ids, false ); // db_api21 doesn't subscribe to Alice
@@ -1100,7 +1105,7 @@ BOOST_AUTO_TEST_CASE( lookup_vote_ids )
    const auto& witness = create_witness( whitney );
    const auto& worker = create_worker( wolverine_id );
 
-   graphene::app::database_api db_api(db);
+   graphene::app::database_api db_api(db, &(app.get_options()));
 
    std::vector<vote_id_type> votes;
    votes.push_back( committee.vote_id );
@@ -1135,7 +1140,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
       BOOST_CHECK(create_sell_order(seller, core.amount(100), bitcny.amount(250 - i)));
    }
 
-   graphene::app::database_api db_api(db);
+   graphene::app::database_api db_api(db, &(app.get_options()));
    std::vector<limit_order_object> results;
    limit_order_object o;
 
@@ -1331,7 +1336,7 @@ BOOST_AUTO_TEST_CASE( verify_authority_multiple_accounts )
       try {
          account_update_operation op;
          op.account = nathan.id;
-         op.active = authority(3, nathan_public_key, 1, alice.id, 1, bob.id, 1);
+         op.active = authority(3, nathan_public_key, 1, alice.get_id(), 1, bob.get_id(), 1);
          op.owner = *op.active;
          trx.operations.push_back(op);
          sign(trx, nathan_private_key);
@@ -1484,8 +1489,8 @@ BOOST_AUTO_TEST_CASE( get_call_orders_by_account ) {
       int64_t init_balance(1000000);
       transfer(committee_account, caller_id, asset(init_balance));
 
-      update_feed_producers(usd, {feedproducer.id});
-      update_feed_producers(cny, {feedproducer.id});
+      update_feed_producers(usd, {feedproducer.get_id()});
+      update_feed_producers(cny, {feedproducer.get_id()});
 
       price_feed current_feed;
       current_feed.maintenance_collateral_ratio = 1750;
@@ -1523,13 +1528,13 @@ BOOST_AUTO_TEST_CASE( get_settle_orders_by_account ) {
 
       const auto &usd = create_bitasset("USD", creator_id);
       const auto &core = asset_id_type()(db);
-      asset_id_type usd_id = usd.id;
+      asset_id_type usd_id = usd.get_id();
 
       int64_t init_balance(1000000);
       transfer(committee_account, settler_id, asset(init_balance));
       transfer(committee_account, caller_id, asset(init_balance));
 
-      update_feed_producers(usd, {feedproducer.id});
+      update_feed_producers(usd, {feedproducer.get_id()});
 
       price_feed current_feed;
       current_feed.maintenance_collateral_ratio = 1750;
@@ -1540,7 +1545,7 @@ BOOST_AUTO_TEST_CASE( get_settle_orders_by_account ) {
       borrow(caller, usd.amount(1000), asset(15000));
       generate_block();
 
-      transfer(caller.id, settler.id, asset(200, usd_id));
+      transfer(caller.get_id(), settler.get_id(), asset(200, usd_id));
 
       auto result = force_settle( settler, usd_id(db).amount(4));
       generate_block();
@@ -1565,7 +1570,7 @@ BOOST_AUTO_TEST_CASE( api_limit_get_limit_orders ){
    create_bitasset("USD", account_id_type());
    create_account("dan");
    create_account("bob");
-   asset_id_type bit_jmj_id = create_bitasset("JMJBIT").id;
+   asset_id_type bit_jmj_id = create_bitasset("JMJBIT").get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
    GRAPHENE_CHECK_THROW(db_api.get_limit_orders(std::string(static_cast<object_id_type>(asset_id_type())),
@@ -1585,10 +1590,10 @@ BOOST_AUTO_TEST_CASE( api_limit_get_call_orders ){
    graphene::app::database_api db_api( db, &( app.get_options() ));
    //account_id_type() do 3 ops
    auto nathan_private_key = generate_private_key("nathan");
-   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).get_id();
    transfer(account_id_type(), nathan_id, asset(100));
    asset_id_type bitusd_id = create_bitasset(
-	   "USDBIT", nathan_id, 100, disable_force_settle).id;
+	   "USDBIT", nathan_id, 100, disable_force_settle).get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
    BOOST_CHECK( bitusd_id(db).is_market_issued() );
@@ -1607,10 +1612,10 @@ BOOST_AUTO_TEST_CASE( api_limit_get_settle_orders ){
    graphene::app::database_api db_api( db, &( app.get_options() ));
    //account_id_type() do 3 ops
    auto nathan_private_key = generate_private_key("nathan");
-   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).get_id();
    transfer(account_id_type(), nathan_id, asset(100));
    asset_id_type bitusd_id = create_bitasset(
-	   "USDBIT", nathan_id, 100, disable_force_settle).id;
+	   "USDBIT", nathan_id, 100, disable_force_settle).get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
    GRAPHENE_CHECK_THROW(db_api.get_settle_orders(
@@ -1628,14 +1633,14 @@ BOOST_AUTO_TEST_CASE( api_limit_get_order_book ){
    graphene::app::database_api db_api( db, &( app.get_options() ));
    auto nathan_private_key = generate_private_key("nathan");
    auto dan_private_key = generate_private_key("dan");
-   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
-   account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).get_id();
+   account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).get_id();
    transfer(account_id_type(), nathan_id, asset(100));
    transfer(account_id_type(), dan_id, asset(100));
    asset_id_type bitusd_id = create_bitasset(
-	   "USDBIT", nathan_id, 100, disable_force_settle).id;
+	   "USDBIT", nathan_id, 100, disable_force_settle).get_id();
    asset_id_type bitdan_id = create_bitasset(
-	   "DANBIT", dan_id, 100, disable_force_settle).id;
+	   "DANBIT", dan_id, 100, disable_force_settle).get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
    GRAPHENE_CHECK_THROW(db_api.get_order_book(std::string(static_cast<object_id_type>(bitusd_id)),
@@ -1664,11 +1669,11 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
    BOOST_CHECK_EQUAL( 0, oassets[0]->total_in_collateral->value );
    BOOST_CHECK( !oassets[0]->total_backing_collateral.valid() );
 
-   asset_id_type bitusd_id = create_bitasset( "USDBIT", nathan_id, 100, charge_market_fee ).id;
+   asset_id_type bitusd_id = create_bitasset( "USDBIT", nathan_id, 100, charge_market_fee ).get_id();
    update_feed_producers( bitusd_id, { nathan_id } );
-   asset_id_type bitdan_id = create_bitasset( "DANBIT", dan_id, 100, charge_market_fee ).id;
+   asset_id_type bitdan_id = create_bitasset( "DANBIT", dan_id, 100, charge_market_fee ).get_id();
    update_feed_producers( bitdan_id, { nathan_id } );
-   asset_id_type btc_id = create_bitasset( "BTC", nathan_id, 100, charge_market_fee, 8, bitusd_id ).id;
+   asset_id_type btc_id = create_bitasset( "BTC", nathan_id, 100, charge_market_fee, 8, bitusd_id ).get_id();
    update_feed_producers( btc_id, { nathan_id } );
 
    oassets = db_api.get_assets( { GRAPHENE_SYMBOL, "USDBIT", "DANBIT", "BTC" } );

@@ -386,18 +386,14 @@ void market_history_plugin_impl::update_market_histories( const signed_block& b 
 } // end namespace detail
 
 
-
-
-
-
-market_history_plugin::market_history_plugin() :
-   my( new detail::market_history_plugin_impl(*this) )
+market_history_plugin::market_history_plugin(graphene::app::application& app) :
+   plugin(app),
+   my( std::make_unique<detail::market_history_plugin_impl>(*this) )
 {
+   // Nothing else to do
 }
 
-market_history_plugin::~market_history_plugin()
-{
-}
+market_history_plugin::~market_history_plugin() = default;
 
 std::string market_history_plugin::plugin_name()const
 {
@@ -442,7 +438,7 @@ void market_history_plugin::plugin_initialize(const boost::program_options::vari
       my->_max_order_his_records_per_market = options["max-order-his-records-per-market"].as<uint32_t>();
    if( options.count( "max-order-his-seconds-per-market" ) )
       my->_max_order_his_seconds_per_market = options["max-order-his-seconds-per-market"].as<uint32_t>();
-} FC_CAPTURE_AND_RETHROW() }
+} FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 void market_history_plugin::plugin_startup()
 {

@@ -51,13 +51,13 @@ void_result vesting_balance_create_evaluator::do_evaluate( const vesting_balance
    // TODO: Check asset authorizations and withdrawals
 
    FC_ASSERT( op.amount.amount > 0 );
-   FC_ASSERT( d.get_balance( creator_account.id, op.amount.asset_id ) >= op.amount );
+   FC_ASSERT( d.get_balance( creator_account.get_id(), op.amount.asset_id ) >= op.amount );
    FC_ASSERT( !op.amount.asset_id(d).is_transfer_restricted() );
 
    detail::check_vesting_balance_policy_hf_1268(d.head_block_time(), op.policy);
 
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 struct init_policy_visitor
 {
@@ -117,7 +117,7 @@ object_id_type vesting_balance_create_evaluator::do_apply( const vesting_balance
 
 
    return vbo.id;
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result vesting_balance_withdraw_evaluator::do_evaluate( const vesting_balance_withdraw_operation& op )
 { try {
@@ -132,7 +132,7 @@ void_result vesting_balance_withdraw_evaluator::do_evaluate( const vesting_balan
    /* const account_object& owner_account = */ op.owner( d );
    // TODO: Check asset authorizations and withdrawals
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 void_result vesting_balance_withdraw_evaluator::do_apply( const vesting_balance_withdraw_operation& op )
 { try {
@@ -154,6 +154,6 @@ void_result vesting_balance_withdraw_evaluator::do_apply( const vesting_balance_
 
    // TODO: Check asset authorizations and withdrawals
    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::chain

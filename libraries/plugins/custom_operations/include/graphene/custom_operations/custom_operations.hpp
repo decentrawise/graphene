@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2023 Indie Protocol contributors.
  *
  * The MIT License
  *
@@ -21,6 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#define BOOST_TEST_MODULE "C++ Benchmarks for Graphene Blockchain Database"
-#include <boost/test/included/unit_test.hpp>
+#pragma once
 
+#include <graphene/chain/database.hpp>
+
+#include "custom_objects.hpp"
+
+namespace graphene { namespace custom_operations {
+
+using namespace std;
+using graphene::protocol::account_id_type;
+
+struct account_storage_map : chain::base_operation
+{
+   bool remove;
+   string catalog;
+   flat_map<string, optional<string>> key_values;
+
+   void validate()const;
+};
+
+} } //graphene::custom_operations
+
+FC_REFLECT( graphene::custom_operations::account_storage_map, (remove)(catalog)(key_values) )
+
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::custom_operations::account_storage_map )
