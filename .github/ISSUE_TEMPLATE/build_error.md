@@ -1,6 +1,6 @@
 ---
 name: Build Error
-about: Create a detailed report about an error encountered during the BitShares Core build process.
+about: Create a detailed report about an error encountered during the Graphene Protocol build process.
 
 ---
 
@@ -21,9 +21,10 @@ Details about the build environment, including the relevant required libraries. 
  - Host OS:             [e.g. Ubuntu 18.04 LTS]
  - Host Physical RAM    [e.g. 4GB]
  - Source Branch/Tag:   [e.g. master or 2.0.180425]
- - OpenSSL Version:     [e.g. 1.1.0g]
- - Boost Version:       [e.g. 1.65.1]
  - C++ Compiler:        [e.g. gcc version 4.8.5]
+ - Dependencies:
+     - OpenSSL Version:     [e.g. 1.1]
+     - Boost Version:       [e.g. 1.83]
 
 **Steps To Reproduce**
 Steps to reproduce the behavior (example outlined below):
