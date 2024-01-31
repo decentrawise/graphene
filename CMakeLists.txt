@@ -1,11 +1,11 @@
-# Defines Indie Protocol library target.
+# Defines Graphene Protocol targets
 cmake_minimum_required( VERSION 3.2 FATAL_ERROR )
-project( IndieProtocol LANGUAGES CXX C)
+project( Graphene LANGUAGES CXX C)
 
-set( BLOCKCHAIN_NAME "Indie Protocol" )
+set( BLOCKCHAIN_NAME "Graphene" )
 
 set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
-set( GUI_CLIENT_EXECUTABLE_NAME IndieProtocol )
+set( GUI_CLIENT_EXECUTABLE_NAME Graphene )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
@@ -257,7 +257,7 @@ add_compiler_flag_if_available("-Wunused-but-set-parameter")
 
 if( WIN32 )
 
-    message( STATUS "Configuring Indie Protocol on WIN32")
+    message( STATUS "Configuring Graphene on WIN32")
 
     if ( MINGW )
         message( STATUS "Windows build using MinGW" )
@@ -282,15 +282,15 @@ else( WIN32 ) # Apple AND Linux
 
     if( APPLE )
         # Apple Specific Options Here
-        message( STATUS "Configuring Indie Protocol on macOS" )
+        message( STATUS "Configuring Graphene on macOS" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++ -Wall -fvisibility-inlines-hidden -fvisibility=hidden" )
     else( APPLE )
         if ( "${CMAKE_SYSTEM_NAME}" STREQUAL "OpenBSD" )
             # OpenBSD Specific Options
-            message( STATUS "Configuring Indie Protocol on OpenBSD" )
+            message( STATUS "Configuring Graphene on OpenBSD" )
         else()
             # Linux Specific Options Here
-            message( STATUS "Configuring Indie Protocol on Linux" )
+            message( STATUS "Configuring Graphene on Linux" )
             set( rt_library rt )
         endif()
         # Common Linux & OpenBSD Options
@@ -330,7 +330,7 @@ if ( NOT MSVC AND FULL_STATIC_BUILD )
     set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc" )
 endif ( NOT MSVC AND FULL_STATIC_BUILD )
 
-set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Indie Protocol for code coverage analysis")
+set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Graphene for code coverage analysis")
 
 if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
@@ -355,23 +355,23 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
 set(CPACK_PACKAGE_NAME "graphene")
-set(CPACK_PACKAGE_VENDOR "Cryptonomex, Inc.")
+set(CPACK_PACKAGE_VENDOR "DecentraWise")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_PACKAGE_DESCRIPTION "A client for the Indie Protocol network")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Indie Protocol network")
+set(CPACK_PACKAGE_DESCRIPTION "A client for Graphene networks")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for Graphene networks")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Indie Protocol ${CPACK_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "graphene ${CPACK_PACKAGE_VERSION}")
 
 if(WIN32)
  SET(CPACK_GENERATOR "ZIP;NSIS")
- set(CPACK_PACKAGE_NAME "Indie Protocol") # override above
+ set(CPACK_PACKAGE_NAME "graphene") # override above
  set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
- set(CPACK_NSIS_PACKAGE_NAME "Indie Protocol v${CPACK_PACKAGE_VERSION}")
+ set(CPACK_NSIS_PACKAGE_NAME "graphene v${CPACK_PACKAGE_VERSION}")
  set(CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}")
- set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Indie Protocol\\\"")
+ set(CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Graphene\\\"")
  # it seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do
  SET(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
 
