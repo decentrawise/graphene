@@ -1,5 +1,4 @@
-Copyright (c) 2015-2016 Cryptonomex Inc. <contact@cryptonomex.com>
-Copyright (c) 2015-2017 contributors <CONTRIBUTORS.txt>
+Copyright (c) 2023-2024 Graphene Protocol contributors
 
 The MIT License
 
