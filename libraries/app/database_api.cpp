@@ -5,7 +5,7 @@
 #include <graphene/app/util.hpp>
 #include <graphene/chain/get_config.hpp>
 #include <graphene/chain/hardfork.hpp>
-#include <graphene/protocol/pts_address.hpp>
+#include <graphene/protocol/btc_address.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/rpc/api_connection.hpp>
@@ -376,10 +376,10 @@ vector<flat_set<account_id_type>> database_api_impl::get_key_references( vector<
 
    for( auto& key : keys )
    {
-      address a1( pts_address(key, false) ); // version = 56 (default)
-      address a2( pts_address(key, true) ); // version = 56 (default)
-      address a3( pts_address(key, false, 0)  );
-      address a4( pts_address(key, true, 0)  );
+      address a1( btc_address(key, false) ); // version = 56 (default)
+      address a2( btc_address(key, true) ); // version = 56 (default)
+      address a3( btc_address(key, false, 0)  );
+      address a4( btc_address(key, true, 0)  );
       address a5( key );
 
       flat_set<account_id_type> result;

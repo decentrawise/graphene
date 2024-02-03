@@ -4,23 +4,23 @@
 
 namespace graphene { namespace protocol {
 
-struct special_authority_validate_visitor
-{
-   typedef void result_type;
-
-   void operator()( const no_special_authority& a ) {}
-
-   void operator()( const top_holders_special_authority& a )
+   struct special_authority_validate_visitor
    {
-      FC_ASSERT( a.num_top_holders > 0 );
-   }
-};
+      typedef void result_type;
 
-void validate_special_authority( const special_authority& a )
-{
-   special_authority_validate_visitor vtor;
-   a.visit( vtor );
-}
+      void operator()( const no_special_authority& a ) {}
+
+      void operator()( const top_holders_special_authority& a )
+      {
+         FC_ASSERT( a.num_top_holders > 0 );
+      }
+   };
+
+   void validate_special_authority( const special_authority& a )
+   {
+      special_authority_validate_visitor vtor;
+      a.visit( vtor );
+   }
 
 } } // graphene::protocol
 

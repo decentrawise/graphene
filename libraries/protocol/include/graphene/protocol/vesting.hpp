@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 
@@ -43,7 +44,7 @@ namespace graphene { namespace protocol {
     *  Manual creation of vesting balances can be used by a stakeholder
     *  to publicly demonstrate that they are committed to the chain.
     *  It can also be used as a building block to create transactions
-    *  that function like public debt.  Finally, it is useful for
+    *  that function like public debt. Finally, it is useful for
     *  testing vesting balance functionality.
     *
     * @return ID of newly created vesting_balance_object

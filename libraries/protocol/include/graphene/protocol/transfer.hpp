@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 #include <graphene/protocol/memo.hpp>
@@ -22,8 +23,8 @@ namespace graphene { namespace protocol {
    struct transfer_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee       = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t price_per_kbyte = 10 * GRAPHENE_BLOCKCHAIN_PRECISION; /// only required for large memos.
+         uint64_t fee               = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint32_t price_per_kbyte   = 10 * GRAPHENE_BLOCKCHAIN_PRECISION; /// only required for large memos.
       };
 
       asset            fee;
@@ -36,6 +37,7 @@ namespace graphene { namespace protocol {
 
       /// User provided data encrypted to the memo key of the "to" account
       optional<memo_data> memo;
+
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return from; }
@@ -54,8 +56,8 @@ namespace graphene { namespace protocol {
    struct override_transfer_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee       = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t price_per_kbyte = 10; /// only required for large memos.
+         uint64_t fee               = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint32_t price_per_kbyte   = 10; /// only required for large memos.
       };
 
       asset           fee;
@@ -69,6 +71,7 @@ namespace graphene { namespace protocol {
 
       /// User provided data encrypted to the memo key of the "to" account
       optional<memo_data> memo;
+
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return issuer; }

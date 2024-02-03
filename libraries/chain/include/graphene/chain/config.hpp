@@ -7,7 +7,7 @@
 
 #define GRAPHENE_MAX_NESTED_OBJECTS (200)
 
-#define GRAPHENE_CURRENT_DB_VERSION                          "20231112"
+#define GRAPHENE_CURRENT_DB_VERSION                          "GPH3.0"
 
 #define GRAPHENE_RECENTLY_MISSED_COUNT_INCREMENT             4
 #define GRAPHENE_RECENTLY_MISSED_COUNT_DECREMENT             3

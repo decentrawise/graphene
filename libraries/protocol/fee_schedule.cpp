@@ -1,4 +1,5 @@
 #include <algorithm>
+
 #include <graphene/protocol/fee_schedule.hpp>
 
 #include <fc/io/raw.hpp>
@@ -8,24 +9,29 @@
 
 namespace graphene { namespace protocol {
 
-   fee_schedule::fee_schedule()
-   {
-   }
-
-   fee_schedule fee_schedule::get_default()
+   fee_schedule fee_schedule::get_default_impl()
    {
       fee_schedule result;
-      for( int i = 0; i < fee_parameters().count(); ++i )
+      const auto count = fee_parameters::count();
+      result.parameters.reserve(count);
+      for( size_t i = 0; i < count; ++i )
       {
-         fee_parameters x; x.set_which(i);
+         fee_parameters x;
+         x.set_which(i);
          result.parameters.insert(x);
       }
       return result;
    }
 
+   const fee_schedule& fee_schedule::get_default()
+   {
+      static const auto result = get_default_impl();
+      return result;
+   }
+
    struct fee_schedule_validate_visitor
    {
-      typedef void result_type;
+      using result_type = void;
 
       template<typename T>
       void operator()( const T& p )const
@@ -42,10 +48,10 @@ namespace graphene { namespace protocol {
 
    struct calc_fee_visitor
    {
-      typedef uint64_t result_type;
+      using result_type = uint64_t;
 
       const fee_schedule& param;
-      const int current_op;
+      const operation::tag_type current_op;
       calc_fee_visitor( const fee_schedule& p, const operation& op ):param(p),current_op(op.which()){}
 
       template<typename OpType>
@@ -54,9 +60,11 @@ namespace graphene { namespace protocol {
          try {
             return op.calculate_fee( param.get<OpType>() ).value;
          } catch (fc::assert_exception& e) {
-             fee_parameters params; params.set_which(current_op);
+             fee_parameters params;
+             params.set_which(current_op);
              auto itr = param.parameters.find(params);
-             if( itr != param.parameters.end() ) params = *itr;
+             if( itr != param.parameters.end() )
+               params = *itr;
              return op.calculate_fee( params.get<typename OpType::fee_parameters_type>() ).value;
          }
       }
@@ -64,7 +72,7 @@ namespace graphene { namespace protocol {
 
    struct set_fee_visitor
    {
-      typedef void result_type;
+      using result_type = void;
       asset _fee;
 
       set_fee_visitor( asset f ):_fee(f){}
@@ -78,7 +86,7 @@ namespace graphene { namespace protocol {
 
    struct zero_fee_visitor
    {
-      typedef void result_type;
+      using result_type = void;
 
       template<typename ParamType>
       result_type operator()(  ParamType& op )const
@@ -117,14 +125,12 @@ namespace graphene { namespace protocol {
    asset fee_schedule::set_fee( operation& op, const price& core_exchange_rate )const
    {
       auto f = calculate_fee( op, core_exchange_rate );
-      auto f_max = f;
-      for( int i=0; i<MAX_FEE_STABILIZATION_ITERATION; i++ )
+      for( int i = 0; i < MAX_FEE_STABILIZATION_ITERATION; ++i )
       {
-         op.visit( set_fee_visitor( f_max ) );
+         op.visit( set_fee_visitor( f ) );
          auto f2 = calculate_fee( op, core_exchange_rate );
-         if( f == f2 )
+         if( f >= f2 )
             break;
-         f_max = std::max( f_max, f2 );
          f = f2;
          if( i == 0 )
          {
@@ -133,32 +139,7 @@ namespace graphene { namespace protocol {
                ("p", core_exchange_rate) ("op", op) );
          }
       }
-      return f_max;
-   }
-
-   void chain_parameters::validate()const
-   {
-      get_current_fees().validate();
-      FC_ASSERT( reserve_percent_of_fee <= GRAPHENE_100_PERCENT );
-      FC_ASSERT( network_percent_of_fee <= GRAPHENE_100_PERCENT );
-      FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );
-      FC_ASSERT( network_percent_of_fee + lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );
-
-      FC_ASSERT( block_interval >= GRAPHENE_MIN_BLOCK_INTERVAL );
-      FC_ASSERT( block_interval <= GRAPHENE_MAX_BLOCK_INTERVAL );
-      FC_ASSERT( block_interval > 0 );
-      FC_ASSERT( maintenance_interval > block_interval,
-                 "Maintenance interval must be longer than block interval" );
-      FC_ASSERT( maintenance_interval % block_interval == 0,
-                 "Maintenance interval must be a multiple of block interval" );
-      FC_ASSERT( maximum_transaction_size >= GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT,
-                 "Transaction size limit is too low" );
-      FC_ASSERT( maximum_block_size >= GRAPHENE_MIN_BLOCK_SIZE_LIMIT,
-                 "Block size limit is too low" );
-      FC_ASSERT( maximum_time_until_expiration > block_interval,
-                 "Maximum transaction expiration time must be greater than a block interval" );
-      FC_ASSERT( maximum_proposal_lifetime - committee_proposal_review_period > block_interval,
-                 "Committee proposal review period must be less than the maximum proposal lifetime" );
+      return f;
    }
 
 } } // graphene::protocol

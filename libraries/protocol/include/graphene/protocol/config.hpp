@@ -1,7 +1,7 @@
 #pragma once
 
-#define GRAPHENE_SYMBOL "BTS"
-#define GRAPHENE_ADDRESS_PREFIX "BTS"
+#define GRAPHENE_SYMBOL "CORE"
+#define GRAPHENE_ADDRESS_PREFIX "GPH"
 
 #define GRAPHENE_BLOCKCHAIN_PRECISION        uint64_t( 100000 )
 #define GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS 5
@@ -83,7 +83,7 @@
 #define GRAPHENE_MAX_MARKET_FEE_PERCENT                         GRAPHENE_100_PERCENT
 /**
  *  These ratios are fixed point numbers with a denominator of GRAPHENE_COLLATERAL_RATIO_DENOM, the
- *  minimum maitenance collateral is therefore 1.001x and the default
+ *  minimum maintenance collateral is therefore 1.001x and the default
  *  maintenance ratio is 1.75x
  */
 ///@{

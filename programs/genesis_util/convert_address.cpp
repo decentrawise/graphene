@@ -1,8 +1,8 @@
 /**
- * Convert BTC / PTS addresses to a Graphene address.
+ * Convert BTC addresses to a Graphene address.
  */
 
-#include <graphene/protocol/pts_address.hpp>
+#include <graphene/protocol/btc_address.hpp>
 #include <graphene/protocol/address.hpp>
 
 #include <iostream>
@@ -16,7 +16,7 @@ int main(int argc, char** argv)
    std::string s;
    while( std::cin >> s )
    {
-      std::cout << std::string( address( pts_address( s ) ) ) << std::endl;
+      std::cout << std::string( address( btc_address( s ) ) ) << std::endl;
    }
    return 0;
 }

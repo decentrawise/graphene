@@ -1,4 +1,5 @@
 #pragma once
+
 #include <fc/exception/exception.hpp>
 #include <fc/io/varint.hpp>
 
@@ -32,9 +33,9 @@ namespace graphene { namespace db {
       friend bool  operator < ( const object_id_type& a, const object_id_type& b ) { return a.number < b.number; }
       friend bool  operator > ( const object_id_type& a, const object_id_type& b ) { return a.number > b.number; }
 
-      object_id_type& operator++() { ++number; return *this; }
+      object_id_type& operator ++ () { ++number; return *this; }
 
-      friend object_id_type operator+(const object_id_type& a, int64_t delta ) {
+      friend object_id_type operator + (const object_id_type& a, int64_t delta ) {
          return object_id_type( a.space(), a.type(), a.instance() + delta );
       }
       friend size_t hash_value( const object_id_type& v ) { return std::hash<uint64_t>()(v.number); }
@@ -66,13 +67,15 @@ namespace graphene { namespace db {
    /// This template is used to downcast a generic object type to a specific xyz_object type.
    template<typename ObjectID>
    struct object_downcast { using type = object; };
+
    // This macro specializes the above template for a specific xyz_object type
-#define MAP_OBJECT_ID_TO_TYPE(OBJECT) \
-   namespace graphene { namespace db { \
-   template<> \
-   struct object_downcast<const graphene::db::object_id<OBJECT::space_id, \
-                                                        OBJECT::type_id>&> { using type = OBJECT; }; \
+   #define MAP_OBJECT_ID_TO_TYPE(OBJECT)                                                              \
+   namespace graphene { namespace db {                                                                \
+   template<>                                                                                         \
+   struct object_downcast<const graphene::db::object_id<OBJECT::space_id,                             \
+                                                        OBJECT::type_id>&> { using type = OBJECT; };  \
    } }
+
    template<typename ObjectID>
    using object_downcast_t = typename object_downcast<ObjectID>::type;
 
@@ -113,13 +116,13 @@ namespace graphene { namespace db {
          FC_ASSERT( (instance.value >> instance_bits) == 0, "instance overflow", ("instance",instance) );
       }
 
-      object_id& operator=( const object_id_type& o )
+      object_id& operator = ( const object_id_type& o )
       {
          *this = object_id(o);
          return *this;
       }
 
-      friend object_id operator+(const object_id& a, int64_t delta )
+      friend object_id operator + (const object_id& a, int64_t delta )
       { return object_id( uint64_t(a.instance.value+delta) ); }
 
       explicit operator object_id_type()const { return object_id_type( SpaceID, TypeID, instance.value ); }
@@ -160,97 +163,100 @@ FC_REFLECT( graphene::db::object_id_type, (number) )
 
 // REFLECT object_id manually because it has 2 template params
 namespace fc {
-template<uint8_t SpaceID, uint8_t TypeID>
-struct get_typename<graphene::db::object_id<SpaceID,TypeID>>
-{
-   static const char* name() {
-      return typeid(get_typename).name();
-      static std::string _str = string("graphene::db::object_id<") + fc::to_string(SpaceID) + ":"
-                                                                   + fc::to_string(TypeID)  + ">";
-      return _str.c_str();
+
+   template<uint8_t SpaceID, uint8_t TypeID>
+   struct get_typename<graphene::db::object_id<SpaceID,TypeID>>
+   {
+      static const char* name() {
+         return typeid(get_typename).name();
+         static std::string _str = string("graphene::db::object_id<") + fc::to_string(SpaceID) + ":"
+                                                                     + fc::to_string(TypeID)  + ">";
+         return _str.c_str();
+      }
+   };
+
+   template<uint8_t SpaceID, uint8_t TypeID>
+   struct reflector<graphene::db::object_id<SpaceID,TypeID> >
+   {
+      using type = graphene::db::object_id<SpaceID,TypeID>;
+      using is_defined = std::true_type;
+      using native_members = typelist::list<fc::field_reflection<0, type, unsigned_int, &type::instance>>;
+      using inherited_members = typelist::list<>;
+      using members = native_members;
+      using base_classes = typelist::list<>;
+      enum  member_count_enum {
+         local_member_count = 1,
+         total_member_count = 1
+      };
+      template<typename Visitor>
+      static inline void visit( const Visitor& visitor )
+      {
+         using member_type = decltype(((type*)nullptr)->instance);
+         visitor.TEMPLATE operator()<member_type,type,&type::instance>( "instance" );
+      }
+   };
+
+   namespace member_names {
+      template<uint8_t S, uint8_t T>
+      struct member_name<graphene::db::object_id<S,T>, 0> { static constexpr const char* value = "instance"; };
    }
-};
 
-template<uint8_t SpaceID, uint8_t TypeID>
-struct reflector<graphene::db::object_id<SpaceID,TypeID> >
-{
-    using type = graphene::db::object_id<SpaceID,TypeID>;
-    using is_defined = std::true_type;
-    using native_members = typelist::list<fc::field_reflection<0, type, unsigned_int, &type::instance>>;
-    using inherited_members = typelist::list<>;
-    using members = native_members;
-    using base_classes = typelist::list<>;
-    enum  member_count_enum {
-      local_member_count = 1,
-      total_member_count = 1
-    };
-    template<typename Visitor>
-    static inline void visit( const Visitor& visitor )
-    {
-       using member_type = decltype(((type*)nullptr)->instance);
-       visitor.TEMPLATE operator()<member_type,type,&type::instance>( "instance" );
-    }
-};
-namespace member_names {
-template<uint8_t S, uint8_t T>
-struct member_name<graphene::db::object_id<S,T>, 0> { static constexpr const char* value = "instance"; };
-}
+   inline void to_variant( const graphene::db::object_id_type& var,  fc::variant& vo, uint32_t max_depth = 1 )
+   {
+      vo = std::string( var );
+   }
 
+   inline void from_variant( const fc::variant& var,  graphene::db::object_id_type& vo, uint32_t max_depth = 1 )
+   { try {
+      const auto& s = var.get_string();
+      auto first_dot = s.find('.');
+      FC_ASSERT( first_dot != std::string::npos, "Missing the first dot" );
+      FC_ASSERT( first_dot != 0, "Missing the space part" );
+      auto second_dot = s.find('.',first_dot+1);
+      FC_ASSERT( second_dot != std::string::npos, "Missing the second dot" );
+      FC_ASSERT( second_dot != first_dot+1, "Missing the type part" );
+      auto space_id = fc::to_uint64( s.substr( 0, first_dot ) );
+      FC_ASSERT( space_id <= graphene::db::object_id_type::one_byte_mask, "space overflow" );
+      auto type_id =  fc::to_uint64( s.substr( first_dot+1, (second_dot-first_dot)-1 ) );
+      FC_ASSERT( type_id <= graphene::db::object_id_type::one_byte_mask, "type overflow");
+      auto instance = fc::to_uint64(s.substr( second_dot+1 ));
+      vo.reset( static_cast<uint8_t>(space_id), static_cast<uint8_t>(type_id), instance );
+   } FC_CAPTURE_AND_RETHROW( (var) ) } // GCOVR_EXCL_LINE
 
- inline void to_variant( const graphene::db::object_id_type& var,  fc::variant& vo, uint32_t max_depth = 1 )
- {
-    vo = std::string( var );
- }
+   template<uint8_t SpaceID, uint8_t TypeID>
+   void to_variant( const graphene::db::object_id<SpaceID,TypeID>& var,  fc::variant& vo, uint32_t max_depth = 1 )
+   {
+      vo = std::string( var );
+   }
 
- inline void from_variant( const fc::variant& var,  graphene::db::object_id_type& vo, uint32_t max_depth = 1 )
- { try {
-    const auto& s = var.get_string();
-    auto first_dot = s.find('.');
-    FC_ASSERT( first_dot != std::string::npos, "Missing the first dot" );
-    FC_ASSERT( first_dot != 0, "Missing the space part" );
-    auto second_dot = s.find('.',first_dot+1);
-    FC_ASSERT( second_dot != std::string::npos, "Missing the second dot" );
-    FC_ASSERT( second_dot != first_dot+1, "Missing the type part" );
-    auto space_id = fc::to_uint64( s.substr( 0, first_dot ) );
-    FC_ASSERT( space_id <= graphene::db::object_id_type::one_byte_mask, "space overflow" );
-    auto type_id =  fc::to_uint64( s.substr( first_dot+1, (second_dot-first_dot)-1 ) );
-    FC_ASSERT( type_id <= graphene::db::object_id_type::one_byte_mask, "type overflow");
-    auto instance = fc::to_uint64(s.substr( second_dot+1 ));
-    vo.reset( static_cast<uint8_t>(space_id), static_cast<uint8_t>(type_id), instance );
- } FC_CAPTURE_AND_RETHROW( (var) ) } // GCOVR_EXCL_LINE
-
- template<uint8_t SpaceID, uint8_t TypeID>
- void to_variant( const graphene::db::object_id<SpaceID,TypeID>& var,  fc::variant& vo, uint32_t max_depth = 1 )
- {
-    vo = std::string( var );
- }
-
- template<uint8_t SpaceID, uint8_t TypeID>
- void from_variant( const fc::variant& var,  graphene::db::object_id<SpaceID,TypeID>& vo, uint32_t max_depth = 1 )
- { try {
-    const auto& s = var.get_string();
-    auto first_dot = s.find('.');
-    FC_ASSERT( first_dot != std::string::npos, "Missing the first dot" );
-    FC_ASSERT( first_dot != 0, "Missing the space part" );
-    auto second_dot = s.find('.',first_dot+1);
-    FC_ASSERT( second_dot != std::string::npos, "Missing the second dot" );
-    FC_ASSERT( second_dot != first_dot+1, "Missing the type part" );
-    FC_ASSERT( fc::to_uint64( s.substr( 0, first_dot ) ) == SpaceID &&
-               fc::to_uint64( s.substr( first_dot+1, (second_dot-first_dot)-1 ) ) == TypeID,
-               "Space.Type.0 (${SpaceID}.${TypeID}.0) doesn't match expected value ${var}",
-               ("TypeID",TypeID)("SpaceID",SpaceID)("var",var) );
-    graphene::db::object_id<SpaceID,TypeID> tmp { fc::to_uint64(s.substr( second_dot+1 )) };
-    vo = tmp;
- } FC_CAPTURE_AND_RETHROW( (var) ) } // GCOVR_EXCL_LINE
+   template<uint8_t SpaceID, uint8_t TypeID>
+   void from_variant( const fc::variant& var,  graphene::db::object_id<SpaceID,TypeID>& vo, uint32_t max_depth = 1 )
+   { try {
+      const auto& s = var.get_string();
+      auto first_dot = s.find('.');
+      FC_ASSERT( first_dot != std::string::npos, "Missing the first dot" );
+      FC_ASSERT( first_dot != 0, "Missing the space part" );
+      auto second_dot = s.find('.',first_dot+1);
+      FC_ASSERT( second_dot != std::string::npos, "Missing the second dot" );
+      FC_ASSERT( second_dot != first_dot+1, "Missing the type part" );
+      FC_ASSERT( fc::to_uint64( s.substr( 0, first_dot ) ) == SpaceID &&
+                  fc::to_uint64( s.substr( first_dot+1, (second_dot-first_dot)-1 ) ) == TypeID,
+                  "Space.Type.0 (${SpaceID}.${TypeID}.0) doesn't match expected value ${var}",
+                  ("TypeID",TypeID)("SpaceID",SpaceID)("var",var) );
+      graphene::db::object_id<SpaceID,TypeID> tmp { fc::to_uint64(s.substr( second_dot+1 )) };
+      vo = tmp;
+   } FC_CAPTURE_AND_RETHROW( (var) ) } // GCOVR_EXCL_LINE
 
 } // namespace fc
 
 namespace std {
-     template <> struct hash<graphene::db::object_id_type>
-     {
-          size_t operator()(const graphene::db::object_id_type& x) const
-          {
-              return std::hash<uint64_t>()(x.number);
-          }
-     };
-}
+
+   template <> struct hash<graphene::db::object_id_type>
+   {
+      size_t operator()(const graphene::db::object_id_type& x) const
+      {
+         return std::hash<uint64_t>()(x.number);
+      }
+   };
+
+} // std

@@ -4,7 +4,7 @@
 
 #include "wallet_api_impl.hpp"
 #include <graphene/wallet/wallet.hpp>
-#include <graphene/protocol/pts_address.hpp>
+#include <graphene/protocol/btc_address.hpp>
 
 /****
  * Wallet API methods to handle accounts
@@ -323,13 +323,13 @@ namespace graphene { namespace wallet { namespace detail {
             addrs.push_back( address(pk) );
             keys[addrs.back()] = *key;
             // see chain/balance_evaluator.cpp
-            addrs.push_back( address( pts_address( pk, false ) ) ); // version = 56 (default)
+            addrs.push_back( address( btc_address( pk, false ) ) ); // version = 56 (default)
             keys[addrs.back()] = *key;
-            addrs.push_back( address( pts_address( pk, true ) ) ); // version = 56 (default)
+            addrs.push_back( address( btc_address( pk, true ) ) ); // version = 56 (default)
             keys[addrs.back()] = *key;
-            addrs.push_back( address( pts_address( pk, false, 0 ) ) );
+            addrs.push_back( address( btc_address( pk, false, 0 ) ) );
             keys[addrs.back()] = *key;
-            addrs.push_back( address( pts_address( pk, true, 0 ) ) );
+            addrs.push_back( address( btc_address( pk, true, 0 ) ) );
             keys[addrs.back()] = *key;
          }
       }

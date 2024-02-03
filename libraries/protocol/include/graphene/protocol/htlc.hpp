@@ -1,203 +1,212 @@
 #pragma once
 
-#include <fc/time.hpp>
+#include <algorithm> // std::max
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 #include <graphene/protocol/memo.hpp>
-#include <algorithm> // std::max
+
+#include <fc/time.hpp>
 
 namespace graphene { namespace protocol {
-      typedef fc::ripemd160    htlc_algo_ripemd160;
-      typedef fc::sha1         htlc_algo_sha1;
-      typedef fc::sha256       htlc_algo_sha256;
-      typedef fc::hash160      htlc_algo_hash160;
 
-      typedef fc::static_variant<
-         htlc_algo_ripemd160,
-         htlc_algo_sha1,
-         htlc_algo_sha256,
-         htlc_algo_hash160
-      > htlc_hash;
+   typedef fc::ripemd160    htlc_algo_ripemd160;
+   typedef fc::sha1         htlc_algo_sha1;
+   typedef fc::sha256       htlc_algo_sha256;
+   typedef fc::hash160      htlc_algo_hash160;
 
-      struct htlc_create_operation : public base_operation 
-      {
-         struct fee_parameters_type {
-            uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-            uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-            uint32_t price_per_kbyte = 10;
-         };
-         // paid to network
-         asset fee;
-         // where the held monies are to come from
-         account_id_type from;
-         // where the held monies will go if the preimage is provided
-         account_id_type to;
-         // the amount to hold
-         asset amount;
-         // the (typed) hash of the preimage
-         htlc_hash preimage_hash;
-         // the size of the preimage
-         uint16_t preimage_size;
-         // The time the funds will be returned to the source if not claimed
-         uint32_t claim_period_seconds;
+   typedef fc::static_variant<
+      htlc_algo_ripemd160,
+      htlc_algo_sha1,
+      htlc_algo_sha256,
+      htlc_algo_hash160
+   > htlc_hash;
 
-         // additional extensions
-         struct additional_options_type
-         {
-            fc::optional<memo_data> memo;
-         };
-         extension<additional_options_type> extensions;
-
-         /***
-          * @brief Does simple validation of this object
-          */
-         void validate()const;
-         
-         /**
-          * @brief who will pay the fee
-          */
-         account_id_type fee_payer()const { return from; }
-
-         /****
-          * @brief calculates the fee to be paid for this operation
-          */
-         share_type calculate_fee(const fee_parameters_type &fee_params) const;
+   struct htlc_create_operation : public base_operation 
+   {
+      struct fee_parameters_type {
+         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint32_t price_per_kbyte = 10;
       };
 
-      struct htlc_redeem_operation : public base_operation
+      // paid to network
+      asset fee;
+
+      // where the held monies are to come from
+      account_id_type from;
+      // where the held monies will go if the preimage is provided
+      account_id_type to;
+      // the amount to hold
+      asset amount;
+      // the (typed) hash of the preimage
+      htlc_hash preimage_hash;
+      // the size of the preimage
+      uint16_t preimage_size;
+      // The time the funds will be returned to the source if not claimed
+      uint32_t claim_period_seconds;
+
+      // additional extensions
+      struct additional_options_type
       {
-         struct fee_parameters_type {
-            uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-            uint64_t price_per_kbyte = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         };
-         
-         // paid to network
-         asset fee;
-         // the object we are attempting to update
-         htlc_id_type htlc_id;
-         // who is attempting to update the transaction
-         account_id_type redeemer;
-         // the preimage (not used if after epoch timeout)
-         std::vector<char> preimage;
-         // for future expansion
-         extensions_type extensions; 
-
-         /***
-          * @brief Perform obvious checks to validate this object
-          */
-    	   void validate()const;
-         
-         /**
-          * @brief Who is to pay the fee
-          */
-         account_id_type fee_payer()const { return redeemer; }
-
-         /****
-          * @brief calculates the fee to be paid for this operation
-          */
-         share_type calculate_fee(const fee_parameters_type& fee_params)const;
+         fc::optional<memo_data> memo;
       };
+      extension<additional_options_type> extensions;
 
-      /**
-       * virtual op to assist with notifying related parties
+      /***
+       * @brief Does simple validation of this object
        */
-      struct htlc_redeemed_operation : public base_operation
-      {
-         struct fee_parameters_type {};
+      void validate()const;
+      
+      /**
+       * @brief who will pay the fee
+       */
+      account_id_type fee_payer()const { return from; }
 
-         htlc_redeemed_operation() {}
-         htlc_redeemed_operation( htlc_id_type htlc_id, account_id_type from, account_id_type to,
-               account_id_type redeemer, asset amount, const htlc_hash& preimage_hash, uint16_t preimage_size,
-               const std::vector<char>& preimage ) :
-               htlc_id(htlc_id), from(from), to(to), redeemer(redeemer), amount(amount),
-               htlc_preimage_hash(preimage_hash), htlc_preimage_size(preimage_size), preimage(preimage) {}
+      /****
+       * @brief calculates the fee to be paid for this operation
+       */
+      share_type calculate_fee(const fee_parameters_type &fee_params) const;
+   };
 
-         account_id_type fee_payer()const { return to; }
-         void validate()const { FC_ASSERT( !"virtual operation" ); }
-
-         share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
-
-         htlc_id_type htlc_id;
-         account_id_type from, to, redeemer;
-         asset amount;
-         htlc_hash htlc_preimage_hash;
-         uint16_t htlc_preimage_size;
-
-         asset fee;
-         std::vector<char> preimage;
+   struct htlc_redeem_operation : public base_operation
+   {
+      struct fee_parameters_type {
+         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t price_per_kbyte = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
       };
+      
+      // paid to network
+      asset fee;
 
-      struct htlc_extend_operation : public base_operation
-      {
-         struct fee_parameters_type {
-            uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-            uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         };
-         
-         // paid to network
-         asset fee;
-         // the object we are attempting to update
-         htlc_id_type htlc_id;
-         // who is attempting to update the transaction
-         account_id_type update_issuer;
-         // how much to add
-         uint32_t seconds_to_add;
-         // for future expansion
-         extensions_type extensions; 
+      // the object we are attempting to update
+      htlc_id_type htlc_id;
+      // who is attempting to update the transaction
+      account_id_type redeemer;
+      // the preimage (not used if after epoch timeout)
+      std::vector<char> preimage;
 
-         /***
-          * @brief Perform obvious checks to validate this object
-          */
-         void validate()const;
-         
-         /**
-          * @brief Who is to pay the fee
-          */
-         account_id_type fee_payer()const { return update_issuer; }
+      // for future expansion
+      extensions_type extensions; 
 
-         /****
-          * @brief calculates the fee to be paid for this operation
-          */
-         share_type calculate_fee(const fee_parameters_type& fee_params)const;
+      /***
+       * @brief Perform obvious checks to validate this object
+       */
+      void validate()const;
+      
+      /**
+       * @brief Who is to pay the fee
+       */
+      account_id_type fee_payer()const { return redeemer; }
+
+      /****
+       * @brief calculates the fee to be paid for this operation
+       */
+      share_type calculate_fee(const fee_parameters_type& fee_params)const;
+   };
+
+   /**
+    * virtual op to assist with notifying related parties
+    */
+   struct htlc_redeemed_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+
+      htlc_redeemed_operation() {}
+      htlc_redeemed_operation( htlc_id_type htlc_id, account_id_type from, account_id_type to,
+            account_id_type redeemer, asset amount, const htlc_hash& preimage_hash, uint16_t preimage_size,
+            const std::vector<char>& preimage ) :
+            htlc_id(htlc_id), from(from), to(to), redeemer(redeemer), amount(amount),
+            htlc_preimage_hash(preimage_hash), htlc_preimage_size(preimage_size), preimage(preimage) {}
+
+      account_id_type fee_payer()const { return to; }
+      void validate()const { FC_ASSERT( !"virtual operation" ); }
+
+      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+
+      asset fee;
+
+      htlc_id_type htlc_id;
+      account_id_type from, to, redeemer;
+      asset amount;
+      htlc_hash htlc_preimage_hash;
+      uint16_t htlc_preimage_size;
+      std::vector<char> preimage;
+   };
+
+   struct htlc_extend_operation : public base_operation
+   {
+      struct fee_parameters_type {
+         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
       };
+      
+      // paid to network
+      asset fee;
 
-      struct htlc_refund_operation : public base_operation
-      {
-         struct fee_parameters_type {};
+      // the object we are attempting to update
+      htlc_id_type htlc_id;
+      // who is attempting to update the transaction
+      account_id_type update_issuer;
+      // how much to add
+      uint32_t seconds_to_add;
 
-         htlc_refund_operation(){}
-         htlc_refund_operation( const htlc_id_type& htlc_id,
-               const account_id_type& htlc_from, const account_id_type& htlc_to, const asset& amount,
-               const htlc_hash& preimage_hash, uint16_t preimage_size ) :
-               htlc_id(htlc_id), to(htlc_from), original_htlc_recipient(htlc_to), htlc_amount(amount),
-               htlc_preimage_hash(preimage_hash), htlc_preimage_size(preimage_size) {}
+      // for future expansion
+      extensions_type extensions; 
 
-         account_id_type fee_payer()const { return to; }
-         void            validate()const { FC_ASSERT( !"virtual operation" ); }
+      /***
+       * @brief Perform obvious checks to validate this object
+       */
+      void validate()const;
+      
+      /**
+       * @brief Who is to pay the fee
+       */
+      account_id_type fee_payer()const { return update_issuer; }
 
-         /// This is a virtual operation; there is no fee
-         share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+      /****
+       * @brief calculates the fee to be paid for this operation
+       */
+      share_type calculate_fee(const fee_parameters_type& fee_params)const;
+   };
 
-         asset fee;
+   struct htlc_refund_operation : public base_operation
+   {
+      struct fee_parameters_type {};
 
-         htlc_id_type htlc_id; // of the associated htlc object; it is deleted during emittance of this operation
-         account_id_type to, original_htlc_recipient;
-         account_id_type htlc_from() const { return to; };
-         account_id_type htlc_to()   const { return original_htlc_recipient; };
-         asset htlc_amount;
-         htlc_hash htlc_preimage_hash;
-         uint16_t htlc_preimage_size;
-      };
-   } 
-}
+      htlc_refund_operation(){}
+      htlc_refund_operation( const htlc_id_type& htlc_id,
+            const account_id_type& htlc_from, const account_id_type& htlc_to, const asset& amount,
+            const htlc_hash& preimage_hash, uint16_t preimage_size ) :
+            htlc_id(htlc_id), to(htlc_from), original_htlc_recipient(htlc_to), htlc_amount(amount),
+            htlc_preimage_hash(preimage_hash), htlc_preimage_size(preimage_size) {}
+
+      account_id_type fee_payer()const { return to; }
+      void            validate()const { FC_ASSERT( !"virtual operation" ); }
+
+      /// This is a virtual operation; there is no fee
+      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+
+      asset fee;
+
+      htlc_id_type htlc_id; // of the associated htlc object; it is deleted during emittance of this operation
+      account_id_type to, original_htlc_recipient;
+      account_id_type htlc_from() const { return to; };
+      account_id_type htlc_to()   const { return original_htlc_recipient; };
+      asset htlc_amount;
+      htlc_hash htlc_preimage_hash;
+      uint16_t htlc_preimage_size;
+   };
+
+} } // graphene::protocol
 
 FC_REFLECT_TYPENAME( graphene::protocol::htlc_hash )
 
-FC_REFLECT( graphene::protocol::htlc_create_operation::fee_parameters_type, (fee) (fee_per_day) (price_per_kbyte) )
+FC_REFLECT( graphene::protocol::htlc_create_operation::fee_parameters_type, (fee)(fee_per_day)(price_per_kbyte) )
 FC_REFLECT( graphene::protocol::htlc_create_operation::additional_options_type, (memo) )
 FC_REFLECT( graphene::protocol::htlc_redeem_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::protocol::htlc_redeemed_operation::fee_parameters_type, ) // VIRTUAL
-FC_REFLECT( graphene::protocol::htlc_extend_operation::fee_parameters_type, (fee) (fee_per_day) )
+FC_REFLECT( graphene::protocol::htlc_extend_operation::fee_parameters_type, (fee)(fee_per_day) )
 FC_REFLECT( graphene::protocol::htlc_refund_operation::fee_parameters_type, ) // VIRTUAL
 
 FC_REFLECT( graphene::protocol::htlc_create_operation,

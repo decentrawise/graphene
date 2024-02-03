@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/types.hpp>
 
 namespace graphene { namespace protocol {

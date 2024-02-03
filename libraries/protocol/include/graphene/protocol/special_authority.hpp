@@ -4,20 +4,20 @@
 
 namespace graphene { namespace protocol {
 
-struct no_special_authority {};
+   struct no_special_authority {};
 
-struct top_holders_special_authority
-{
-   asset_id_type asset;
-   uint8_t       num_top_holders = 1;
-};
+   struct top_holders_special_authority
+   {
+      asset_id_type asset;
+      uint8_t       num_top_holders = 1;
+   };
 
-typedef static_variant<
-   no_special_authority,
-   top_holders_special_authority
-   > special_authority;
+   typedef static_variant<
+      no_special_authority,
+      top_holders_special_authority
+      > special_authority;
 
-void validate_special_authority( const special_authority& auth );
+   void validate_special_authority( const special_authority& auth );
 
 } } // graphene::protocol
 

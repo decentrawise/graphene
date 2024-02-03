@@ -1462,7 +1462,7 @@ class wallet_api
        * @param destination The account that will receive the funds if the preimage is presented
        * @param amount the amount of the asset that is to be traded
        * @param asset_symbol_or_id The asset that is to be traded
-       * @param hash_algorithm the algorithm used to generate the hash from the preimage. Can be RIPEMD160 or SHA256.
+       * @param hash_algorithm the algorithm used to generate the hash from the preimage. Can be RIPEMD160, SHA256, SHA1 or HASH160.
        * @param preimage_hash the hash of the preimage
        * @param preimage_size the size of the preimage in bytes
        * @param claim_period_seconds how long after creation until the lock expires

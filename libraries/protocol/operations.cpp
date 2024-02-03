@@ -37,12 +37,11 @@ struct operation_validator
 
 struct operation_get_required_auth
 {
-   typedef void result_type;
+   using result_type = void;
 
    flat_set<account_id_type>& active;
    flat_set<account_id_type>& owner;
    vector<authority>&         other;
-
 
    operation_get_required_auth( flat_set<account_id_type>& a,
      flat_set<account_id_type>& own,

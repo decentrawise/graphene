@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 #include <graphene/protocol/memo.hpp>
@@ -17,7 +18,7 @@ namespace graphene { namespace protocol {
     * not exceed the limit for any given period.
     *
     * Withdrawal permissions authorize only a specific pairing, i.e. a permission only authorizes one specified
-    * authorized account to withdraw from one specified authorizing account. Withdrawals are limited and may not exceet
+    * authorized account to withdraw from one specified authorizing account. Withdrawals are limited and may not exceed
     * the withdrawal limit. The withdrawal must be made in the same asset as the limit; attempts with withdraw any
     * other asset type will be rejected.
     *

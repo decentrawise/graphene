@@ -98,7 +98,7 @@ application_impl::~application_impl()
 
 void application_impl::reset_p2p_node(const fc::path& data_dir)
 { try {
-   _p2p_network = std::make_shared<net::node>("BitShares Reference Implementation");
+   _p2p_network = std::make_shared<net::node>("Graphene Reference Implementation");
 
    _p2p_network->load_configuration(data_dir / "p2p");
    _p2p_network->set_node_delegate(shared_from_this());
@@ -113,13 +113,6 @@ void application_impl::reset_p2p_node(const fc::path& data_dir)
    {
       auto seeds_str = _options->at("seed-nodes").as<string>();
       auto seeds = fc::json::from_string(seeds_str).as<vector<string>>(2);
-      _p2p_network->add_seed_nodes(seeds);
-   }
-   else
-   {
-      vector<string> seeds = {
-         #include "../egenesis/seed-nodes.txt"
-      };
       _p2p_network->add_seed_nodes(seeds);
    }
 

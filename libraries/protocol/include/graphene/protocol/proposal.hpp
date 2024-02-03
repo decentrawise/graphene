@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 
@@ -47,8 +48,8 @@ namespace graphene { namespace protocol {
    struct proposal_create_operation : public base_operation
    {
        struct fee_parameters_type { 
-          uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
-          uint32_t price_per_kbyte = 10;
+          uint64_t fee              = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+          uint32_t price_per_kbyte  = 10;
        };
 
        asset              fee;
@@ -56,6 +57,7 @@ namespace graphene { namespace protocol {
        vector<op_wrapper> proposed_ops;
        time_point_sec     expiration_time;
        optional<uint32_t> review_period_seconds;
+
        extensions_type    extensions;
 
        /**
@@ -96,12 +98,12 @@ namespace graphene { namespace protocol {
    struct proposal_update_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
-         uint32_t price_per_kbyte = 10;
+         uint64_t fee               = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+         uint32_t price_per_kbyte   = 10;
       };
 
-      account_id_type            fee_paying_account;
       asset                      fee;
+      account_id_type            fee_paying_account;
       proposal_id_type           proposal;
       flat_set<account_id_type>  active_approvals_to_add;
       flat_set<account_id_type>  active_approvals_to_remove;
@@ -109,11 +111,13 @@ namespace graphene { namespace protocol {
       flat_set<account_id_type>  owner_approvals_to_remove;
       flat_set<public_key_type>  key_approvals_to_add;
       flat_set<public_key_type>  key_approvals_to_remove;
+
       extensions_type            extensions;
 
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const;
+
       void get_required_authorities( vector<authority>& )const;
       void get_required_active_authorities( flat_set<account_id_type>& )const;
       void get_required_owner_authorities( flat_set<account_id_type>& )const;
@@ -134,18 +138,19 @@ namespace graphene { namespace protocol {
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
 
+      asset             fee;
       account_id_type   fee_paying_account;
       bool              using_owner_authority = false;
-      asset             fee;
       proposal_id_type  proposal;
+
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return fee_paying_account; }
-      void       validate()const;
+      void            validate()const;
    };
    ///@}
    
-}} // graphene::protocol
+} } // graphene::protocol
 
 FC_REFLECT( graphene::protocol::proposal_create_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::protocol::proposal_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )

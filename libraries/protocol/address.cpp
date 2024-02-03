@@ -1,5 +1,5 @@
 #include <graphene/protocol/address.hpp>
-#include <graphene/protocol/pts_address.hpp>
+#include <graphene/protocol/btc_address.hpp>
 #include <fc/crypto/base58.hpp>
 #include <algorithm>
 
@@ -26,7 +26,7 @@ namespace graphene { namespace protocol {
       std::vector<char> v;
       try
       {
-		     v = fc::from_base58( base58str.substr( prefix_len ) );
+		v = fc::from_base58( base58str.substr( prefix_len ) );
       }
       catch( const fc::parse_error_exception& e )
       {
@@ -49,9 +49,9 @@ namespace graphene { namespace protocol {
        addr = fc::ripemd160::hash( fc::sha512::hash( (char*) dat.data(), dat.size() ) );
    }
 
-   address::address( const pts_address& ptsaddr )
+   address::address( const btc_address& btcaddr )
    {
-       addr = fc::ripemd160::hash( (char*)&ptsaddr, sizeof( ptsaddr ) );
+       addr = fc::ripemd160::hash( (char*)&btcaddr, sizeof( btcaddr ) );
    }
 
    address::address( const fc::ecc::public_key_data& pub )

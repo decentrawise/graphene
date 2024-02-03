@@ -20,7 +20,7 @@ list(APPEND SOURCES account.cpp
                     custom.cpp
                     market.cpp
                     operations.cpp
-                    pts_address.cpp
+                    btc_address.cpp
                     small_ops.cpp
                     transaction.cpp
                     types.cpp

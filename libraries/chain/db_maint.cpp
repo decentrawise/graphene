@@ -176,7 +176,7 @@ void database::pay_workers( share_type& budget )
 void database::update_active_witnesses()
 { try {
    assert( !_witness_count_histogram_buffer.empty() );
-   share_type stake_target = (_total_voting_stake-_witness_count_histogram_buffer[0]) / (size_t)2;
+   share_type stake_target = (_total_voting_stake-_witness_count_histogram_buffer[0]) / 2;
 
    /// accounts that vote for 0 or 1 witness do not get to express an opinion on
    /// the number of witnesses to have (they abstain and are non-voting accounts)
@@ -195,7 +195,7 @@ void database::update_active_witnesses()
 
    const chain_property_object& cpo = get_chain_properties();
 
-   witness_count = std::max( (witness_count * (size_t)2) + 1,
+   witness_count = std::max( (witness_count * 2) + 1,
                              (size_t)cpo.immutable_parameters.min_witness_count );
    auto wits = sort_votable_objects<witness_index>( witness_count );
 
@@ -253,7 +253,7 @@ void database::update_active_witnesses()
             a.active.weight_threshold += votes;
          }
 
-         a.active.weight_threshold /= (size_t)2;
+         a.active.weight_threshold /= 2;
          a.active.weight_threshold += 1;
       }
       else
@@ -281,7 +281,7 @@ void database::update_active_witnesses()
 void database::update_active_committee_members()
 { try {
    assert( !_committee_count_histogram_buffer.empty() );
-   share_type stake_target = (_total_voting_stake-_committee_count_histogram_buffer[0]) / (size_t)2;
+   share_type stake_target = (_total_voting_stake-_committee_count_histogram_buffer[0]) / 2;
 
    /// accounts that vote for 0 or 1 committee member do not get to express an opinion on
    /// the number of committee members to have (they abstain and are non-voting accounts)
@@ -298,7 +298,7 @@ void database::update_active_committee_members()
 
    const chain_property_object& cpo = get_chain_properties();
 
-   committee_member_count = std::max( (committee_member_count * (size_t)2) + 1,
+   committee_member_count = std::max( (committee_member_count * 2) + 1,
                                       (size_t)cpo.immutable_parameters.min_committee_member_count );
    auto committee_members = sort_votable_objects<committee_member_index>( committee_member_count );
 
@@ -358,7 +358,7 @@ void database::update_active_committee_members()
                a.active.weight_threshold += votes;
             }
 
-            a.active.weight_threshold /= (size_t)2;
+            a.active.weight_threshold /= 2;
             a.active.weight_threshold += 1;
          }
          else
@@ -676,7 +676,7 @@ void split_fba_balance(
 void distribute_fba_balances( database& db )
 {
    constexpr uint16_t twenty_percent = 20 * GRAPHENE_1_PERCENT;
-   constexpr uint16_t sixty_percent  =  60 * GRAPHENE_1_PERCENT;
+   constexpr uint16_t sixty_percent  = 60 * GRAPHENE_1_PERCENT;
    split_fba_balance( db, fba_accumulator_id_transfer_to_blind  , twenty_percent, sixty_percent, twenty_percent );
    split_fba_balance( db, fba_accumulator_id_blind_transfer     , twenty_percent, sixty_percent, twenty_percent );
    split_fba_balance( db, fba_accumulator_id_transfer_from_blind, twenty_percent, sixty_percent, twenty_percent );
@@ -798,7 +798,7 @@ void database::process_bids( const asset_bitasset_data_object& bad )
    const asset_object& to_revive = to_revive_id( *this );
    const asset_dynamic_data_object& bdd = to_revive.dynamic_data( *this );
 
-   if( 0 == bdd.current_supply ) // shortcut
+   if( bdd.current_supply == 0 ) // shortcut
    {
       _cancel_bids_and_revive_mpa( to_revive, bad );
       return;

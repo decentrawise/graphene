@@ -1,5 +1,5 @@
 #include <graphene/chain/balance_evaluator.hpp>
-#include <graphene/protocol/pts_address.hpp>
+#include <graphene/protocol/btc_address.hpp>
 
 namespace graphene { namespace chain {
 
@@ -10,10 +10,10 @@ void_result balance_claim_evaluator::do_evaluate(const balance_claim_operation& 
 
    GRAPHENE_ASSERT(
              op.balance_owner_key == balance->owner ||
-             pts_address(op.balance_owner_key, false, 56) == balance->owner ||
-             pts_address(op.balance_owner_key, true, 56) == balance->owner ||
-             pts_address(op.balance_owner_key, false, 0) == balance->owner ||
-             pts_address(op.balance_owner_key, true, 0) == balance->owner,
+             btc_address(op.balance_owner_key, false, 56) == balance->owner ||
+             btc_address(op.balance_owner_key, true, 56) == balance->owner ||
+             btc_address(op.balance_owner_key, false, 0) == balance->owner ||
+             btc_address(op.balance_owner_key, true, 0) == balance->owner,
              balance_claim_owner_mismatch,
              "Balance owner key was specified as '${op}' but balance's actual owner is '${bal}'",
              ("op", op.balance_owner_key)

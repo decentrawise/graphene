@@ -6,7 +6,7 @@
 #include <fc/crypto/ripemd160.hpp>
 
 namespace graphene { namespace protocol {
-   struct pts_address;
+   struct btc_address;
 
    /**
     *  @brief a 160 bit hash of a public key
@@ -22,11 +22,11 @@ namespace graphene { namespace protocol {
    {
       public:
        address(){} ///< constructs empty / null address
-       explicit address( const std::string& base58str );   ///< converts to binary, validates checksum
-       address( const fc::ecc::public_key& pub ); ///< converts to binary
-       explicit address( const fc::ecc::public_key_data& pub ); ///< converts to binary
-       address( const pts_address& pub ); ///< converts to binary
-       address( const public_key_type& pubkey );
+       explicit address( const std::string& base58str );          ///< converts to binary, validates checksum
+       explicit address(const fc::ecc::public_key &pub);          ///< converts to binary
+       explicit address( const fc::ecc::public_key_data& pub );   ///< converts to binary
+       explicit address(const btc_address &pub);                  ///< converts to binary
+       explicit address(const public_key_type &pubkey);
 
        static bool is_valid( const std::string& base58str, const std::string& prefix = GRAPHENE_ADDRESS_PREFIX );
 
@@ -37,6 +37,12 @@ namespace graphene { namespace protocol {
    inline bool operator == ( const address& a, const address& b ) { return a.addr == b.addr; }
    inline bool operator != ( const address& a, const address& b ) { return a.addr != b.addr; }
    inline bool operator <  ( const address& a, const address& b ) { return a.addr <  b.addr; }
+
+   inline bool operator == ( const btc_address& a, const address& b ) { return address(a) == b; }
+   inline bool operator == ( const address& a, const btc_address& b ) { return a == address(b); }
+
+   inline bool operator == ( const public_key_type& a, const address& b ) { return address(a) == b; }
+   inline bool operator == ( const address& a, const public_key_type& b ) { return a == address(b); }
 
 } } // namespace graphene::protocol
 

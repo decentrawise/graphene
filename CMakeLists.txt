@@ -284,6 +284,10 @@ else( WIN32 ) # Apple AND Linux
         # Apple Specific Options Here
         message( STATUS "Configuring Graphene on macOS" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++ -Wall -fvisibility-inlines-hidden -fvisibility=hidden" )
+        if( USE_SANITIZER )
+            message( STATUS "Using sanitizer for Undefined Behavior" )
+            add_flag_append(CMAKE_CXX_FLAGS "-fsanitize=undefined")
+        endif()
     else( APPLE )
         if ( "${CMAKE_SYSTEM_NAME}" STREQUAL "OpenBSD" )
             # OpenBSD Specific Options

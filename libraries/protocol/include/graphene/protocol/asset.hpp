@@ -1,9 +1,8 @@
 #pragma once
+
 #include <graphene/protocol/types.hpp>
 
 namespace graphene { namespace protocol {
-
-   extern const int64_t scaled_precision_lut[];
 
    struct price;
 
@@ -67,11 +66,7 @@ namespace graphene { namespace protocol {
          return asset( a.amount + b.amount, a.asset_id );
       }
 
-      static share_type scaled_precision( uint8_t precision )
-      {
-         FC_ASSERT( precision < 19 );
-         return scaled_precision_lut[ precision ];
-      }
+      static share_type scaled_precision( uint8_t precision );
 
       asset multiply_and_round_up( const price& p )const; ///< Multiply and round up
    };
@@ -110,7 +105,10 @@ namespace graphene { namespace protocol {
       double to_real()const { return double(base.amount.value)/double(quote.amount.value); }
 
       bool is_null()const;
-      void validate()const;
+
+      /// @brief Check if the object is valid
+      /// @param check_upper_bound Whether to check if the amounts in the price are too large
+      void validate( bool check_upper_bound = false )const;
    };
 
    price operator / ( const asset& base, const asset& quote );
@@ -187,8 +185,10 @@ namespace graphene { namespace protocol {
 
       friend bool operator == ( const price_feed& a, const price_feed& b )
       {
-         return std::tie( a.settlement_price, a.maintenance_collateral_ratio, a.maximum_short_squeeze_ratio ) ==
-                std::tie( b.settlement_price, b.maintenance_collateral_ratio, b.maximum_short_squeeze_ratio );
+         if (&a == &b)
+            return true;
+         return std::tie(a.settlement_price, a.maintenance_collateral_ratio, a.maximum_short_squeeze_ratio) ==
+                std::tie(b.settlement_price, b.maintenance_collateral_ratio, b.maximum_short_squeeze_ratio);
       }
 
       void validate() const;
@@ -200,10 +200,10 @@ namespace graphene { namespace protocol {
 FC_REFLECT( graphene::protocol::asset, (amount)(asset_id) )
 FC_REFLECT( graphene::protocol::price, (base)(quote) )
 
-#define GRAPHENE_PRICE_FEED_FIELDS (settlement_price)(maintenance_collateral_ratio)(maximum_short_squeeze_ratio) \
-   (core_exchange_rate)
+// used in asset_object to calculate the median feed
+#define GRAPHENE_PRICE_FEED_FIELDS (settlement_price)(maintenance_collateral_ratio)(maximum_short_squeeze_ratio)(core_exchange_rate)
 
-FC_REFLECT( graphene::protocol::price_feed, GRAPHENE_PRICE_FEED_FIELDS )
+FC_REFLECT(graphene::protocol::price_feed, GRAPHENE_PRICE_FEED_FIELDS)
 
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::price )

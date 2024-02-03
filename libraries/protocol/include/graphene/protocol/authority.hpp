@@ -76,7 +76,6 @@ namespace graphene { namespace protocol {
          return result;
       }
 
-
       friend bool operator == ( const authority& a, const authority& b )
       {
          return (a.weight_threshold == b.weight_threshold) &&
@@ -84,8 +83,11 @@ namespace graphene { namespace protocol {
                 (a.key_auths == b.key_auths) &&
                 (a.address_auths == b.address_auths); 
       }
+
+      friend bool operator != ( const authority& a, const authority& b ) { return !(a == b); }
+
       uint32_t num_auths()const { return account_auths.size() + key_auths.size() + address_auths.size(); }
-      void     clear() { account_auths.clear(); key_auths.clear(); }
+      void     clear() { account_auths.clear(); key_auths.clear(); address_auths.clear(); weight_threshold = 0; }
 
       static authority null_authority()
       {
@@ -96,16 +98,13 @@ namespace graphene { namespace protocol {
       flat_map<account_id_type,weight_type> account_auths;
       flat_map<public_key_type,weight_type> key_auths;
       /** needed for backward compatibility only */
-      flat_map<address,weight_type>         address_auths;
+      flat_map<address,weight_type>         address_auths;  // TODO: remove?
    };
 
-/**
- * Add all account members of the given authority to the given flat_set.
- */
-void add_authority_accounts(
-   flat_set<account_id_type>& result,
-   const authority& a
-   );
+   /**
+    * Add all account members of the given authority to the given flat_set.
+    */
+   void add_authority_accounts( flat_set<account_id_type>& result, const authority& a );
 
 } } // namespace graphene::protocol
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 
@@ -9,7 +10,7 @@ namespace graphene { namespace protocol {
     *  @brief instructs the blockchain to attempt to sell one asset for another
     *  @ingroup operations
     *
-    *  The blockchain will atempt to sell amount_to_sell.asset_id for as
+    *  The blockchain will attempt to sell amount_to_sell.asset_id for as
     *  much min_to_receive.asset_id as possible.  The fee will be paid by
     *  the seller's account.  Market fees will apply as specified by the
     *  issuer of both the selling asset and the receiving asset as
@@ -37,6 +38,7 @@ namespace graphene { namespace protocol {
 
       /// If this flag is set the entire order must be filled or the operation is rejected
       bool fill_or_kill = false;
+
       extensions_type   extensions;
 
       pair<asset_id_type,asset_id_type> get_market()const
@@ -65,6 +67,7 @@ namespace graphene { namespace protocol {
       limit_order_id_type order;
       /** must be order->seller */
       account_id_type     fee_paying_account;
+
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return fee_paying_account; }
@@ -85,6 +88,14 @@ namespace graphene { namespace protocol {
     */
    struct call_order_update_operation : public base_operation
    {
+      /** this is slightly more expensive than limit orders, this pricing impacts prediction markets */
+      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+
+      asset               fee;
+      account_id_type     funding_account; ///< pays fee, collateral, and cover
+      asset               delta_collateral; ///< the amount of collateral to add to the margin position
+      asset               delta_debt; ///< the amount of the debt to be paid off, may be negative to issue new debt
+
       /**
        * Options to be used in @ref call_order_update_operation.
        *
@@ -94,16 +105,8 @@ namespace graphene { namespace protocol {
       {
          optional<uint16_t> target_collateral_ratio; ///< maximum CR to maintain when selling collateral on margin call
       };
+      using extensions_type = extension<options_type>; // note: this will be jsonified to {...} but no longer [...]
 
-      /** this is slightly more expensive than limit orders, this pricing impacts prediction markets */
-      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
-
-      asset               fee;
-      account_id_type     funding_account; ///< pays fee, collateral, and cover
-      asset               delta_collateral; ///< the amount of collateral to add to the margin position
-      asset               delta_debt; ///< the amount of the debt to be paid off, may be negative to issue new debt
-
-      typedef extension<options_type> extensions_type; // note: this will be jsonified to {...} but no longer [...]
       extensions_type     extensions;
 
       account_id_type fee_payer()const { return funding_account; }
@@ -131,7 +134,7 @@ namespace graphene { namespace protocol {
       asset               receives;
       asset               fee; // paid by receiving account
       price               fill_price;
-      bool                is_maker;
+      bool                is_maker = true;
 
       pair<asset_id_type,asset_id_type> get_market()const
       {
@@ -161,6 +164,7 @@ namespace graphene { namespace protocol {
       account_id_type     bidder; ///< pays fee and additional collateral
       asset               additional_collateral; ///< the amount of collateral to bid for the debt
       asset               debt_covered; ///< the amount of debt to take over
+
       extensions_type     extensions;
 
       account_id_type fee_payer()const { return bidder; }
@@ -181,10 +185,10 @@ namespace graphene { namespace protocol {
       execute_bid_operation( account_id_type a, asset d, asset c )
          : bidder(a), debt(d), collateral(c) {}
 
+      asset               fee;
       account_id_type     bidder;
       asset               debt;
       asset               collateral;
-      asset               fee;
 
       account_id_type fee_payer()const { return bidder; }
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
@@ -203,8 +207,8 @@ FC_REFLECT( graphene::protocol::execute_bid_operation::fee_parameters_type,  ) /
 
 FC_REFLECT( graphene::protocol::call_order_update_operation::options_type, (target_collateral_ratio) )
 
-FC_REFLECT( graphene::protocol::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(expiration)(fill_or_kill)(extensions))
-FC_REFLECT( graphene::protocol::limit_order_cancel_operation,(fee)(fee_paying_account)(order)(extensions) )
+FC_REFLECT( graphene::protocol::limit_order_create_operation, (fee)(seller)(amount_to_sell)(min_to_receive)(expiration)(fill_or_kill)(extensions) )
+FC_REFLECT( graphene::protocol::limit_order_cancel_operation, (fee)(fee_paying_account)(order)(extensions) )
 FC_REFLECT( graphene::protocol::call_order_update_operation, (fee)(funding_account)(delta_collateral)(delta_debt)(extensions) )
 FC_REFLECT( graphene::protocol::fill_order_operation, (fee)(order_id)(account_id)(pays)(receives)(fill_price)(is_maker) )
 FC_REFLECT( graphene::protocol::bid_collateral_operation, (fee)(bidder)(additional_collateral)(debt_covered)(extensions) )

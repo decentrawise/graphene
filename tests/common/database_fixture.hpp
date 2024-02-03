@@ -130,10 +130,10 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 #define REQUIRE_THROW_WITH_VALUE( op, field, value ) \
    REQUIRE_THROW_WITH_VALUE_2( op, field, value, fc::exception )
 
-///This simply resets v back to its default-constructed value. Requires v to have a working assingment operator and
+/// This simply resets v back to its default-constructed value. Requires v to have a working assignment operator and
 /// default constructor.
 #define RESET(v) v = decltype(v)()
-///This allows me to build consecutive test cases. It's pretty ugly, but it works well enough for unit tests.
+/// This allows me to build consecutive test cases. It's pretty ugly, but it works well enough for unit tests.
 /// i.e. This allows a test on update_account to begin with the database at the end state of create_account.
 #define INVOKE(test) ((struct test*)this)->test_method(); trx.clear()
 

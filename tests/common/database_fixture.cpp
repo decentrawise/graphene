@@ -19,7 +19,7 @@
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/htlc_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/hardfork_visitor.hpp>
 
 #include <fc/crypto/digest.hpp>
 
@@ -1555,7 +1555,9 @@ void database_fixture_base::set_htlc_committee_parameters()
    {
       auto itr = htlc_fees.find(param.which());
       if (itr == htlc_fees.end()) {
-         new_fee_schedule->parameters.insert(param);
+         // Only define fees for operations which are already forked in!
+         if (hardfork_visitor(db.head_block_time()).visit(param.which()))
+            new_fee_schedule->parameters.insert(param);
       } else {
          new_fee_schedule->parameters.insert( (*itr).second);
       }

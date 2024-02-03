@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/asset.hpp>
 #include <graphene/protocol/memo.hpp>
@@ -36,7 +37,7 @@ namespace graphene { namespace protocol {
       uint16_t flags = 0;
 
       /// When a non-core asset is used to pay a fee, the blockchain must convert that asset to core asset in
-      /// order to accept the fee. If this asset's fee pool is funded, the chain will automatically deposite fees
+      /// order to accept the fee. If this asset's fee pool is funded, the chain will automatically deposit fees
       /// in this asset to its accumulated fees, and withdraw from the fee pool the same amount as converted at
       /// the core exchange rate.
       price core_exchange_rate = price(asset(), asset(0, asset_id_type(1)));
@@ -90,6 +91,7 @@ namespace graphene { namespace protocol {
       /// This speicifies which asset type is used to collateralize short sales
       /// This field may only be updated if the current supply of the asset is zero.
       asset_id_type short_backing_asset;
+
       extensions_type extensions;
 
       /// Perform internal consistency checks.
@@ -129,6 +131,7 @@ namespace graphene { namespace protocol {
       optional<bitasset_options> bitasset_opts;
       /// For BitAssets, set this to true if the asset implements a @ref prediction_market; false otherwise
       bool is_prediction_market = false;
+
       extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -154,6 +157,7 @@ namespace graphene { namespace protocol {
       account_id_type issuer; ///< must equal @ref asset_to_settle->issuer
       asset_id_type   asset_to_settle;
       price           settle_price;
+
       extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -164,9 +168,9 @@ namespace graphene { namespace protocol {
     * @brief Schedules a market-issued asset for automatic settlement
     * @ingroup operations
     *
-    * Holders of market-issued assests may request a forced settlement for some amount of their asset. This means that
+    * Holders of market-issued assets may request a forced settlement for some amount of their asset. This means that
     * the specified sum will be locked by the chain and held for the settlement period, after which time the chain will
-    * choose a margin posision holder and buy the settled asset using the margin's collateral. The price of this sale
+    * choose a margin position holder and buy the settled asset using the margin's collateral. The price of this sale
     * will be based on the feed price for the market-issued asset being settled. The exact settlement price will be the
     * feed price at the time of settlement with an offset in favor of the margin position, where the offset is a
     * blockchain parameter set in the global_property_object.
@@ -190,6 +194,7 @@ namespace graphene { namespace protocol {
       account_id_type account;
       /// Amount of asset to force settle. This must be a market-issued asset
       asset           amount;
+
       extensions_type extensions;
 
       account_id_type fee_payer()const { return account; }
@@ -210,12 +215,16 @@ namespace graphene { namespace protocol {
       account_id_type account;
       /// Amount of asset to force settle. This must be a market-issued asset
       asset           amount;
+
       extensions_type extensions;
 
       account_id_type fee_payer()const { return account; }
-      void            validate()const {
-         FC_ASSERT( amount.amount > 0, "Must settle at least 1 unit" );
-      }
+
+      /***
+       * This is a virtual operation and should never be placed in a block
+       * (i.e. in a proposal)
+       */
+      void validate() const { FC_ASSERT(!"Virtual operation"); }
 
       share_type calculate_fee(const fee_parameters_type& params)const
       { return 0; }
@@ -232,6 +241,7 @@ namespace graphene { namespace protocol {
       account_id_type from_account;
       asset_id_type   asset_id;
       share_type      amount; ///< core asset
+      
       extensions_type extensions;
 
       account_id_type fee_payer()const { return from_account; }
@@ -268,6 +278,7 @@ namespace graphene { namespace protocol {
 
       /// If the asset is to be given a new issuer, specify his ID here.
       optional<account_id_type>   new_issuer;
+
       asset_options               new_options;
       extensions_type             extensions;
 
@@ -346,7 +357,7 @@ namespace graphene { namespace protocol {
     *
     * The feed in the operation contains three prices: a call price limit, a short price limit, and a settlement price.
     * The call limit price is structured as (collateral asset) / (debt asset) and the short limit price is structured
-    * as (asset for sale) / (collateral asset). Note that the asset IDs are opposite to eachother, so if we're
+    * as (asset for sale) / (collateral asset). Note that the asset IDs are opposite to each other, so if we're
     * publishing a feed for USD, the call limit price will be CORE/USD and the short limit price will be USD/CORE. The
     * settlement price may be flipped either direction, as long as it is a ratio between the market-issued asset and
     * its collateral.
@@ -359,6 +370,7 @@ namespace graphene { namespace protocol {
       account_id_type        publisher;
       asset_id_type          asset_id; ///< asset for which the feed is published
       price_feed             feed;
+
       extensions_type        extensions;
 
       account_id_type fee_payer()const { return publisher; }
@@ -379,7 +391,6 @@ namespace graphene { namespace protocol {
       account_id_type  issuer; ///< Must be asset_to_issue->asset_id->issuer
       asset            asset_to_issue;
       account_id_type  issue_to_account;
-
 
       /** user provided data encrypted to the memo key of the "to" account */
       optional<memo_data>  memo;
@@ -403,6 +414,7 @@ namespace graphene { namespace protocol {
       asset             fee;
       account_id_type   payer;
       asset             amount_to_reserve;
+
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return payer; }
@@ -421,6 +433,7 @@ namespace graphene { namespace protocol {
       asset           fee;
       account_id_type issuer;
       asset           amount_to_claim; /// amount_to_claim.asset_id->issuer must == issuer
+
       extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -447,6 +460,7 @@ namespace graphene { namespace protocol {
       account_id_type issuer;
       asset_id_type   asset_to_update;
       account_id_type new_issuer;
+
       extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -483,6 +497,7 @@ namespace graphene { namespace protocol {
       account_id_type issuer;
       asset_id_type   asset_id;        /// fee.asset_id must != asset_id
       asset           amount_to_claim; /// core asset
+      
       extensions_type extensions;
 
       account_id_type fee_payer()const { return issuer; }

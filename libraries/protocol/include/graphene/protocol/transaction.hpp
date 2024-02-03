@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/operations.hpp>
 
 namespace graphene { namespace protocol {
@@ -58,6 +59,7 @@ namespace graphene { namespace protocol {
       fc::time_point_sec expiration;
 
       vector<operation>  operations;
+      
       extensions_type    extensions;
 
       /// Calculate the digest for a transaction

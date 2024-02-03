@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/transaction.hpp>
 
 namespace graphene { namespace protocol {
@@ -12,6 +13,7 @@ namespace graphene { namespace protocol {
       fc::time_point_sec            timestamp;
       witness_id_type               witness;
       checksum_type                 transaction_merkle_root;
+
       // Note: when we need to add data to `extensions`, remember to review `database::_generate_block()`.
       //       More info in https://github.com/bitshares/bitshares-core/issues/1136
       extensions_type               extensions;
@@ -33,6 +35,7 @@ namespace graphene { namespace protocol {
 
       signed_block_header() = default;
       explicit signed_block_header( const block_header& header ) : block_header( header ) {}
+      
    protected:
       mutable fc::ecc::public_key _signee;
       mutable block_id_type       _block_id;

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <graphene/protocol/base.hpp>
 #include <graphene/protocol/account.hpp>
 #include <graphene/protocol/assert.hpp>

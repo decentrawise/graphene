@@ -87,10 +87,11 @@ namespace graphene { namespace protocol {
       virtual void get_required_authorities( vector<authority>& )const{ /* do nothing by default */ }
       virtual void get_required_active_authorities( flat_set<account_id_type>& )const{ /* do nothing by default */ }
       virtual void get_required_owner_authorities( flat_set<account_id_type>& )const{ /* do nothing by default */ }
+      
       virtual void validate()const{ /* do nothing by default */ }
-      fc::optional< fc::future<void> > validate_parallel( uint32_t skip )const;
+      fc::optional< fc::future<void> > validate_parallel( uint32_t skip )const;  // implemented in operations.cpp
 
-      static uint64_t calculate_data_fee( uint64_t bytes, uint64_t price_per_kbyte );
+      static uint64_t calculate_data_fee( uint64_t bytes, uint64_t price_per_kbyte );  // implemented in operations.cpp
    };
 
    /**
@@ -120,4 +121,4 @@ FC_REFLECT_TYPENAME(graphene::protocol::extensions_type)
 FC_REFLECT(graphene::protocol::void_result, )
 FC_REFLECT(graphene::protocol::generic_operation_result, (new_objects)(updated_objects)(removed_objects))
 
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION(graphene::protocol::generic_operation_result) // impl in operations.cpp
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION(graphene::protocol::generic_operation_result)  // implemented in operations.cpp

@@ -42,14 +42,12 @@ share_type transfer_to_blind_operation::calculate_fee( const fee_parameters_type
     return k.fee + outputs.size() * k.price_per_output;
 }
 
-
 void transfer_from_blind_operation::validate()const
 {
    FC_ASSERT( amount.amount > 0 );
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( inputs.size() > 0 );
    FC_ASSERT( amount.asset_id == fee.asset_id );
-
 
    vector<commitment_type> in(inputs.size());
    vector<commitment_type> out;
@@ -65,7 +63,6 @@ void transfer_from_blind_operation::validate()const
    FC_ASSERT( fc::ecc::verify_sum( in, out, 0 ) );
 }
 
-
 /**
  *  If fee_payer = temp_account_id, then the fee is paid by the surplus balance of inputs-outputs and
  *  100% of the fee goes to the network.
@@ -74,7 +71,6 @@ account_id_type blind_transfer_operation::fee_payer()const
 {
    return GRAPHENE_TEMP_ACCOUNT;
 }
-
 
 /**
  *  This method can be computationally intensive because it verifies that input commitments - output commitments add up to 0
