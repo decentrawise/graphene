@@ -47,7 +47,6 @@ The default configuration is:
 
     p2p-endpoint = 0.0.0.0:1776
     rpc-endpoint = 0.0.0.0:8090
-    bucket-size = [60,300,900,1800,3600,14400,86400]
     history-per-size = 1000
     max-ops-per-account = 100
     partial-operations = true
