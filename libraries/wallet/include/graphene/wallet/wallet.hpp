@@ -527,7 +527,7 @@ class wallet_api
        */
       string  gethelp( const string& method )const;
 
-      /** Loads a specified BitShares wallet.
+      /** Loads a specified Graphene wallet.
        *
        * The current wallet is closed before the new wallet is loaded.
        *
@@ -622,23 +622,23 @@ class wallet_api
        */
       bool import_key( const string& account_name_or_id, const string& wif_key )const;
 
-      /** Imports accounts from a BitShares 0.x wallet file.
+      /** Imports accounts from a Graphene 0.x wallet file.
        * Current wallet file must be unlocked to perform the import.
        *
-       * @param filename the BitShares 0.x wallet file to import
-       * @param password the password to encrypt the BitShares 0.x wallet file
+       * @param filename the Graphene 0.x wallet file to import
+       * @param password the password to encrypt the Graphene 0.x wallet file
        * @returns a map containing the accounts found and whether imported
        */
       map<string, bool, std::less<>> import_accounts( const string& filename, const string& password )const;
 
-      /** Imports from a BitShares 0.x wallet file, find keys that were bound to a given account name on the
-       * BitShares 0.x chain, rebind them to an account name on the 2.0 chain.
+      /** Imports from a Graphene 0.x wallet file, find keys that were bound to a given account name on the
+       * Graphene 0.x chain, rebind them to an account name on the 2.0 chain.
        * Current wallet file must be unlocked to perform the import.
        *
-       * @param filename the BitShares 0.x wallet file to import
-       * @param password the password to encrypt the BitShares 0.x wallet file
-       * @param src_account_name name of the account on BitShares 0.x chain
-       * @param dest_account_name name of the account on BitShares 2.0 chain,
+       * @param filename the Graphene 0.x wallet file to import
+       * @param password the password to encrypt the Graphene 0.x wallet file
+       * @param src_account_name name of the account on Graphene 0.x chain
+       * @param dest_account_name name of the account on Graphene 2.0 chain,
        *                          can be same or different to \c src_account_name
        * @returns whether the import has succeeded
        */
@@ -646,7 +646,7 @@ class wallet_api
                                 const string& src_account_name, const string& dest_account_name )const;
 
       /**
-       * This call will construct transaction(s) that will claim all balances controled
+       * This call will construct transaction(s) that will claim all balances controlled
        * by wif_keys and deposit them into the given account.
        *
        * @param account_name_or_id name or ID of an account that to claim balances to
@@ -738,7 +738,7 @@ class wallet_api
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
        * @param to the name or id of the account receiving the funds
-       * @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+       * @param amount the amount to send (in nominal units -- to send half CORE, specify 0.5)
        * @param asset_symbol_or_id the symbol or id of the asset to send
        * @param memo a memo to attach to the transaction.  The memo will be encrypted in the
        *             transaction and readable for the receiver.  There is no length limit
@@ -759,7 +759,7 @@ class wallet_api
        *  returns the transaction ID (hash) along with the signed transaction.
        * @param from the name or id of the account sending the funds
        * @param to the name or id of the account receiving the funds
-       * @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+       * @param amount the amount to send (in nominal units -- to send half CORE, specify 0.5)
        * @param asset_symbol_or_id the symbol or id of the asset to send
        * @param memo a memo to attach to the transaction.  The memo will be encrypted in the
        *             transaction and readable for the receiver.  There is no length limit
@@ -958,8 +958,8 @@ class wallet_api
 
       /** Place a limit order attempting to sell one asset for another.
        *
-       * Buying and selling are the same operation on BitShares. If you want to buy BTS
-       * with USD, you should sell USD for BTS.
+       * Buying and selling are the same operation on Graphene. If you want to buy CORE
+       * with USD, you should sell USD for CORE.
        *
        * The blockchain will attempt to sell the \c symbol_or_id_to_sell for as
        * much \c symbol_or_id_to_receive as possible, as long as the price is at

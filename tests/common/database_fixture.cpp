@@ -397,7 +397,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
       set_option( options, "elasticsearch-operation-string", true );
       set_option( options, "elasticsearch-mode", uint16_t(2) );
 
-      fixture.es_index_prefix = string("bitshares-") + fc::to_string(uint64_t(rand())) + "-";
+      fixture.es_index_prefix = string("graphene-") + fc::to_string(uint64_t(rand())) + "-";
       BOOST_TEST_MESSAGE( string("ES index prefix is ") + fixture.es_index_prefix );
       set_option( options, "elasticsearch-index-prefix", fixture.es_index_prefix );
    }

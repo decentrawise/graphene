@@ -29,7 +29,7 @@ class elasticsearch_plugin_impl
          uint32_t bulk_replay = 10000;
          uint32_t bulk_sync = 100;
 
-         std::string index_prefix = "bitshares-";
+         std::string index_prefix = "graphene-";
 
          /// For the "index.mapping.depth.limit" setting in ES. The default value is 20.
          uint16_t max_mapping_depth = 20;
@@ -472,9 +472,9 @@ void elasticsearch_plugin::plugin_set_program_options(
          ("elasticsearch-bulk-replay", boost::program_options::value<uint32_t>(),
                "Number of bulk documents to index on replay(10000)")
          ("elasticsearch-bulk-sync", boost::program_options::value<uint32_t>(),
-               "Number of bulk documents to index on a syncronied chain(100)")
+               "Number of bulk documents to index on a synchronized chain(100)")
          ("elasticsearch-index-prefix", boost::program_options::value<std::string>(),
-               "Add a prefix to the index(bitshares-)")
+               "Add a prefix to the index(graphene-)")
          ("elasticsearch-max-mapping-depth", boost::program_options::value<uint16_t>(),
                "The maximum index mapping depth (index.mapping.depth.limit) setting in ES, "
                "should be >=2. (20)")

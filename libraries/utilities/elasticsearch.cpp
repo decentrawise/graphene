@@ -80,7 +80,7 @@ curl_slist* curl_wrapper::init_request_headers()
 curl_wrapper::curl_wrapper()
 {
    curl_easy_setopt( curl.get(), CURLOPT_HTTPHEADER, request_headers.get() );
-   curl_easy_setopt( curl.get(), CURLOPT_USERAGENT, "bitshares-core/6.1" );
+   curl_easy_setopt( curl.get(), CURLOPT_USERAGENT, "graphene/3.0" );
 }
 
 void curl_wrapper::curl_deleter::operator()( CURL* p_curl ) const

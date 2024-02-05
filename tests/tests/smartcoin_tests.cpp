@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
          trx.clear();
       }
 
-      // Bitshares will create entries in the field feed after feed producers are added
+      // Graphene will create entries in the field feed after feed producers are added
       auto bitasset_data = bit_usd_id(db).bitasset_data(db);
 
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 3u);
