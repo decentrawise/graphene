@@ -21,6 +21,8 @@
 #include "../common/utils.hpp"
 
 using namespace graphene;
+using namespace graphene::tests::utils;
+
 namespace bpo = boost::program_options;
 
 namespace fc {

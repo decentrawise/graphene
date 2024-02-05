@@ -284,10 +284,6 @@ else( WIN32 ) # Apple AND Linux
         # Apple Specific Options Here
         message( STATUS "Configuring Graphene on macOS" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++ -Wall -fvisibility-inlines-hidden -fvisibility=hidden" )
-        if( USE_SANITIZER )
-            message( STATUS "Using sanitizer for Undefined Behavior" )
-            add_flag_append(CMAKE_CXX_FLAGS "-fsanitize=undefined")
-        endif()
     else( APPLE )
         if ( "${CMAKE_SYSTEM_NAME}" STREQUAL "OpenBSD" )
             # OpenBSD Specific Options
@@ -309,6 +305,15 @@ else( WIN32 ) # Apple AND Linux
           set( crypto_library crypto)
         endif ()
     endif( APPLE )
+
+    # Added to try to find a memory related bug, but fails on node start and is unusable.
+    # Kept as a way to easily use any other sanitizer like "undefined" if needed...
+    if( USE_SANITIZER )
+        message( STATUS "Using Address Sanitizer" )
+        add_flag_append(CMAKE_CXX_FLAGS "-fsanitize=address")
+        # Tried to supply an ignore list, but didn't work...
+        # add_flag_append(CMAKE_CXX_FLAGS "-fsanitize-ignorelist=${CMAKE_CURRENT_SOURCE_DIR}/.sanitizer-ignore.lst")
+    endif()
 
     if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-memcmp" )

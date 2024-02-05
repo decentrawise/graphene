@@ -47,6 +47,8 @@ int sockQuit(void)
 }
 #endif
 
+using namespace graphene::tests::utils;
+
 /*********************
  * Helper Methods
  *********************/

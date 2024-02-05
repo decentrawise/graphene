@@ -468,7 +468,7 @@ struct database_fixture_init : database_fixture_base {
       F::init_genesis( fixture );
       fc::json::save_to_file( fixture.genesis_state, fixture.data_dir.path() / "genesis.json" );
       auto options = F::init_options( fixture );
-      set_option( *options, "genesis-json", boost::filesystem::path(fixture.data_dir.path() / "genesis.json") );
+      graphene::tests::utils::set_option( *options, "genesis-json", boost::filesystem::path(fixture.data_dir.path() / "genesis.json") );
       fixture.app.initialize( fixture.data_dir.path(), options );
       fixture.app.startup();
 

@@ -1,5 +1,5 @@
 /**
- * Convert BTC addresses to a Graphene address.
+ * Convert BTC addresses to Graphene addresses.
  */
 
 #include <graphene/protocol/btc_address.hpp>

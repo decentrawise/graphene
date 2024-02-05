@@ -16,6 +16,7 @@
 using namespace graphene::chain;
 using namespace graphene::chain::test;
 using namespace graphene::app;
+using namespace graphene::tests::utils;
 
 extern std::string GRAPHENE_TESTING_ES_URL;
 

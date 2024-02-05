@@ -29,6 +29,7 @@
 #include "elasticsearch.hpp"
 
 using namespace graphene::chain::test;
+using namespace graphene::tests::utils;
 
 extern uint32_t    GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 extern std::string GRAPHENE_TESTING_ES_URL;
