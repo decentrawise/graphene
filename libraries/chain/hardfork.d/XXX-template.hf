@@ -1,0 +1,6 @@
+// Hardfork includes:
+// - (list of features, issues, etc)
+#ifndef HARDFORK_XXX_TIME
+#define HARDFORK_XXX_TIME (fc::time_point_sec( 2000000000 )) // Wednesday, May 18, 2033 03:33:20 UTC
+#define HARDFORK_XXX_PASSED(now) (now >= HARDFORK_XXX_TIME)
+#endif
