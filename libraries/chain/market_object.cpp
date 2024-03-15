@@ -56,8 +56,8 @@ share_type call_order_object::get_max_debt_to_cover( price match_price,
                  && maintenance_collateralization->quote.asset_id == call_price.quote.asset_id );
    }
 
-   // According to the feed protection rule (https://github.com/cryptonomex/graphene/issues/436),
-   // a call order should only be called when its collateral ratio is not higher than required maintenance collateral ratio.
+   // According to the feed protection rule, a call order should only be called when its collateral ratio is
+   // not higher than required maintenance collateral ratio.
    // Although this should be guaranteed by the caller of this function, we still check here to be defensive.
    // Theoretically this check can be skipped for better performance.
    //

@@ -470,8 +470,7 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
             auto call_itr = call_collateral_idx.lower_bound( call_min );
             if( call_itr == call_collateral_idx.end()
                   || call_itr->debt_type() != sell_asset_id
-                  // feed protected https://github.com/cryptonomex/graphene/issues/436
-                  || call_itr->collateralization() > sell_abd->current_maintenance_collateralization )
+                  || call_itr->collateralization() > sell_abd->current_maintenance_collateralization )   // feed protected
                break;
             // hard fork core-338 and core-625 took place at same time, not checking HARDFORK_CORE_338_TIME here.
             auto match_result = match( new_order_object, *call_itr, call_match_price,
@@ -496,8 +495,7 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
             auto call_itr = call_price_idx.lower_bound( call_min );
             if( call_itr == call_price_idx.end()
                   || call_itr->debt_type() != sell_asset_id
-                  // feed protected https://github.com/cryptonomex/graphene/issues/436
-                  || call_itr->call_price > ~sell_abd->current_feed.settlement_price )
+                  || call_itr->call_price > ~sell_abd->current_feed.settlement_price )    // feed protected
                break;
             // assume hard fork core-338 and core-625 will take place at same time, not checking HARDFORK_CORE_338_TIME here.
             auto match_result = match( new_order_object, *call_itr, call_match_price,
@@ -1033,7 +1031,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     auto head_num = head_block_num();
 
     bool before_hardfork_615 = ( head_time < HARDFORK_615_TIME );
-    bool after_hardfork_436 = ( head_time > HARDFORK_436_TIME );
 
     bool before_core_hardfork_184 = ( maint_time <= HARDFORK_CORE_184_TIME ); // something-for-nothing
     bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
@@ -1051,10 +1048,10 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 
        const call_order_object& call_order = ( before_core_hardfork_1270 ? *call_price_itr : *call_collateral_itr );
 
-       // Feed protected (don't call if CR>MCR) https://github.com/cryptonomex/graphene/issues/436
+       // Feed protected (don't call if CR>MCR)
        if( ( !before_core_hardfork_1270 && bitasset.current_maintenance_collateralization < call_order.collateralization() )
              || ( before_core_hardfork_1270
-                   && after_hardfork_436 && bitasset.current_feed.settlement_price > ~call_order.call_price ) )
+                  && bitasset.current_feed.settlement_price > ~call_order.call_price ) )
           return margin_called;
 
        const limit_order_object& limit_order = *limit_itr;
