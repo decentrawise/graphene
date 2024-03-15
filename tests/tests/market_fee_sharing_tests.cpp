@@ -245,8 +245,6 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
 {
    try
    {
-      // handle small percentages
-      generate_blocks(HARDFORK_453_TIME + 10);
       set_expiration(db, trx);
 
       ACTORS((registrar)(alicereferrer)(bobreferrer)(izzy)(jill));
