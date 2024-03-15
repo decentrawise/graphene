@@ -71,14 +71,10 @@ void limit_order_create_evaluator::convert_fee()
 
 void limit_order_create_evaluator::pay_fee()
 {
-   if( db().head_block_time() <= HARDFORK_445_TIME )
-      generic_evaluator::pay_fee();
-   else
-   {
-      _deferred_fee = core_fee_paid;
-      if( db().head_block_time() > HARDFORK_CORE_604_TIME && fee_asset->get_id() != asset_id_type() )
-         _deferred_paid_fee = fee_from_account;
-   }
+   // Defer fees so they can be refunded on order cancel
+   _deferred_fee = core_fee_paid;
+   if( db().head_block_time() > HARDFORK_CORE_604_TIME && fee_asset->get_id() != asset_id_type() )
+      _deferred_paid_fee = fee_from_account;
 }
 
 object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_operation& op)
