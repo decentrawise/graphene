@@ -300,8 +300,8 @@ bool maybe_cull_small_order( database& db, const limit_order_object& order )
     *  sold at the sale price.
     *
     *  If the order is a taker order (as opposed to a maker order), so the price is
-    *  set by the counterparty, this check is deferred until the order becomes unmatched
-    *  (see #555) -- however, detecting this condition is the responsibility of the caller.
+    *  set by the counterparty, this check is deferred until the order becomes unmatched,
+    *  however, detecting this condition is the responsibility of the caller.
     */
    if( order.amount_to_receive().amount == 0 )
    {
@@ -361,11 +361,7 @@ bool database::apply_order_before_hardfork_625(const limit_order_object& new_ord
    const limit_order_object* updated_order_object = find< limit_order_object >( order_id );
    if( updated_order_object == nullptr )
       return true;
-   if( head_block_time() <= HARDFORK_555_TIME )
-      return false;
-   // before #555 we would have done maybe_cull_small_order() logic as a result of fill_order() being called by match() above
-   // however after #555 we need to get rid of small orders -- #555 hardfork defers logic that was done too eagerly before, and
-   // this is the point it's deferred to.
+
    return maybe_cull_small_order( *this, *updated_order_object );
 }
 
@@ -525,9 +521,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
    if( updated_order_object == nullptr )
       return true;
 
-   // before #555 we would have done maybe_cull_small_order() logic as a result of fill_order() being called by match() above
-   // however after #555 we need to get rid of small orders -- #555 hardfork defers logic that was done too eagerly before, and
-   // this is the point it's deferred to.
    return maybe_cull_small_order( *this, *updated_order_object );
 }
 
@@ -808,8 +801,6 @@ asset database::match( const call_order_object& call,
 bool database::fill_limit_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small,
                            const price& fill_price, const bool is_maker )
 { try {
-   cull_if_small |= (head_block_time() < HARDFORK_555_TIME);
-
    FC_ASSERT( order.amount_for_sale().asset_id == pays.asset_id );
    FC_ASSERT( pays.asset_id != receives.asset_id );
 
