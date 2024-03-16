@@ -770,6 +770,10 @@ BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
 BOOST_AUTO_TEST_CASE( subscription_notification_test )
 {
    try {
+      // Initialize committee by voting for each member and for desired count
+      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+      generate_block();
 
       generate_blocks(HARDFORK_CORE_1468_TIME);
       set_expiration( db, trx );

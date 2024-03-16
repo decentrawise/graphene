@@ -408,7 +408,11 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
+   // Initialize committee by voting for each member and for desired count
+   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
+   set_expiration(db, trx);
 
    // Signatures are for suckers.
    db.modify(db.get_global_properties(), [](global_property_object& p) {
@@ -443,6 +447,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    pop.review_period_seconds = global_params.committee_proposal_review_period;
    trx.operations.back() = pop;
    _sign();
+
    proposal_object prop = db.get<proposal_object>(PUSH_TX( db, trx ).operation_results.front().get<object_id_type>());
    BOOST_REQUIRE(db.find_object(prop.id));
 
@@ -459,19 +464,12 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    BOOST_TEST_MESSAGE( "Checking that the proposal is not authorized to execute" );
    BOOST_REQUIRE(!db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
    trx.clear();
+
    proposal_update_operation uop;
    uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    uop.proposal = prop.id;
 
    uop.key_approvals_to_add.emplace(committee_key.get_public_key());
-   /*
-   uop.key_approvals_to_add.emplace(1);
-   uop.key_approvals_to_add.emplace(2);
-   uop.key_approvals_to_add.emplace(3);
-   uop.key_approvals_to_add.emplace(4);
-   uop.key_approvals_to_add.emplace(5);
-   uop.key_approvals_to_add.emplace(6);
-   */
    trx.operations.push_back(uop);
    sign( trx, committee_key );
    PUSH_TX(db, trx);
@@ -499,7 +497,13 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    fc::ecc::private_key committee_key = init_account_priv_key;
    fc::ecc::private_key committee_member_key = fc::ecc::private_key::generate();
 
-   //Meet nathan. He has a little money.
+   // Initialize committee by voting for each member and for desired count
+   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   generate_block();
+   set_expiration(db, trx);
+
+   // Meet nathan. He has a little money.
    const account_object* nathan = &create_account("nathan");
    transfer(account_id_type()(db), *nathan, asset(5000));
    generate_block();

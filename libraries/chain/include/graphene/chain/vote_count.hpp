@@ -5,7 +5,7 @@
 namespace graphene { namespace chain {
 
 /**
- * Keep track of vote totals in internal authority object.  See #533.
+ * Keep track of vote totals in internal authority object.
  */
 struct vote_counter
 {

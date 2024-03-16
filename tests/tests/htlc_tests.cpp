@@ -246,7 +246,15 @@ BOOST_AUTO_TEST_CASE( other_peoples_money )
 {
 try {
    advance_past_hardfork(this);
-	
+
+   // Initialize committee by voting for each member and for desired count and HTLC parameters
+   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   set_expiration(db, trx);
+   set_htlc_committee_parameters();
+   generate_block();
+   set_expiration(db, trx);
+
    ACTORS((alice)(bob));
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION );
@@ -258,7 +266,7 @@ try {
    generate_random_preimage(preimage_size, pre_image);
 
    graphene::chain::htlc_id_type alice_htlc_id;
-   // cler everything out
+   // clear everything out
    generate_block();
    trx.clear();
    // Bob attempts to put a contract on the blockchain using Alice's funds
@@ -363,6 +371,14 @@ BOOST_AUTO_TEST_CASE( htlc_hardfork_test )
       // now things should start working...
       BOOST_TEST_MESSAGE("Advancing to HTLC hardfork time.");
       advance_past_hardfork(this);
+
+      // Initialize committee by voting for each member and for desired count and HTLC parameters
+      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+      set_expiration(db, trx);
+      set_htlc_committee_parameters();
+      generate_block();
+      set_expiration(db, trx);
 
       proposal_id_type good_proposal_id;
       BOOST_TEST_MESSAGE( "Creating a proposal to change the max_preimage_size to 2048 and set higher fees" );

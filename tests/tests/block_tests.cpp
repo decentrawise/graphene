@@ -963,7 +963,11 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
+   // Initialize committee by voting for each member and for desired count
+   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
+   set_expiration(db, trx);
 
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();

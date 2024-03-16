@@ -1012,6 +1012,12 @@ BOOST_AUTO_TEST_CASE( create_mia )
 BOOST_AUTO_TEST_CASE( update_mia )
 {
    try {
+      // Initialize witnesses by voting for each member and for desired count
+      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+      generate_block();
+      set_expiration(db, trx);
+
       INVOKE(create_mia);
       generate_block();
       const asset_object& bit_usd = get_asset("USDBIT");
@@ -1649,7 +1655,13 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
 {
    using namespace graphene::chain;
    try {
-      INVOKE( create_mia );
+      // Initialize committee by voting for each member and for desired count
+      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+      generate_block();
+      set_expiration(db, trx);
+
+      INVOKE(create_mia);
       {
          auto& current = get_asset( "USDBIT" );
          asset_update_operation uop;

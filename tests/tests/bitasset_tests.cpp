@@ -120,12 +120,10 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
 {
    ACTORS((nathan));
 
-   /*
-       // do a maintenance block
-      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
-      // generate blocks until close to hard fork
-      generate_blocks( HARDFORK_CORE_868_890_TIME - fc::hours(1) );
-    */
+   // Initialize witnesses by voting for each member and for desired count
+   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   generate_block();
 
    BOOST_TEST_MESSAGE("Advance to near hard fork");
    auto maint_interval = db.get_global_properties().parameters.maintenance_interval;
