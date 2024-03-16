@@ -1117,8 +1117,7 @@ BOOST_AUTO_TEST_CASE( worker_create_test )
    BOOST_CHECK(worker.daily_pay == 1000);
    BOOST_CHECK(worker.work_begin_date == db.head_block_time() + 10);
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
-   BOOST_CHECK(worker.vote_for.type() == vote_id_type::worker);
-   BOOST_CHECK(worker.vote_against.type() == vote_id_type::worker);
+   BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
    const vesting_balance_object& balance = worker.worker.get<vesting_balance_worker_type>().balance(db);
    BOOST_CHECK(balance.owner == nathan_id);
@@ -1137,7 +1136,7 @@ BOOST_AUTO_TEST_CASE( worker_pay_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(worker_id_type()(db).vote_for);
+      op.new_options->votes.insert(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1177,7 +1176,7 @@ BOOST_AUTO_TEST_CASE( worker_pay_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.erase(worker_id_type()(db).vote_for);
+      op.new_options->votes.erase(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1241,8 +1240,7 @@ BOOST_AUTO_TEST_CASE( refund_worker_test )
    BOOST_CHECK(worker.daily_pay == 1000);
    BOOST_CHECK(worker.work_begin_date == db.head_block_time() + 10);
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
-   BOOST_CHECK(worker.vote_for.type() == vote_id_type::worker);
-   BOOST_CHECK(worker.vote_against.type() == vote_id_type::worker);
+   BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
    transfer(committee_account, nathan_id, asset(100000));
 
@@ -1250,7 +1248,7 @@ BOOST_AUTO_TEST_CASE( refund_worker_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(worker_id_type()(db).vote_for);
+      op.new_options->votes.insert(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1314,8 +1312,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
    BOOST_CHECK(worker.daily_pay == 1000);
    BOOST_CHECK(worker.work_begin_date == db.head_block_time() + 10);
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
-   BOOST_CHECK(worker.vote_for.type() == vote_id_type::worker);
-   BOOST_CHECK(worker.vote_against.type() == vote_id_type::worker);
+   BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
    transfer(committee_account, nathan_id, asset(100000));
 
@@ -1323,7 +1320,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(worker_id_type()(db).vote_for);
+      op.new_options->votes.insert(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1879,7 +1876,7 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
          account_update_operation vote_op;
          vote_op.account = alice_id;
          vote_op.new_options = alice_id(db).options;
-         vote_op.new_options->votes.insert(wid(db).vote_for);
+         vote_op.new_options->votes.insert(wid(db).vote_id);
          signed_transaction vote_tx;
          vote_tx.operations.push_back(vote_op);
          set_expiration( db, vote_tx );

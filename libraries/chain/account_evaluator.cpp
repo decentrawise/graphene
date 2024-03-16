@@ -48,27 +48,13 @@ void verify_account_votes( const database& db, const account_options& options )
    FC_ASSERT( db.find(options.voting_account), "Invalid proxy account specified." );
 
    uint32_t max_vote_id = gpo.next_available_vote_id;
-   bool has_worker_votes = false;
    for( auto id : options.votes )
    {
       FC_ASSERT( id < max_vote_id, "Can not vote for ${id} which does not exist.", ("id",id) );
-      has_worker_votes |= (id.type() == vote_id_type::worker);
    }
 
-   if( has_worker_votes && (db.head_block_time() >= HARDFORK_607_TIME) )
-   {
-      const auto& against_worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_against>();
-      for( auto id : options.votes )
-      {
-         if( id.type() == vote_id_type::worker )
-         {
-            FC_ASSERT( against_worker_idx.find( id ) == against_worker_idx.end(),
-                       "Can no longer vote against a worker." );
-         }
-      }
-   }
    if ( db.head_block_time() >= HARDFORK_CORE_143_TIME ) {
-      const auto& approve_worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_for>();
+      const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
       const auto& committee_idx = db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
       const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
       for ( auto id : options.votes ) {
@@ -82,7 +68,7 @@ void verify_account_votes( const database& db, const account_options& options )
                           "Can not vote for ${id} which does not exist.", ("id",id) );
                break;
             case vote_id_type::worker:
-               FC_ASSERT( approve_worker_idx.find( id ) != approve_worker_idx.end(),
+               FC_ASSERT( worker_idx.find( id ) != worker_idx.end(),
                           "Can not vote for ${id} which does not exist.", ("id",id) );
                break;
             default:

@@ -1090,7 +1090,7 @@ BOOST_AUTO_TEST_CASE( lookup_vote_ids )
    std::vector<vote_id_type> votes;
    votes.push_back( committee.vote_id );
    votes.push_back( witness.vote_id );
-   votes.push_back( worker.vote_for );
+   votes.push_back( worker.vote_id );
 
    const auto results = db_api.lookup_vote_ids( votes );
 

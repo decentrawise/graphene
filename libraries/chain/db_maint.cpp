@@ -112,13 +112,11 @@ void database::update_worker_votes()
    const auto& idx = get_index_type<worker_index>().indices().get<by_account>();
    auto itr = idx.begin();
    auto itr_end = idx.end();
-   bool allow_negative_votes = (head_block_time() < HARDFORK_607_TIME);
    while( itr != itr_end )
    {
-      modify( *itr, [this,allow_negative_votes]( worker_object& obj )
+      modify( *itr, [this]( worker_object& obj )
       {
-         obj.total_votes_for = _vote_tally_buffer[obj.vote_for];
-         obj.total_votes_against = allow_negative_votes ? _vote_tally_buffer[obj.vote_against] : 0;
+         obj.total_votes = _vote_tally_buffer[obj.vote_id];
       });
       ++itr;
    }
@@ -132,15 +130,15 @@ void database::pay_workers( share_type& budget )
    // TODO optimization: add by_expiration index to avoid iterating through all objects
    get_index_type<worker_index>().inspect_all_objects([head_time, &active_workers](const object& o) {
       const worker_object& w = static_cast<const worker_object&>(o);
-      if( w.is_active(head_time) && w.approving_stake() > 0 )
+      if( w.is_active(head_time) && w.total_votes > 0 )
          active_workers.emplace_back(w);
    });
 
    // worker with more votes is preferred
    // if two workers exactly tie for votes, worker with lower ID is preferred
    std::sort(active_workers.begin(), active_workers.end(), [](const worker_object& wa, const worker_object& wb) {
-      share_type wa_vote = wa.approving_stake();
-      share_type wb_vote = wb.approving_stake();
+      share_type wa_vote = wa.total_votes;
+      share_type wb_vote = wb.total_votes;
       if( wa_vote != wb_vote )
          return wa_vote > wb_vote;
       return wa.id < wb.id;
