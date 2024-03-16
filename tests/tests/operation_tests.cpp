@@ -1179,11 +1179,12 @@ BOOST_AUTO_TEST_CASE( update_uia )
          PUSH_TX( db, trx, ~0 );
       }
 
-      BOOST_TEST_MESSAGE( "Make sure white_list can't be re-enabled" );
+      BOOST_TEST_MESSAGE( "Make sure white_list can be re-enabled with no supply" );
       op.new_options.issuer_permissions = test.options.issuer_permissions;
       op.new_options.flags = test.options.flags;
       BOOST_CHECK(!(test.options.issuer_permissions & white_list));
-      REQUIRE_THROW_WITH_VALUE(op, new_options.issuer_permissions, UIA_ASSET_ISSUER_PERMISSION_MASK);
+      trx.operations.back() = op;
+      PUSH_TX(db, trx, ~0);
 
       BOOST_TEST_MESSAGE( "We can change issuer to account_id_type(), but can't do it again" );
       op.new_issuer = account_id_type();
