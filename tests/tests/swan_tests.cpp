@@ -86,10 +86,6 @@ struct swan_fixture : database_fixture {
       FC_ASSERT( swan().bitasset_data(db).current_feed.settlement_price.is_null() );
     }
 
-    void wait_for_hf_core_216() {
-      generate_blocks( HARDFORK_CORE_216_TIME );
-      generate_block();
-    }
     void wait_for_hf_core_1270() {
        auto mi = db.get_global_properties().parameters.maintenance_interval;
        generate_blocks(HARDFORK_CORE_1270_TIME - mi);
@@ -122,15 +118,13 @@ BOOST_FIXTURE_TEST_SUITE( swan_tests, swan_fixture )
  */
 BOOST_AUTO_TEST_CASE( black_swan )
 { try {
-      if(hf1270)
-         wait_for_hf_core_1270();
+      wait_for_hf_core_1270();
 
       init_standard_swan();
 
       force_settle( borrower(), swan().amount(100) );
 
       expire_feed();
-      wait_for_hf_core_216();
 
       force_settle( borrower(), swan().amount(100) );
 
@@ -270,10 +264,7 @@ BOOST_AUTO_TEST_CASE( revive_recovered )
 { try {
       init_standard_swan( 700 );
 
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
+      wait_for_hf_core_1270();
 
       // revive after price recovers
       set_feed( 700, 800 );
@@ -303,13 +294,7 @@ BOOST_AUTO_TEST_CASE( recollateralize )
 { try {
       init_standard_swan( 700 );
 
-      // no hardfork yet
-      GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), back().amount(1000), swan().amount(100) ), fc::exception );
-
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
+      wait_for_hf_core_1270();
 
       int64_t b2_balance = get_balance( borrower2(), back() );
       bid_collateral( borrower2(), back().amount(1000), swan().amount(100) );
@@ -402,10 +387,7 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
 { try {
       limit_order_id_type oid = init_standard_swan( 1000 );
 
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
+      wait_for_hf_core_1270();
 
       set_expiration( db, trx );
       cancel_limit_order( oid(db) );
@@ -432,10 +414,7 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
  */
 BOOST_AUTO_TEST_CASE( revive_empty )
 { try {
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
+      wait_for_hf_core_1270();
 
       limit_order_id_type oid = init_standard_swan( 1000 );
 
@@ -459,10 +438,7 @@ BOOST_AUTO_TEST_CASE( revive_empty )
  */
 BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
 { try {
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
+      wait_for_hf_core_1270();
 
       standard_users();
       standard_asset();
@@ -507,57 +483,11 @@ BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
    }
 }
 
-BOOST_AUTO_TEST_CASE(black_swan_after_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(black_swan);
-
-} FC_LOG_AND_RETHROW() }
-
-// black_swan_issue_346_hf1270 is skipped as it is already failing with HARDFORK_CORE_834_TIME
-
-BOOST_AUTO_TEST_CASE(revive_recovered_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_recovered);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(recollateralize_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(recollateralize);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(revive_empty_recovered_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_empty_recovered);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(revive_empty_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_empty);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(revive_empty_with_bid_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_empty_with_bid);
-
-} FC_LOG_AND_RETHROW() }
-
 /** Creates a black swan, bids on more than outstanding debt
  */
 BOOST_AUTO_TEST_CASE( overflow )
 { try {
    init_standard_swan( 700 );
-
-   wait_for_hf_core_216();
 
    bid_collateral( borrower(),  back().amount(2200), swan().amount(GRAPHENE_MAX_SHARE_SUPPLY - 1) );
    bid_collateral( borrower2(), back().amount(2100), swan().amount(1399) );
