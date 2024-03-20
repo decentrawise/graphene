@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE( prediction_market_resolves_to_0 )
       // force settle with 0 outcome
       force_global_settle( pmark, pmark.amount(100) / core.amount(0) );
 
-      BOOST_TEST_MESSAGE( "Verify that forced settlment succeedes after global settlement" );
+      BOOST_TEST_MESSAGE( "Verify that forced settlement succeeds after global settlement" );
       force_settle( dan, pmark.amount(100) );
 
       // force settle the rest
@@ -805,7 +805,6 @@ BOOST_AUTO_TEST_CASE( prediction_market_resolves_to_0 )
 BOOST_AUTO_TEST_CASE( create_account_test )
 {
    try {
-      generate_blocks( HARDFORK_CORE_143_TIME );
       set_expiration( db, trx );
       trx.operations.push_back(make_account());
       account_create_operation op = trx.operations.back().get<account_create_operation>();

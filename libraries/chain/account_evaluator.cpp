@@ -53,28 +53,26 @@ void verify_account_votes( const database& db, const account_options& options )
       FC_ASSERT( id < max_vote_id, "Can not vote for ${id} which does not exist.", ("id",id) );
    }
 
-   if ( db.head_block_time() >= HARDFORK_CORE_143_TIME ) {
-      const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
-      const auto& committee_idx = db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-      const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
-      for ( auto id : options.votes ) {
-         switch ( id.type() ) {
-            case vote_id_type::committee:
-               FC_ASSERT( committee_idx.find(id) != committee_idx.end(),
-                          "Can not vote for ${id} which does not exist.", ("id",id) );
-               break;
-            case vote_id_type::witness:
-               FC_ASSERT( witness_idx.find(id) != witness_idx.end(),
-                          "Can not vote for ${id} which does not exist.", ("id",id) );
-               break;
-            case vote_id_type::worker:
-               FC_ASSERT( worker_idx.find( id ) != worker_idx.end(),
-                          "Can not vote for ${id} which does not exist.", ("id",id) );
-               break;
-            default:
-               FC_THROW( "Invalid Vote Type: ${id}", ("id", id) );
-               break;
-         }
+   const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
+   const auto& committee_idx = db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
+   const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
+   for ( auto id : options.votes ) {
+      switch ( id.type() ) {
+         case vote_id_type::committee:
+            FC_ASSERT( committee_idx.find(id) != committee_idx.end(),
+                        "Can not vote for ${id} which does not exist.", ("id",id) );
+            break;
+         case vote_id_type::witness:
+            FC_ASSERT( witness_idx.find(id) != witness_idx.end(),
+                        "Can not vote for ${id} which does not exist.", ("id",id) );
+            break;
+         case vote_id_type::worker:
+            FC_ASSERT( worker_idx.find( id ) != worker_idx.end(),
+                        "Can not vote for ${id} which does not exist.", ("id",id) );
+            break;
+         default:
+            FC_THROW( "Invalid Vote Type: ${id}", ("id", id) );
+            break;
       }
    }
 }
