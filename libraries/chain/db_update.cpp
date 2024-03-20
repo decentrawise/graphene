@@ -292,7 +292,6 @@ void database::clear_expired_force_settlements()
    auto head_time = head_block_time();
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
 
-   bool before_core_hardfork_184 = ( maint_time <= HARDFORK_CORE_184_TIME ); // something-for-nothing
    bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
 
    asset_id_type current_asset = settlement_index.begin()->settlement_asset_id();
@@ -438,7 +437,7 @@ void database::clear_expired_force_settlements()
          }
          try {
             asset new_settled = match(*itr, order, settlement_price, max_settlement, settlement_fill_price);
-            if( !before_core_hardfork_184 && new_settled.amount == 0 ) // unable to fill this settle order
+            if( new_settled.amount == 0 ) // unable to fill this settle order
             {
                if( find_object( order_id ) ) // the settle order hasn't been cancelled
                   current_asset_finished = true;

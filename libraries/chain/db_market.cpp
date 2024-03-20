@@ -58,7 +58,7 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
 
          // Be here, the call order can be paying nothing
          if( pays.amount == 0 && !bitasset.is_prediction_market ) // TODO remove this warning after hard fork core-342
-            wlog( "Something for nothing issue (#184, variant E) occurred at block #${block}", ("block",head_block_num()) );
+            wlog( "Something for nothing issue occurred at block #${block}", ("block",head_block_num()) );
       }
       else
          pays = call_itr->get_debt().multiply_and_round_up( settlement_price ); // round up, in favor of global settlement fund
@@ -565,7 +565,7 @@ database::match_result_type database::match( const limit_order_object &usd, cons
 
       // Be here, it's possible that taker is paying something for nothing due to partially filled in last loop.
       // In this case, we see it as filled and cancel it later
-      if( usd_receives.amount == 0 && maint_time > HARDFORK_CORE_184_TIME )
+      if( usd_receives.amount == 0 )
          return match_result_type::only_taker_filled;
 
       if( before_core_hardfork_342 )
@@ -626,12 +626,8 @@ database::match_result_type database::match( const limit_order_object &bid, cons
 
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
    // TODO remove when we're sure it's always false
-   bool before_core_hardfork_184 = ( maint_time <= HARDFORK_CORE_184_TIME ); // something-for-nothing
-   // TODO remove when we're sure it's always false
    bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
    // TODO remove when we're sure it's always false
-   if( before_core_hardfork_184 )
-      ilog( "match(limit,call) is called before hardfork core-184 at block #${block}", ("block",head_block_num()) );
    if( before_core_hardfork_342 )
       ilog( "match(limit,call) is called before hardfork core-342 at block #${block}", ("block",head_block_num()) );
 
@@ -648,8 +644,7 @@ database::match_result_type database::match( const limit_order_object &bid, cons
 
       // Be here, it's possible that taker is paying something for nothing due to partially filled in last loop.
       // In this case, we see it as filled and cancel it later
-      // TODO remove hardfork check when we're sure it's always after hard fork (but keep the zero amount check)
-      if( order_receives.amount == 0 && !before_core_hardfork_184 )
+      if( order_receives.amount == 0 )
          return match_result_type::only_taker_filled;
 
       if( before_core_hardfork_342 ) // TODO remove this "if" when we're sure it's always false (keep the code in else)
@@ -670,8 +665,7 @@ database::match_result_type database::match( const limit_order_object &bid, cons
       if( before_core_hardfork_342 ) // TODO remove this "if" when we're sure it's always false (keep the code in else)
       {
          order_receives = usd_to_buy * match_price; // round down here, in favor of call order
-         // TODO remove hardfork check when we're sure it's always after hard fork (but keep the zero amount check)
-         if( order_receives.amount == 0 && !before_core_hardfork_184 )
+         if( order_receives.amount == 0 )
             return match_result_type::only_taker_filled;
       }
       else // has hardfork core-342
@@ -715,27 +709,22 @@ asset database::match( const call_order_object& call,
    bool cull_settle_order = false; // whether need to cancel dust settle order
    if( call_pays.amount == 0 )
    {
-      if( maint_time > HARDFORK_CORE_184_TIME )
+      if( call_receives == call_debt ) // the call order is smaller than or equal to the settle order
       {
-         if( call_receives == call_debt ) // the call order is smaller than or equal to the settle order
-         {
-            wlog( "Something for nothing issue (#184, variant C-1) handled at block #${block}", ("block",head_block_num()) );
-            call_pays.amount = 1;
-         }
-         else
-         {
-            if( call_receives == settle.balance ) // the settle order is smaller
-            {
-               wlog( "Something for nothing issue (#184, variant C-2) handled at block #${block}", ("block",head_block_num()) );
-               cancel_settle_order( settle );
-            }
-            // else do nothing: neither order will be completely filled, perhaps due to max_settlement too small
-
-            return asset( 0, settle.balance.asset_id );
-         }
+         wlog( "Something for nothing issue handled at block #${block}", ("block",head_block_num()) );
+         call_pays.amount = 1;
       }
-      else // TODO remove this warning after hard fork core-184
-         wlog( "Something for nothing issue (#184, variant C) occurred at block #${block}", ("block",head_block_num()) );
+      else
+      {
+         if( call_receives == settle.balance ) // the settle order is smaller
+         {
+            wlog( "Something for nothing issue handled at block #${block}", ("block",head_block_num()) );
+            cancel_settle_order( settle );
+         }
+         // else do nothing: neither order will be completely filled, perhaps due to max_settlement too small
+
+         return asset( 0, settle.balance.asset_id );
+      }
    }
    else // the call order is not paying nothing, but still possible it's paying more than minimum required due to rounding
    {
@@ -1021,7 +1010,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     auto head_time = head_block_time();
     auto head_num = head_block_num();
 
-    bool before_core_hardfork_184 = ( maint_time <= HARDFORK_CORE_184_TIME ); // something-for-nothing
     bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
     bool before_core_hardfork_343 = ( maint_time <= HARDFORK_CORE_343_TIME ); // update call_price after partially filled
     bool before_core_hardfork_453 = ( maint_time <= HARDFORK_CORE_453_TIME ); // multiple matching issue
@@ -1093,10 +1081,7 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
           //   * when the limit order is a maker, it won't be paying something for nothing
           if( order_receives.amount == 0 ) // TODO this should not happen. remove the warning after confirmed
           {
-             if( before_core_hardfork_184 )
-                wlog( "Something for nothing issue (#184, variant D-1) occurred at block #${block}", ("block",head_num) );
-             else
-                wlog( "Something for nothing issue (#184, variant D-2) occurred at block #${block}", ("block",head_num) );
+             wlog( "Something for nothing issue occurred at block #${block}", ("block",head_num) );
           }
 
           if( before_core_hardfork_342 )
@@ -1119,7 +1104,7 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 
              // Be here, the limit order would be paying something for nothing
              if( order_receives.amount == 0 ) // TODO remove warning after hard fork core-342
-                wlog( "Something for nothing issue (#184, variant D) occurred at block #${block}", ("block",head_num) );
+                wlog( "Something for nothing issue occurred at block #${block}", ("block",head_num) );
           }
           else
              order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up, in favor of limit order
