@@ -1754,12 +1754,10 @@ BOOST_AUTO_TEST_CASE( stealth_fba_test )
 
       // Izzy transfers issuer duty to Tom
       {
-         asset_update_operation update_op;
+         asset_update_issuer_operation update_op;
          update_op.issuer = izzy_id;
          update_op.asset_to_update = stealth_id;
          update_op.new_issuer = tom_id;
-         // new_options should be optional, but isn't...the following line should be unnecessary #580
-         update_op.new_options = stealth_id(db).options;
          signed_transaction tx;
          tx.operations.push_back( update_op );
          set_expiration( db, tx );

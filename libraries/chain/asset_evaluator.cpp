@@ -243,13 +243,6 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
    a_copy.options = o.new_options;
    a_copy.validate();
 
-   if( o.new_issuer )
-   {
-      FC_ASSERT( d.head_block_time() < HARDFORK_CORE_199_TIME,
-                 "Since Hardfork #199, updating issuer requires the use of asset_update_issuer_operation.");
-      validate_new_issuer( d, a, *o.new_issuer );
-   }
-
    detail::check_asset_options_hf_1268(d.head_block_time(), o.new_options);
 
    if( a.dynamic_asset_data_id(d).current_supply != 0 )
@@ -311,8 +304,6 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
    }
 
    d.modify(*asset_to_update, [&o](asset_object& a) {
-      if( o.new_issuer )
-         a.issuer = *o.new_issuer;
       a.options = o.new_options;
    });
 

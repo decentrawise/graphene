@@ -362,20 +362,29 @@ BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
 {
    try
    {
-      /* For MPA fed by non witnesses or non committee mmembers but by feed producers changes should do nothing */
+      /* For MPA fed by non witnesses or non committee members but by feed producers changes should do nothing */
       ACTORS( (sam)(alice)(paul)(bob) );
 
       // Create the asset
       const asset_id_type bit_usd_id = create_bitasset("USDBIT").get_id();
 
       // Update asset issuer
-      const asset_object &asset_obj = bit_usd_id(db);
+      {
+         asset_update_issuer_operation op;
+         op.asset_to_update = bit_usd_id;
+         op.issuer = bit_usd_id(db).issuer;
+         op.new_issuer = bob_id;
+         trx.operations.push_back(op);
+         PUSH_TX(db, trx, ~0);
+         generate_block();
+         trx.clear();
+      }
+      // Update asset options
       {
          asset_update_operation op;
          op.asset_to_update = bit_usd_id;
-         op.issuer = asset_obj.issuer;
-         op.new_issuer = bob_id;
-         op.new_options = asset_obj.options;
+         op.issuer = bob_id;
+         op.new_options = bit_usd_id(db).options;
          op.new_options.flags &= ~witness_fed_asset;
          trx.operations.push_back(op);
          PUSH_TX(db, trx, ~0);

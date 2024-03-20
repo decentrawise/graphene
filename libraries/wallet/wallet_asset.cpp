@@ -84,22 +84,16 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(common)(bitasset_opts)(broadcast) ) }
 
-   signed_transaction wallet_api_impl::update_asset(string symbol, optional<string> new_issuer,
-         asset_options new_options, bool broadcast /* = false */)
+   signed_transaction wallet_api_impl::update_asset(string symbol, asset_options new_options,
+         bool broadcast /* = false */)
    { try {
       optional<asset_object> asset_to_update = find_asset(symbol);
       if (!asset_to_update)
          FC_THROW("No asset with that symbol exists!");
-      optional<account_id_type> new_issuer_account_id;
-      if (new_issuer)
-      {
-         FC_THROW( "The use of 'new_issuer' is no longer supported. Please use `update_asset_issuer' instead!" );
-      }
 
       asset_update_operation update_op;
       update_op.issuer = asset_to_update->issuer;
       update_op.asset_to_update = asset_to_update->id;
-      update_op.new_issuer = new_issuer_account_id;
       update_op.new_options = new_options;
 
       signed_transaction tx;
@@ -108,7 +102,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(new_options)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (symbol)(new_options)(broadcast) ) }
 
    signed_transaction wallet_api_impl::update_asset_issuer(string symbol, string new_issuer,
          bool broadcast /* = false */)

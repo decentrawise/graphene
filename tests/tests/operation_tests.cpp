@@ -1030,7 +1030,6 @@ BOOST_AUTO_TEST_CASE( update_mia )
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
       std::swap(op.new_options.flags, op.new_options.issuer_permissions);
-      op.new_issuer = account_id_type();
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
@@ -1049,20 +1048,6 @@ BOOST_AUTO_TEST_CASE( update_mia )
          trx.operations.back() = pop;
          PUSH_TX( db, trx, ~0 );
       }
-
-      trx.operations.clear();
-      auto nathan = create_account("nathan");
-      op.issuer = account_id_type();
-      op.new_issuer = nathan.id;
-      trx.operations.emplace_back(op);
-      PUSH_TX( db, trx, ~0 );
-      BOOST_CHECK(bit_usd.issuer == nathan.id);
-
-      op.issuer = nathan.id;
-      op.new_issuer = account_id_type();
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-      BOOST_CHECK(bit_usd.issuer == account_id_type());
    } catch ( const fc::exception& e ) {
       elog( "${e}", ("e", e.to_detail_string() ) );
       throw;
@@ -1127,7 +1112,6 @@ BOOST_AUTO_TEST_CASE( update_uia )
    try {
       INVOKE(create_uia);
       const auto& test = get_asset(UIA_TEST_SYMBOL);
-      const auto& nathan = create_account("nathan");
 
       asset_update_operation op;
       op.issuer = test.issuer;
@@ -1135,10 +1119,6 @@ BOOST_AUTO_TEST_CASE( update_uia )
       op.new_options = test.options;
 
       trx.operations.push_back(op);
-
-      //Cannot change issuer to same as before
-      BOOST_TEST_MESSAGE( "Make sure changing issuer to same as before is forbidden" );
-      REQUIRE_THROW_WITH_VALUE(op, new_issuer, test.issuer);
 
       //Cannot convert to an MIA
       BOOST_TEST_MESSAGE( "Make sure we can't convert UIA to MIA" );
@@ -1151,13 +1131,10 @@ BOOST_AUTO_TEST_CASE( update_uia )
       PUSH_TX( db, trx, ~0 );
       REQUIRE_THROW_WITH_VALUE(op, new_options.core_exchange_rate, price());
       op.new_options.core_exchange_rate = test.options.core_exchange_rate;
-      op.new_issuer = nathan.id;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
       BOOST_TEST_MESSAGE( "Test setting flags" );
-      op.issuer = nathan.id;
-      op.new_issuer.reset();
       op.new_options.flags = transfer_restricted | white_list;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
@@ -1184,14 +1161,6 @@ BOOST_AUTO_TEST_CASE( update_uia )
       BOOST_CHECK(!(test.options.issuer_permissions & white_list));
       trx.operations.back() = op;
       PUSH_TX(db, trx, ~0);
-
-      BOOST_TEST_MESSAGE( "We can change issuer to account_id_type(), but can't do it again" );
-      op.new_issuer = account_id_type();
-      trx.operations.back() = op;
-      PUSH_TX( db, trx, ~0 );
-      op.issuer = account_id_type();
-      GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
-      op.new_issuer.reset();
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -1222,20 +1191,6 @@ BOOST_AUTO_TEST_CASE( update_uia_issuer )
          PUSH_TX( db, trx, ~0 );
 
          return get_account(name);
-      };
-
-      auto update_asset_issuer = [&](const asset_object& current,
-                                     const account_object& new_issuer) {
-         asset_update_operation op;
-         op.issuer =  current.issuer;
-         op.asset_to_update = current.id;
-         op.new_options = current.options;
-         op.new_issuer = new_issuer.id;
-         signed_transaction tx;
-         tx.operations.push_back( op );
-         db.current_fee_schedule().set_fee( tx.operations.back() );
-         set_expiration( db, tx );
-         PUSH_TX( db, tx, ~0 );
       };
 
       // Lambda for updating the issuer on chain using a particular key
@@ -1299,9 +1254,6 @@ BOOST_AUTO_TEST_CASE( update_uia_issuer )
       const auto& test = create_user_issued_asset("UPDATEISSUER", alice_id(db), 0);
       const asset_id_type test_id = test.get_id();
 
-      // Fast Forward to Hardfork time
-      generate_blocks( HARDFORK_CORE_199_TIME );
-
       update_issuer_proposal( test_id, alice_id(db), bob_id(db), alice_owner);
 
       BOOST_TEST_MESSAGE( "Can't change issuer if not my asset" );
@@ -1310,9 +1262,6 @@ BOOST_AUTO_TEST_CASE( update_uia_issuer )
 
       BOOST_TEST_MESSAGE( "Can't change issuer with alice's active key" );
       GRAPHENE_REQUIRE_THROW( update_issuer( test_id, alice_id(db), bob_id(db), alice_active ), fc::exception );
-
-      BOOST_TEST_MESSAGE( "Old method with asset_update needs to fail" );
-      GRAPHENE_REQUIRE_THROW( update_asset_issuer( test_id(db), bob_id(db)  ), fc::exception );
 
       BOOST_TEST_MESSAGE( "Updating issuer to bob" );
       update_issuer( test_id, alice_id(db), bob_id(db), alice_owner );
@@ -1668,7 +1617,6 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
          uop.issuer =  current.issuer;
          uop.asset_to_update = current.id;
          uop.new_options = current.options;
-         uop.new_issuer = account_id_type();
          trx.operations.push_back(uop);
          PUSH_TX( db, trx, ~0 );
          trx.clear();

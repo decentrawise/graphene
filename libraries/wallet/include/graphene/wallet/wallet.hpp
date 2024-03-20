@@ -1104,15 +1104,12 @@ class wallet_api
        * \c update_bitasset() instead.
        *
        * @param symbol_or_id the symbol or id of the asset to update
-       * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
-       *                   null if you wish to remain the issuer of the asset
        * @param new_options the new asset_options object, which will entirely replace the existing
        *                    options.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the asset
        */
       signed_transaction update_asset( const string& symbol_or_id,
-                                       const optional<string>& new_issuer,
                                        const asset_options& new_options,
                                        bool broadcast = false )const;
 

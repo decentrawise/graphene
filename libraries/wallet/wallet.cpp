@@ -785,11 +785,10 @@ signed_transaction wallet_api::create_asset( const string& issuer,
 }
 
 signed_transaction wallet_api::update_asset( const string& symbol,
-                                             const optional<string>& new_issuer,
                                              const asset_options& new_options,
                                              bool broadcast /* = false */ )const
 {
-   return my->update_asset(symbol, new_issuer, new_options, broadcast);
+   return my->update_asset(symbol, new_options, broadcast);
 }
 
 signed_transaction wallet_api::update_asset_issuer( const string& symbol,

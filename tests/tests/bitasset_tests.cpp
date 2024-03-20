@@ -59,21 +59,17 @@ void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key&
 /******
  * @brief helper method to turn witness_fed_asset on and off
  * @param fixture the database_fixture
- * @param new_issuer optionally change the issuer
  * @param signing_key signer
  * @param asset_id asset we want to change
  * @param witness_fed true if you want this to be a witness fed asset
  */
-void change_asset_options(database_fixture& fixture, const optional<account_id_type>& new_issuer,
-      const fc::ecc::private_key& signing_key,
+void change_asset_options(database_fixture& fixture, const fc::ecc::private_key& signing_key,
       asset_id_type asset_id, bool witness_fed)
 {
    asset_update_operation op;
    const asset_object& obj = asset_id(fixture.db);
    op.asset_to_update = asset_id;
    op.issuer = obj.issuer;
-   if (new_issuer)
-      op.new_issuer = new_issuer;
    op.new_options = obj.options;
    if (witness_fed)
    {
@@ -90,6 +86,28 @@ void change_asset_options(database_fixture& fixture, const optional<account_id_t
    fixture.generate_block();
    fixture.trx.clear();
 
+}
+
+/******
+ * @brief helper method to change asset issuer
+ * @param fixture the database_fixture
+ * @param signing_key signer
+ * @param asset_id asset we want to change
+ * @param new_issuer the new issuer for asset
+ */
+void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& signing_key,
+      asset_id_type asset_id, account_id_type new_issuer)
+{
+   asset_update_issuer_operation op;
+   const asset_object& obj = asset_id(fixture.db);
+   op.asset_to_update = asset_id;
+   op.issuer = obj.issuer;
+   op.new_issuer = new_issuer;
+   fixture.trx.operations.push_back(op);
+   fixture.sign( fixture.trx, signing_key );
+   PUSH_TX( fixture.db, fixture.trx, ~0 );
+   fixture.generate_block();
+   fixture.trx.clear();
 }
 
 /*********
@@ -136,14 +154,16 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
 
    {
       BOOST_TEST_MESSAGE("Update the USDBIT asset options");
-      change_asset_options(*this, nathan_id, nathan_private_key, bit_usd_id, false );
+      change_asset_options(*this, nathan_private_key, bit_usd_id, false );
+      change_asset_issuer(*this, nathan_private_key, bit_usd_id, nathan_id);
    }
 
    BOOST_TEST_MESSAGE("Create JMJBIT based on USDBIT.");
    asset_id_type bit_jmj_id = create_bitasset("JMJBIT").get_id();
    {
       BOOST_TEST_MESSAGE("Update the JMJBIT asset options");
-      change_asset_options(*this, nathan_id, nathan_private_key, bit_jmj_id, true );
+      change_asset_options(*this, nathan_private_key, bit_jmj_id, true );
+      change_asset_issuer(*this, nathan_private_key, bit_jmj_id, nathan_id);
    }
 
    {
@@ -268,14 +288,16 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_witness_asset )
 
    {
       BOOST_TEST_MESSAGE("Update the USDBIT asset options");
-      change_asset_options(*this, nathan_id, nathan_private_key, bit_usd_id, false );
+      change_asset_options(*this, nathan_private_key, bit_usd_id, false );
+      change_asset_issuer(*this, nathan_private_key, bit_usd_id, nathan_id);
    }
 
    BOOST_TEST_MESSAGE("Create JMJBIT based on USDBIT.");
    asset_id_type bit_jmj_id = create_bitasset("JMJBIT").get_id();
    {
       BOOST_TEST_MESSAGE("Update the JMJBIT asset options");
-      change_asset_options(*this, nathan_id, nathan_private_key, bit_jmj_id, false );
+      change_asset_options(*this, nathan_private_key, bit_jmj_id, false );
+      change_asset_issuer(*this, nathan_private_key, bit_jmj_id, nathan_id);
    }
    {
       BOOST_TEST_MESSAGE("Update the JMJBIT bitasset options");
@@ -1223,14 +1245,14 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_switching_to_witness_fed )
 
    {
       BOOST_TEST_MESSAGE("Update the USDBIT asset options");
-      change_asset_options(*this, nathan_id, nathan_private_key, bit_usd_id, false );
+      change_asset_options(*this, nathan_private_key, bit_usd_id, false );
    }
 
    BOOST_TEST_MESSAGE("Create JMJBIT based on USDBIT.");
    asset_id_type bit_jmj_id = create_bitasset("JMJBIT").id;
    {
       BOOST_TEST_MESSAGE("Update the JMJBIT asset options");
-      change_asset_options(*this, nathan_id, nathan_private_key, bit_jmj_id, false );
+      change_asset_options(*this, nathan_private_key, bit_jmj_id, false );
    }
    {
       BOOST_TEST_MESSAGE("Update the JMJBIT bitasset options");
@@ -1283,8 +1305,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_switching_to_witness_fed )
    }
    {
       BOOST_TEST_MESSAGE("Change JMJBIT to be witness_fed");
-      optional<account_id_type> noone;
-      change_asset_options(*this, noone, nathan_private_key, bit_jmj_id, true );
+      change_asset_options(*this, nathan_private_key, bit_jmj_id, true );
    }
    {
       BOOST_TEST_MESSAGE("Change underlying asset of bit_jmj from bit_usd to core");
