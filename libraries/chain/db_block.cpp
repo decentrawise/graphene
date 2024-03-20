@@ -585,8 +585,6 @@ void database::_apply_block( const signed_block& next_block )
 
    _current_block_time   = next_block.timestamp;
 
-   _issue_453_affected_assets.clear();
-
    signed_block processed_block( next_block ); // make a copy
    for( auto& trx : processed_block.transactions )
    {

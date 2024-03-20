@@ -1021,8 +1021,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     auto head_time = head_block_time();
     auto head_num = head_block_num();
 
-    bool before_hardfork_615 = ( head_time < HARDFORK_615_TIME );
-
     bool before_core_hardfork_184 = ( maint_time <= HARDFORK_CORE_184_TIME ); // something-for-nothing
     bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
     bool before_core_hardfork_343 = ( maint_time <= HARDFORK_CORE_343_TIME ); // update call_price after partially filled
@@ -1133,8 +1131,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
           else if( filled_limit && maint_time <= HARDFORK_CORE_453_TIME ) // TODO remove warning after hard fork core-453
           {
              wlog( "Multiple limit match problem (issue 453) occurred at block #${block}", ("block",head_num) );
-             if( before_hardfork_615 )
-                _issue_453_affected_assets.insert( bitasset.asset_id );
           }
        }
 

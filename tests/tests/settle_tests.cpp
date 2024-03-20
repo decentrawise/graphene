@@ -15,8 +15,6 @@ BOOST_FIXTURE_TEST_SUITE( settle_tests, database_fixture )
 BOOST_AUTO_TEST_CASE( settle_rounding_test )
 {
    try {
-      // get around Graphene issue #615 feed expiration bug
-      generate_blocks(HARDFORK_615_TIME);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration( db, trx );
 
@@ -1231,9 +1229,6 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test_after_hf_184 )
 BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
 {
    try {
-      // get around Graphene issue #615 feed expiration bug
-      generate_blocks(HARDFORK_615_TIME);
-      generate_block();
       set_expiration( db, trx );
 
       ACTORS((paul)(michael)(rachel)(alice));

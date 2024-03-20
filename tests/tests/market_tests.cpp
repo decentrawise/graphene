@@ -17,8 +17,6 @@ BOOST_FIXTURE_TEST_SUITE(market_tests, database_fixture)
  */
 BOOST_AUTO_TEST_CASE(issue_338_etc)
 { try {
-   generate_blocks(HARDFORK_615_TIME); // get around Graphene issue #615 feed expiration bug
-   generate_block();
 
    set_expiration( db, trx );
 
@@ -140,7 +138,7 @@ BOOST_AUTO_TEST_CASE(issue_338_etc)
    BOOST_CHECK_EQUAL( 6923, call.collateral.value );
 
    // generate blocks to let the settle order execute (price feed will expire after it)
-   generate_blocks( HARDFORK_615_TIME + fc::hours(25) );
+   generate_blocks( db.head_block_time() + fc::hours(25) );
    // call2 get settled #343
    BOOST_CHECK_EQUAL( 252, get_balance(seller_id, usd_id) );
    BOOST_CHECK_EQUAL( 8177, get_balance(seller_id, core_id) );
@@ -189,7 +187,7 @@ BOOST_AUTO_TEST_CASE(issue_338_etc)
 
    // generate a block, sell_low will expire
    BOOST_TEST_MESSAGE( "Expire sell_low" );
-   generate_blocks( HARDFORK_615_TIME + fc::hours(26) );
+   generate_blocks( db.head_block_time() + fc::hours(26) );
    BOOST_CHECK( db.find( sell_low ) == nullptr );
 
    // #453 multiple order matching issue occurs

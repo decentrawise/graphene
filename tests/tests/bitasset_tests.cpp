@@ -424,8 +424,6 @@ BOOST_AUTO_TEST_CASE( hf_890_test )
                  | database::skip_tapos_check
                  | database::skip_merkle_check
                  ;
-   generate_blocks(HARDFORK_615_TIME, true, skip); // get around Graphene issue #615 feed expiration bug
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time, true, skip);
 
    auto hf_time = HARDFORK_CORE_868_890_TIME;
    if(hf1270)
@@ -897,9 +895,6 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
                  | database::skip_tapos_check
                  | database::skip_merkle_check
                  ;
-   generate_blocks( HARDFORK_615_TIME, true, skip ); // get around Graphene issue #615 feed expiration bug
-   generate_blocks( db.get_dynamic_global_properties().next_maintenance_time, true, skip );
-   generate_block( skip );
 
    for( int i = 0; i < 8; ++i )
    {

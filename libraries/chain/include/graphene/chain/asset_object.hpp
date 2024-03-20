@@ -173,7 +173,7 @@ namespace graphene { namespace chain {
          /// True if this asset implements a @ref prediction_market
          bool is_prediction_market = false;
 
-         /// This is the volume of this asset which has been force-settled this maintanence interval
+         /// This is the volume of this asset which has been force-settled this maintenance interval
          share_type force_settled_volume;
          /// Calculate the maximum force settlement volume per maintenance interval, given the current share supply
          share_type max_force_settlement_volume(share_type current_supply)const;
@@ -183,7 +183,7 @@ namespace graphene { namespace chain {
 
          /**
           *  In the event of a black swan, the swan price is saved in the settlement price, and all margin positions
-          *  are settled at the same price with the siezed collateral being moved into the settlement fund. From this
+          *  are settled at the same price with the seized collateral being moved into the settlement fund. From this
           *  point on no further updates to the asset are permitted (no feeds, etc) and forced settlement occurs
           *  immediately when requested, using the settlement price and fund.
           */
@@ -215,8 +215,8 @@ namespace graphene { namespace chain {
             else
                return current_feed_publication_time + options.feed_lifetime_sec;
          }
-         bool feed_is_expired_before_hardfork_615(time_point_sec current_time)const
-         { return feed_expiration_time() >= current_time; }
+
+         /// Returns true if the feed is expired
          bool feed_is_expired(time_point_sec current_time)const
          { return feed_expiration_time() <= current_time; }
 
