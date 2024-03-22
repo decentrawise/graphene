@@ -282,7 +282,7 @@ void database::clear_expired_force_settlements()
    //      - One idea is to check time first, if any expired settlement found, check asset.
    //        However, due to max_settlement_volume, this does not work, i.e. time meets but have to
    //        skip due to volume limit.
-   //      - Instead, maintain some data e.g. (whether_force_settle_volome_meets, first_settle_time)
+   //      - Instead, maintain some data e.g. (whether_force_settle_volume_meets, first_settle_time)
    //        in bitasset_data object and index by them, then we could process here faster.
    //        Note: due to rounding, even when settled < max_volume, it is still possible that we have to skip
    const auto& settlement_index = get_index_type<force_settlement_index>().indices().get<by_expiration>();
@@ -291,8 +291,6 @@ void database::clear_expired_force_settlements()
 
    auto head_time = head_block_time();
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-
-   bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
 
    asset_id_type current_asset = settlement_index.begin()->settlement_asset_id();
 
@@ -405,17 +403,7 @@ void database::clear_expired_force_settlements()
                                  / ratio_type( GRAPHENE_100_PERCENT - mia.options.force_settlement_offset_percent,
                                                 GRAPHENE_100_PERCENT );
 
-      if( before_core_hardfork_342 )
-      {
-         auto& pays = order.balance;
-         auto receives = (order.balance * mia.current_feed.settlement_price);
-         receives.amount = static_cast<uint64_t>( fc::uint128_t(receives.amount.value) *
-                              (GRAPHENE_100_PERCENT - mia.options.force_settlement_offset_percent) /
-                              GRAPHENE_100_PERCENT );
-         assert(receives <= order.balance * mia.current_feed.settlement_price);
-         settlement_price = pays / receives;
-      }
-      else if( settlement_price.base.asset_id != current_asset ) // only calculate once per asset
+      if( settlement_price.base.asset_id != current_asset ) // only calculate once per asset
          settlement_price = settlement_fill_price;
 
       auto& call_index = get_index_type<call_order_index>().indices().get<by_collateral>();
@@ -444,12 +432,7 @@ void database::clear_expired_force_settlements()
                break;
             }
             settled += new_settled;
-            // before hard fork core-342, `new_settled > 0` is always true, we'll have:
-            // * call order is completely filled (thus itr will change in next loop), or
-            // * settle order is completely filled (thus find_object(order_id) will be false so will break out), or
-            // * reached max_settlement_volume limit (thus new_settled == max_settlement so will break out).
-            //
-            // after hard fork core-342, if new_settled > 0, we'll have:
+            // If new_settled > 0, we'll have:
             // * call order is completely filled (thus itr will change in next loop), or
             // * settle order is completely filled (thus find_object(order_id) will be false so will break out), or
             // * reached max_settlement_volume limit, but it's possible that new_settled < max_settlement,

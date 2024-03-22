@@ -44,7 +44,6 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
    const auto& call_price_index = get_index_type<call_order_index>().indices().get<by_price>();
 
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-   bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
 
    // cancel all call orders and accumulate it into collateral_gathered
    auto call_itr = call_price_index.lower_bound( price::min( bitasset.options.short_backing_asset, bitasset.asset_id ) );
@@ -52,16 +51,7 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
    asset pays;
    while( call_itr != call_end )
    {
-      if( before_core_hardfork_342 )
-      {
-         pays = call_itr->get_debt() * settlement_price; // round down, in favor of call order
-
-         // Be here, the call order can be paying nothing
-         if( pays.amount == 0 && !bitasset.is_prediction_market ) // TODO remove this warning after hard fork core-342
-            wlog( "Something for nothing issue occurred at block #${block}", ("block",head_block_num()) );
-      }
-      else
-         pays = call_itr->get_debt().multiply_and_round_up( settlement_price ); // round up, in favor of global settlement fund
+      pays = call_itr->get_debt().multiply_and_round_up( settlement_price ); // round up, in favor of global settlement fund
 
       if( pays > call_itr->get_collateral() )
          pays = call_itr->get_collateral();
@@ -554,7 +544,6 @@ database::match_result_type database::match( const limit_order_object &usd, cons
    asset usd_pays, usd_receives, core_pays, core_receives;
 
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-   bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
 
    bool cull_taker = false;
    if( usd_for_sale <= core_for_sale * match_price ) // rounding down here should be fine
@@ -566,17 +555,12 @@ database::match_result_type database::match( const limit_order_object &usd, cons
       if( usd_receives.amount == 0 )
          return match_result_type::only_taker_filled;
 
-      if( before_core_hardfork_342 )
-         core_receives = usd_for_sale;
-      else
-      {
-         // The remaining amount in order `usd` would be too small,
-         //   so we should cull the order in fill_limit_order() below.
-         // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
-         //   so calling maybe_cull_small() will always cull it.
-         core_receives = usd_receives.multiply_and_round_up( match_price );
-         cull_taker = true;
-      }
+      // The remaining amount in order `usd` would be too small,
+      //   so we should cull the order in fill_limit_order() below.
+      // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
+      //   so calling maybe_cull_small() will always cull it.
+      core_receives = usd_receives.multiply_and_round_up( match_price );
+      cull_taker = true;
    }
    else
    {
@@ -587,20 +571,13 @@ database::match_result_type database::match( const limit_order_object &usd, cons
 
       // The maker won't be paying something for nothing, since if it would, it would have been cancelled already.
       core_receives = core_for_sale * match_price; // round down, in favor of bigger order
-      if( before_core_hardfork_342 )
-         usd_receives = core_for_sale;
-      else
-         // The remaining amount in order `core` would be too small,
-         //   so the order will be culled in fill_limit_order() below
-         usd_receives = core_receives.multiply_and_round_up( match_price );
+      // The remaining amount in order `core` would be too small,
+      //   so the order will be culled in fill_limit_order() below
+      usd_receives = core_receives.multiply_and_round_up( match_price );
    }
 
    core_pays = usd_receives;
    usd_pays  = core_receives;
-
-   if( before_core_hardfork_342 )
-      FC_ASSERT( usd_pays == usd.amount_for_sale() ||
-                 core_pays == core.amount_for_sale() );
 
    // the first param of match() is taker
    bool taker_filled = fill_limit_order( usd, usd_pays, usd_receives, cull_taker, match_price, false );
@@ -623,11 +600,6 @@ database::match_result_type database::match( const limit_order_object &bid, cons
    // GCOVR_EXCL_STOP
 
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-   // TODO remove when we're sure it's always false
-   bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
-   // TODO remove when we're sure it's always false
-   if( before_core_hardfork_342 )
-      ilog( "match(limit,call) is called before hardfork core-342 at block #${block}", ("block",head_block_num()) );
 
    bool cull_taker = false;
 
@@ -645,29 +617,17 @@ database::match_result_type database::match( const limit_order_object &bid, cons
       if( order_receives.amount == 0 )
          return match_result_type::only_taker_filled;
 
-      if( before_core_hardfork_342 ) // TODO remove this "if" when we're sure it's always false (keep the code in else)
-         call_receives = usd_for_sale;
-      else
-      {
-         // The remaining amount in the limit order would be too small,
-         //   so we should cull the order in fill_limit_order() below.
-         // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
-         //   so calling maybe_cull_small() will always cull it.
-         call_receives = order_receives.multiply_and_round_up( match_price );
-         cull_taker = true;
-      }
+      // The remaining amount in the limit order would be too small,
+      //   so we should cull the order in fill_limit_order() below.
+      // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
+      //   so calling maybe_cull_small() will always cull it.
+      call_receives = order_receives.multiply_and_round_up( match_price );
+      cull_taker = true;
    }
    else
    {  // fill call order
       call_receives  = usd_to_buy;
-      if( before_core_hardfork_342 ) // TODO remove this "if" when we're sure it's always false (keep the code in else)
-      {
-         order_receives = usd_to_buy * match_price; // round down here, in favor of call order
-         if( order_receives.amount == 0 )
-            return match_result_type::only_taker_filled;
-      }
-      else // has hardfork core-342
-         order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up here, in favor of limit order
+      order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up here, in favor of limit order
    }
 
    call_pays  = order_receives;
@@ -694,7 +654,6 @@ asset database::match( const call_order_object& call,
    FC_ASSERT(call.debt > 0 && call.collateral > 0 && settle.balance.amount > 0);
 
    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-   bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
 
    auto settle_for_sale = std::min(settle.balance, max_settlement);
    auto call_debt = call.get_debt();
@@ -726,32 +685,22 @@ asset database::match( const call_order_object& call,
    }
    else // the call order is not paying nothing, but still possible it's paying more than minimum required due to rounding
    {
-      if( !before_core_hardfork_342 )
+      if( call_receives == call_debt ) // the call order is smaller than or equal to the settle order
       {
-         if( call_receives == call_debt ) // the call order is smaller than or equal to the settle order
-         {
-            call_pays = call_receives.multiply_and_round_up( match_price ); // round up here, in favor of settle order
-            // be here, we should have: call_pays <= call_collateral
-         }
-         else
-         {
-            // be here, call_pays has been rounded down
+         call_pays = call_receives.multiply_and_round_up( match_price ); // round up here, in favor of settle order
+         // be here, we should have: call_pays <= call_collateral
+      }
+      else
+      {
+         if( call_receives == settle.balance ) // the settle order will be completely filled, assuming we need to cull it
+            cull_settle_order = true;
+         // else do nothing, since we can't cull the settle order
 
-            // be here, we should have: call_pays <= call_collateral
+         call_receives = call_pays.multiply_and_round_up( match_price );   // round up here to mitigate rounding issue
 
-            if( call_receives == settle.balance ) // the settle order will be completely filled, assuming we need to cull it
-               cull_settle_order = true;
-            // else do nothing, since we can't cull the settle order
-
-            call_receives = call_pays.multiply_and_round_up( match_price ); // round up here to mitigate rounding issue (core-342).
-                                                                            // It is important to understand here that the newly
-                                                                            // rounded up call_receives won't be greater than the
-                                                                            // old call_receives.
-
-            if( call_receives == settle.balance ) // the settle order will be completely filled, no need to cull
-               cull_settle_order = false;
-            // else do nothing, since we still need to cull the settle order or still can't cull the settle order
-         }
+         if( call_receives == settle.balance ) // the settle order will be completely filled, no need to cull
+            cull_settle_order = false;
+         // else do nothing, since we still need to cull the settle order or still can't cull the settle order
       }
    }
 
@@ -765,16 +714,6 @@ asset database::match( const call_order_object& call,
     *  can trigger a black swan.  So now we must cancel the forced settlement
     *  object.
     */
-   if( before_core_hardfork_342 )
-   {
-      auto call_collateral = call.get_collateral();
-      if( call_pays == call_collateral ) // TODO remove warning after hard fork core-342
-         wlog( "Incorrectly captured black swan event at block #${block}", ("block",head_block_num()) );
-      GRAPHENE_ASSERT( call_pays < call_collateral, black_swan_exception, "" );
-
-      assert( settle_pays == settle_for_sale || call_receives == call.get_debt() );
-   }
-   // else do nothing, since black swan event won't happen, and the assertion is no longer true
 
    fill_call_order( call, call_pays, call_receives, fill_price, true ); // call order is maker
    fill_settle_order( settle, settle_pays, settle_receives, fill_price, false ); // force settlement order is taker
@@ -1008,7 +947,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     auto head_time = head_block_time();
     auto head_num = head_block_num();
 
-    bool before_core_hardfork_342 = ( maint_time <= HARDFORK_CORE_342_TIME ); // better rounding
     bool before_core_hardfork_343 = ( maint_time <= HARDFORK_CORE_343_TIME ); // update call_price after partially filled
     bool before_core_hardfork_453 = ( maint_time <= HARDFORK_CORE_453_TIME ); // multiple matching issue
     bool before_core_hardfork_606 = ( maint_time <= HARDFORK_CORE_606_TIME ); // feed always trigger call
@@ -1082,30 +1020,18 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
              wlog( "Something for nothing issue occurred at block #${block}", ("block",head_num) );
           }
 
-          if( before_core_hardfork_342 )
-             call_receives = usd_for_sale;
-          else
-             // The remaining amount in the limit order would be too small,
-             //   so we should cull the order in fill_limit_order() below.
-             // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
-             //   so calling maybe_cull_small() will always cull it.
-             call_receives = order_receives.multiply_and_round_up( match_price );
+          // The remaining amount in the limit order would be too small,
+          //   so we should cull the order in fill_limit_order() below.
+          // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
+          //   so calling maybe_cull_small() will always cull it.
+          call_receives = order_receives.multiply_and_round_up( match_price );
 
           filled_limit = true;
 
        } else { // fill call
           call_receives  = usd_to_buy;
 
-          if( before_core_hardfork_342 )
-          {
-             order_receives = usd_to_buy * match_price; // round down, in favor of call order
-
-             // Be here, the limit order would be paying something for nothing
-             if( order_receives.amount == 0 ) // TODO remove warning after hard fork core-342
-                wlog( "Something for nothing issue occurred at block #${block}", ("block",head_num) );
-          }
-          else
-             order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up, in favor of limit order
+          order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up, in favor of limit order
 
           filled_call    = true; // this is safe, since BSIP38 (hard fork core-834) depends on BSIP31 (hard fork core-343)
 

@@ -999,14 +999,6 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
 
    generate_block( skip );
 
-  for( int i=0; i<2; i++ )
-  {
-   if( i == 1 )
-   {
-      auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_342_TIME - mi, true, skip);
-      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time, true, skip);
-   }
    set_expiration( db, trx );
 
    ACTORS((nathan)(ben)(valentine)(dan));
@@ -1079,22 +1071,16 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
    BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 0);
    BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 10045);
    BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
-   if( i == 1 ) // BSIP35: better rounding
-   {
-      BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10090);
-      BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9850);
-   }
-   else
-   {
-      BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10091);
-      BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9849);
-   }
+   
+   // Better rounding
+   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10090);
+   BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9850);
    BOOST_CHECK_EQUAL(get_balance(dan_id, bit_usd_id), 0);
 
    // undo above tx's and reset
    generate_block( skip );
    db.pop_block();
-  }
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( worker_create_test )
@@ -1373,14 +1359,6 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
    generate_block( skip );
 
-  for( int i=0; i<2; i++ )
-  {
-   if( i == 1 )
-   {
-      auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_342_TIME - mi, true, skip);
-      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time, true, skip);
-   }
    set_expiration( db, trx );
 
    int blocks = 0;
@@ -1540,16 +1518,9 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
       int64_t call1_payout =                0;
       int64_t call2_payout =       550*99/100;
-      int64_t call3_payout = 49 + 2950*99/100;
-      int64_t call4_payout =      4000*99/100;
-      int64_t call5_payout =      5000*99/100;
-
-      if( i == 1 ) // BSIP35: better rounding
-      {
-         call3_payout = 49 + (2950*99+100-1)/100; // round up
-         call4_payout =      (4000*99+100-1)/100; // round up
-         call5_payout =      (5000*99+100-1)/100; // round up
-      }
+      int64_t call3_payout = 49 + (2950*99+100-1)/100; // round up
+      int64_t call4_payout =      (4000*99+100-1)/100; // round up
+      int64_t call5_payout =      (5000*99+100-1)/100; // round up
 
       BOOST_CHECK_EQUAL( get_balance(shorter1_id, core_id), initial_balance-2*1000 );  // full collat still tied up
       BOOST_CHECK_EQUAL( get_balance(shorter2_id, core_id), initial_balance-2*1999 );  // full collat still tied up
@@ -1587,7 +1558,7 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
       db.pop_block();
       --blocks;
    }
-  }
+
 }
 
 BOOST_AUTO_TEST_CASE( assert_op_test )
