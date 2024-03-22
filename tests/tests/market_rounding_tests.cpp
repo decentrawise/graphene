@@ -550,14 +550,14 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test2 )
 
 
 /***
- * This test case tests one of the scenarios described in bitshares-core issue #343 after hard fork:
+ * This test case tests one of the scenarios described in bitshares-core issue #453 after hard fork:
  *   when matching a small taker limit order with a big maker call order,
  *   the small limit order would be paying minimum required.
  */
-BOOST_AUTO_TEST_CASE( limit_call_rounding_test2_after_hf_343 )
+BOOST_AUTO_TEST_CASE( limit_call_rounding_test2_after_hf_453 )
 { try {
    auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_343_TIME - mi);
+   generate_blocks(HARDFORK_CORE_453_TIME - mi);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    set_expiration( db, trx );

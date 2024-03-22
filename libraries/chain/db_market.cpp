@@ -43,8 +43,6 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
 
    const auto& call_price_index = get_index_type<call_order_index>().indices().get<by_price>();
 
-   auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-
    // cancel all call orders and accumulate it into collateral_gathered
    auto call_itr = call_price_index.lower_bound( price::min( bitasset.options.short_backing_asset, bitasset.asset_id ) );
    auto call_end = call_price_index.upper_bound( price::max( bitasset.options.short_backing_asset, bitasset.asset_id ) );
@@ -451,7 +449,7 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
          auto call_min = price::min( recv_asset_id, sell_asset_id );
          while( !finished )
          {
-            // hard fork core-343 and core-625 took place at same time,
+            // hard fork core-625
             // always check call order with least collateral ratio
             auto call_itr = call_collateral_idx.lower_bound( call_min );
             if( call_itr == call_collateral_idx.end()
@@ -476,7 +474,8 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
          auto call_min = price::min( recv_asset_id, sell_asset_id );
          while( !finished )
          {
-            // assume hard fork core-343 and core-625 will take place at same time, always check call order with least call_price
+            // hard fork core-625 will take place
+            // always check call order with least call_price
             auto call_itr = call_price_idx.lower_bound( call_min );
             if( call_itr == call_price_idx.end()
                   || call_itr->debt_type() != sell_asset_id
@@ -543,8 +542,6 @@ database::match_result_type database::match( const limit_order_object &usd, cons
 
    asset usd_pays, usd_receives, core_pays, core_receives;
 
-   auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-
    bool cull_taker = false;
    if( usd_for_sale <= core_for_sale * match_price ) // rounding down here should be fine
    {
@@ -599,8 +596,6 @@ database::match_result_type database::match( const limit_order_object &bid, cons
    FC_ASSERT( bid.for_sale > 0 && ask.debt > 0 && ask.collateral > 0 );
    // GCOVR_EXCL_STOP
 
-   auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-
    bool cull_taker = false;
 
    asset usd_for_sale = bid.amount_for_sale();
@@ -652,8 +647,6 @@ asset database::match( const call_order_object& call,
 { try {
    FC_ASSERT(call.get_debt().asset_id == settle.balance.asset_id );
    FC_ASSERT(call.debt > 0 && call.collateral > 0 && settle.balance.amount > 0);
-
-   auto maint_time = get_dynamic_global_properties().next_maintenance_time;
 
    auto settle_for_sale = std::min(settle.balance, max_settlement);
    auto call_debt = call.get_debt();
@@ -801,9 +794,8 @@ bool database::fill_call_order( const call_order_object& order, const asset& pay
             else
             {
                auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-               // update call_price after core-343 hard fork,
-               // but don't update call_price after core-1270 hard fork
-               if( maint_time <= HARDFORK_CORE_1270_TIME && maint_time > HARDFORK_CORE_343_TIME )
+               // don't update call_price after core-1270 hard fork
+               if( maint_time <= HARDFORK_CORE_1270_TIME )
                {
                   o.call_price = price::call_price( o.get_debt(), o.get_collateral(),
                                                     mia.bitasset_data(*this).current_feed.maintenance_collateral_ratio );
@@ -944,10 +936,8 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     bool filled_limit = false;
     bool margin_called = false;
 
-    auto head_time = head_block_time();
     auto head_num = head_block_num();
 
-    bool before_core_hardfork_343 = ( maint_time <= HARDFORK_CORE_343_TIME ); // update call_price after partially filled
     bool before_core_hardfork_453 = ( maint_time <= HARDFORK_CORE_453_TIME ); // multiple matching issue
     bool before_core_hardfork_606 = ( maint_time <= HARDFORK_CORE_606_TIME ); // feed always trigger call
     bool before_core_hardfork_834 = ( maint_time <= HARDFORK_CORE_834_TIME ); // target collateral ratio option
@@ -957,8 +947,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
            && ( ( !before_core_hardfork_1270 && call_collateral_itr != call_collateral_end )
               || ( before_core_hardfork_1270 && call_price_itr != call_price_end ) ) )
     {
-       bool  filled_call      = false;
-
        const call_order_object& call_order = ( before_core_hardfork_1270 ? *call_price_itr : *call_collateral_itr );
 
        // Feed protected (don't call if CR>MCR)
@@ -1033,8 +1021,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 
           order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up, in favor of limit order
 
-          filled_call    = true; // this is safe, since BSIP38 (hard fork core-834) depends on BSIP31 (hard fork core-343)
-
           if( usd_to_buy == usd_for_sale )
              filled_limit = true;
           else if( filled_limit && maint_time <= HARDFORK_CORE_453_TIME ) // TODO remove warning after hard fork core-453
@@ -1046,13 +1032,11 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
        call_pays  = order_receives;
        order_pays = call_receives;
 
-       if( filled_call && before_core_hardfork_343 )
-          ++call_price_itr;
        // when for_new_limit_order is true, the call order is maker, otherwise the call order is taker
        fill_call_order( call_order, call_pays, call_receives, match_price, for_new_limit_order );
        if( !before_core_hardfork_1270 )
           call_collateral_itr = call_collateral_index.lower_bound( call_min );
-       else if( !before_core_hardfork_343 )
+       else
           call_price_itr = call_price_index.lower_bound( call_min );
 
        auto next_limit_itr = std::next( limit_itr );

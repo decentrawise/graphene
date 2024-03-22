@@ -2070,11 +2070,12 @@ BOOST_AUTO_TEST_CASE( cover_with_collateral_test )
       GRAPHENE_REQUIRE_THROW( update_call_order( alice_id, asset(-1), bitusd.amount(0) ), call_order_update_unfilled_margin_call );
       // wdump( (*call_order) );
 
-      BOOST_TEST_MESSAGE( "Bob offers to sell the last of his BitUSD in another order" );
-      order = create_sell_order( bob_id, bitusd.amount(1), asset(50) );
+      BOOST_TEST_MESSAGE( "Bob cancels the order and offers to sell all of his BitUSD in a new order" );
+      cancel_limit_order(*order);
+      order = create_sell_order( bob_id, bitusd.amount(100), asset(5000) );
       BOOST_REQUIRE( order != nullptr );
       limit_order_id_type order2_id = order->get_id();
-      BOOST_CHECK_EQUAL( order->for_sale.value, 1 );
+      BOOST_CHECK_EQUAL( order->for_sale.value, 100 );
       // wdump( (*call_order) );
 
       BOOST_TEST_MESSAGE( "Alice decreases her collateral to maint level and Bob's orders fill" );

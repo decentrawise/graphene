@@ -1058,8 +1058,6 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
          trx.clear();
       }
 
-      bool affected_by_hf_343 = false;
-
       // check
       if( i / 2 == 0 ) // before hard fork 890
       {
@@ -1072,13 +1070,7 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
 
          // go beyond hard fork 890
          blocks += generate_blocks( HARDFORK_CORE_868_890_TIME - mi, true, skip );
-         bool was_before_hf_343 = ( db.get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_343_TIME );
-
          blocks += generate_blocks( db.get_dynamic_global_properties().next_maintenance_time, true, skip );
-         bool now_after_hf_343 = ( db.get_dynamic_global_properties().next_maintenance_time > HARDFORK_CORE_343_TIME );
-
-         if( was_before_hf_343 && now_after_hf_343 ) // if hf 343 executed at same maintenance interval, actually after hf 890
-            affected_by_hf_343 = true;
       }
 
       // after hard fork 890, if it's before hard fork 935
@@ -1091,12 +1083,8 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
          else // MSSR test, MSSR should be 125%
             BOOST_CHECK_EQUAL( usd_id(db).bitasset_data(db).current_feed.maximum_short_squeeze_ratio, 1250 );
 
-         if( affected_by_hf_343 ) // if updated bitasset before hf 890, and hf 343 executed after hf 890
-            // the limit order should have been filled
-            BOOST_CHECK( !db.find( sell_id ) );
-         else // if not affected by hf 343
-            // the limit order should be still there, because `check_call_order` was incorrectly skipped
-            BOOST_CHECK( db.find( sell_id ) );
+         // the limit order should be still there, because `check_call_order` was incorrectly skipped
+         BOOST_CHECK( db.find( sell_id ) );
 
          // go beyond hard fork 935
          blocks += generate_blocks(HARDFORK_CORE_935_TIME - mi, true, skip);
@@ -1111,10 +1099,7 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
          BOOST_CHECK( usd_id(db).bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
          if( i % 2 == 0) { // MCR test, median MCR should be 350% and order will not be filled except when i = 0
             BOOST_CHECK_EQUAL(usd_id(db).bitasset_data(db).current_feed.maintenance_collateral_ratio, 3500);
-            if( affected_by_hf_343 )
-               BOOST_CHECK(!db.find(sell_id));
-            else
-               BOOST_CHECK(db.find(sell_id)); // MCR bug, order still there
+            BOOST_CHECK(db.find(sell_id)); // MCR bug, order still there
          }
          else { // MSSR test, MSSR should be 125% and order is filled
             BOOST_CHECK_EQUAL(usd_id(db).bitasset_data(db).current_feed.maximum_short_squeeze_ratio, 1250);

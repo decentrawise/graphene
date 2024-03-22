@@ -290,7 +290,6 @@ void database::clear_expired_force_settlements()
       return;
 
    auto head_time = head_block_time();
-   auto maint_time = get_dynamic_global_properties().next_maintenance_time;
 
    asset_id_type current_asset = settlement_index.begin()->settlement_asset_id();
 
