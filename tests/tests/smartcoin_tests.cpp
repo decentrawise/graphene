@@ -15,19 +15,10 @@ using namespace graphene::chain::test;
 BOOST_FIXTURE_TEST_SUITE(smartcoin_tests, database_fixture)
 
 
-BOOST_AUTO_TEST_CASE(bsip36)
+BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
 {
    try
    {
-      /* Issue affects only smartcoins(market pegged assets feeded by active witnesses or committee members).
-       * Test case reproduces, advance to hardfork and check if solved after it.
-       */
-
-      /* References:
-       * BSIP 36: https://github.com/bitshares/bsips/blob/master/bsip-0036.md
-       * and the former: CORE Issue 518: https://github.com/bitshares/bitshares-core/issues/518
-       */
-
       // Create 12 accounts to be witnesses under our control
       ACTORS( (witness0)(witness1)(witness2)(witness3)(witness4)(witness5)
                    (witness6)(witness7)(witness8)(witness9)(witness10)(witness11) );
@@ -228,13 +219,9 @@ BOOST_AUTO_TEST_CASE(bsip36)
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 16u);
 
-      // Feed persist after expiration
+      // Expire feeds
       const auto feed_lifetime = bit_usd_id(db).bitasset_data(db).options.feed_lifetime_sec;
       generate_blocks(db.head_block_time() + feed_lifetime + 1);
-      bitasset_data = bit_usd_id(db).bitasset_data(db);
-      itr = bitasset_data.feeds.begin();
-      BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);
-      BOOST_CHECK_EQUAL(itr[0].first.instance.value, 16u);
 
       // Other witnesses add more feeds
       feed.settlement_price = bit_usd_id(db).amount(4) / core.amount(5);
@@ -242,33 +229,18 @@ BOOST_AUTO_TEST_CASE(bsip36)
       feed.settlement_price = bit_usd_id(db).amount(3) / core.amount(5);
       publish_feed(bit_usd_id(db), witness3_id(db), feed);
 
-      // But the one from witness0 is never removed
-      bitasset_data = bit_usd_id(db).bitasset_data(db);
-      itr = bitasset_data.feeds.begin();
-      BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 4u);
-      BOOST_CHECK_EQUAL(itr[0].first.instance.value, 16u);
-
-      // Feed from witness1 is also expired but never deleted
-      // All feeds should be deleted at this point
-      const auto minimum_feeds = bit_usd_id(db).bitasset_data(db).options.minimum_feeds;
-      BOOST_CHECK_EQUAL(minimum_feeds, 1u);
-      BOOST_CHECK_EQUAL(itr[1].first.instance.value, 17u);
-
-      // Advancing into HF time
-      generate_blocks(HARDFORK_CORE_518_TIME);
-
       // Advancing to next maint
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
       //  All expired feeds are deleted
       bitasset_data = bit_usd_id(db).bitasset_data(db);
-      BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 0u);
+      BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);
 
       // witness1 start feed producing again
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
       publish_feed(bit_usd_id(db), witness1_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
-      BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1u);
+      BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 3u);
       itr = bitasset_data.feeds.begin();
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 17u);
 
@@ -358,7 +330,7 @@ BOOST_AUTO_TEST_CASE(bsip36)
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
+BOOST_AUTO_TEST_CASE(update_feed_producers)
 {
    try
    {
@@ -443,9 +415,6 @@ BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 17u);
       BOOST_CHECK_EQUAL(itr[1].first.instance.value, 18u);
 
-      // Advancing into HF time
-      generate_blocks(HARDFORK_CORE_518_TIME);
-
       // Advancing to next maint
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -459,12 +428,12 @@ BOOST_AUTO_TEST_CASE(bsip36_update_feed_producers)
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(bsip36_additional)
+BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
 {
    try
    {
-      /* Check impact of bsip36 with multiple feeds */
-      INVOKE( bsip36 );
+      /* Check impact with multiple feeds */
+      INVOKE( maintenance_feed_cleanup );
 
       // get the stuff needed from invoked test
       const asset_id_type bit_usd_id = get_asset("USDBIT").get_id();
