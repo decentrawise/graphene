@@ -55,25 +55,22 @@ void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_o
 
 void limit_order_create_evaluator::convert_fee()
 {
-   if( db().head_block_time() <= HARDFORK_CORE_604_TIME )
-      generic_evaluator::convert_fee();
-   else
-      if( !trx_state->skip_fee )
+   if( !trx_state->skip_fee )
+   {
+      if( fee_asset->get_id() != asset_id_type() )
       {
-         if( fee_asset->get_id() != asset_id_type() )
-         {
-            db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object& d) {
-               d.fee_pool -= core_fee_paid;
-            });
-         }
+         db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object& d) {
+            d.fee_pool -= core_fee_paid;
+         });
       }
+   }
 }
 
 void limit_order_create_evaluator::pay_fee()
 {
    // Defer fees so they can be refunded on order cancel
    _deferred_fee = core_fee_paid;
-   if( db().head_block_time() > HARDFORK_CORE_604_TIME && fee_asset->get_id() != asset_id_type() )
+   if( fee_asset->get_id() != asset_id_type() )
       _deferred_paid_fee = fee_from_account;
 }
 

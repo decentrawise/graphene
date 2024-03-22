@@ -183,12 +183,12 @@ void database::cancel_settle_order(const force_settlement_object& order, bool cr
    remove(order);
 }
 
-void database::cancel_limit_order( const limit_order_object& order, bool create_virtual_op, bool skip_cancel_fee )
+void database::cancel_limit_order( const limit_order_object& order, bool create_virtual_op )
 {
    // if need to create a virtual op, try deduct a cancellation fee here.
    // there are two scenarios when order is cancelled and need to create a virtual op:
    // 1. due to expiration: always deduct a fee if there is any fee deferred
-   // 2. due to cull_small: deduct a fee after hard fork 604, but not before (will set skip_cancel_fee)
+   // 2. due to cull_small: deduct a fee
    const account_statistics_object* seller_acc_stats = nullptr;
    const asset_dynamic_data_object* fee_asset_dyn_data = nullptr;
    limit_order_cancel_operation vop;
@@ -198,8 +198,8 @@ void database::cancel_limit_order( const limit_order_object& order, bool create_
    {
       vop.order = order.id;
       vop.fee_paying_account = order.seller;
-      // only deduct fee if not skipping fee, and there is any fee deferred
-      if( !skip_cancel_fee && deferred_fee > 0 )
+      // only deduct fee if any fee deferred
+      if( deferred_fee > 0 )
       {
          asset core_cancel_fee = current_fee_schedule().calculate_fee( vop );
          // cap the fee
@@ -257,9 +257,7 @@ void database::cancel_limit_order( const limit_order_object& order, bool create_
    // could be virtual op or real op here
    if( order.deferred_paid_fee.amount == 0 )
    {
-      // be here, order.create_time <= HARDFORK_CORE_604_TIME, or fee paid in CORE, or no fee to refund.
-      // if order was created before hard fork 604 then cancelled no matter before or after hard fork 604,
-      //    see it as fee paid in CORE, deferred_fee should be refunded to order owner but not fee pool
+      // be here, for fee paid in CORE, or no fee to refund.
       adjust_balance( order.seller, deferred_fee );
    }
    else // need to refund fee in originally paid asset
@@ -293,13 +291,7 @@ bool maybe_cull_small_order( database& db, const limit_order_object& order )
     */
    if( order.amount_to_receive().amount == 0 )
    {
-      if( order.deferred_fee > 0 && db.head_block_time() <= HARDFORK_CORE_604_TIME )
-      { // TODO remove this warning after hard fork core-604
-         wlog( "At block ${n}, cancelling order without charging a fee: ${o}", ("n",db.head_block_num())("o",order) );
-         db.cancel_limit_order( order, true, true );
-      }
-      else
-         db.cancel_limit_order( order );
+      db.cancel_limit_order( order );
       return true;
    }
    return false;
@@ -744,7 +736,7 @@ bool database::fill_limit_order( const limit_order_object& order, const asset& p
       } );
    }
 
-   if( order.deferred_paid_fee.amount > 0 ) // implies head_block_time() > HARDFORK_CORE_604_TIME
+   if( order.deferred_paid_fee.amount > 0 )
    {
       const auto& fee_asset_dyn_data = order.deferred_paid_fee.asset_id(*this).dynamic_asset_data_id(*this);
       modify( fee_asset_dyn_data, [&](asset_dynamic_data_object& addo) {
