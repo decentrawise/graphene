@@ -190,9 +190,6 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test2 )
  */
 BOOST_AUTO_TEST_CASE( limit_and_call_test1 )
 { try {
-   auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_453_TIME - mi);   // TODO: remove after passing without it
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    set_expiration( db, trx );
 
@@ -266,9 +263,6 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test1 )
  */
 BOOST_AUTO_TEST_CASE( limit_and_call_test2 )
 { try {
-   auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_453_TIME - mi);   // TODO: remove after passing without it
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    set_expiration( db, trx );
 
@@ -338,9 +332,6 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test2 )
  */
 BOOST_AUTO_TEST_CASE( limit_and_call_test3 )
 { try {
-   auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_453_TIME - mi);   // TODO: remove after passing without it
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    set_expiration( db, trx );
 
@@ -550,14 +541,14 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test2 )
 
 
 /***
- * This test case tests one of the scenarios described in bitshares-core issue #453 after hard fork:
+ * This test case tests one of the scenarios described in bitshares-core issue #935 after hard fork:
  *   when matching a small taker limit order with a big maker call order,
  *   the small limit order would be paying minimum required.
  */
-BOOST_AUTO_TEST_CASE( limit_call_rounding_test2_after_hf_453 )
+BOOST_AUTO_TEST_CASE( limit_call_rounding_test2_after_hf_935 )
 { try {
    auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_453_TIME - mi);
+   generate_blocks(HARDFORK_CORE_935_TIME - mi);      // TODO: remove when it passes without this and previous test fails
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    set_expiration( db, trx );

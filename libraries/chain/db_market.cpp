@@ -933,12 +933,10 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
        call_collateral_end = call_collateral_index.upper_bound( call_max );
     }
 
-    bool filled_limit = false;
     bool margin_called = false;
 
     auto head_num = head_block_num();
 
-    bool before_core_hardfork_453 = ( maint_time <= HARDFORK_CORE_453_TIME ); // multiple matching issue
     bool before_core_hardfork_606 = ( maint_time <= HARDFORK_CORE_606_TIME ); // feed always trigger call
     bool before_core_hardfork_834 = ( maint_time <= HARDFORK_CORE_834_TIME ); // target collateral ratio option
 
@@ -1013,20 +1011,10 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
           // The order would receive 0 even at `match_price`, so it would receive 0 at its own price,
           //   so calling maybe_cull_small() will always cull it.
           call_receives = order_receives.multiply_and_round_up( match_price );
-
-          filled_limit = true;
-
        } else { // fill call
           call_receives  = usd_to_buy;
 
           order_receives = usd_to_buy.multiply_and_round_up( match_price ); // round up, in favor of limit order
-
-          if( usd_to_buy == usd_for_sale )
-             filled_limit = true;
-          else if( filled_limit && maint_time <= HARDFORK_CORE_453_TIME ) // TODO remove warning after hard fork core-453
-          {
-             wlog( "Multiple limit match problem (issue 453) occurred at block #${block}", ("block",head_num) );
-          }
        }
 
        call_pays  = order_receives;
@@ -1042,7 +1030,7 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
        auto next_limit_itr = std::next( limit_itr );
        // when for_new_limit_order is true, the limit order is taker, otherwise the limit order is maker
        bool really_filled = fill_limit_order( limit_order, order_pays, order_receives, true, match_price, !for_new_limit_order );
-       if( really_filled || ( filled_limit && before_core_hardfork_453 ) )
+       if( really_filled )
           limit_itr = next_limit_itr;
 
     } // while call_itr != call_end

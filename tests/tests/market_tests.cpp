@@ -196,17 +196,15 @@ BOOST_AUTO_TEST_CASE(hardfork_core_606_test)
 } FC_LOG_AND_RETHROW() }
 
 /***
- * Fixed bitshares-core issue #453: multiple limit order filling issue
+ * Multiple limit order filling issue
  */
-BOOST_AUTO_TEST_CASE(hardfork_core_453_test)
+BOOST_AUTO_TEST_CASE(multiple_limit_order_filling)
 { try {
 
    auto mi = db.get_global_properties().parameters.maintenance_interval;
 
    if(hf1270)
       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-   else
-      generate_blocks(HARDFORK_CORE_453_TIME - mi);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -267,7 +265,7 @@ BOOST_AUTO_TEST_CASE(hardfork_core_453_test)
    publish_feed( bitusd, feedproducer, current_feed );
    // settlement price = 1/10, mssp = 1/11
 
-   // Fixed #453 multiple order matching issue occurs
+   // Multiple order matching check
    BOOST_CHECK( !db.find( sell_med ) ); // sell_med get filled
    BOOST_CHECK( !db.find( sell_med2 ) ); // sell_med2 get filled
    BOOST_CHECK( !db.find( sell_med3 ) ); // sell_med3 get filled
@@ -767,9 +765,6 @@ BOOST_AUTO_TEST_CASE(target_cr_test_call_limit)
 BOOST_AUTO_TEST_CASE(mcr_bug_increase_before1270)
 { try {
 
-   auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_453_TIME - mi);
-   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
 
    set_expiration( db, trx );
@@ -899,7 +894,7 @@ BOOST_AUTO_TEST_CASE(mcr_bug_decrease_before1270)
 { try {
 
    auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_453_TIME - mi);
+   generate_blocks(HARDFORK_CORE_935_TIME - mi);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
 
@@ -1079,10 +1074,10 @@ BOOST_AUTO_TEST_CASE(mcr_bug_cross1270)
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(hardfork_core_453_test_after_hf1270)
+BOOST_AUTO_TEST_CASE(multiple_limit_order_filling_after_hf1270)
 { try {
    hf1270 = true;
-   INVOKE(hardfork_core_453_test);
+   INVOKE(multiple_limit_order_filling);
 
 } FC_LOG_AND_RETHROW() }
 

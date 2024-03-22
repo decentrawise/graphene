@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
 {
    try {
       auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_453_TIME - mi);   // TODO: remove after passing without it
+      generate_blocks(HARDFORK_CORE_935_TIME - mi);   // TODO: remove after passing without it
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration( db, trx );
 
@@ -627,9 +627,6 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
 BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
 {
    try {
-      auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_453_TIME - mi);   // TODO: remove after passing without it
-      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration( db, trx );
 
       ACTORS((paul)(michael)(rachel)(alice));
