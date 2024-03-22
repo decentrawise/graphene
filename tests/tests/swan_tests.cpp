@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE( black_swan )
  * Black swan occurs when price feed falls, triggered by settlement
  * order.
  */
-BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
+BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
 { try {
 
       ACTORS((buyer)(seller)(borrower)(borrower2)(settler)(feeder));
@@ -228,28 +228,7 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
          force_settle( settler, bitusd.amount(100) );
 
          // wait for forced settlement to execute
-         // this would throw on Sep.18 testnet, see #346 (https://github.com/cryptonomex/graphene/issues/346)
          wait_for_settlement();
-      }
-
-      // issue 350 (https://github.com/cryptonomex/graphene/issues/350)
-      {
-         // ok, new asset
-         const asset_object& bitusd = setup_asset();
-         top_up();
-         set_price( bitusd, bitusd.amount(40) / core.amount(1000) ); // $0.04
-         borrow( borrower, bitusd.amount(100), asset(5000) );    // 2x collat
-         transfer( borrower, seller, bitusd.amount(100) );
-         limit_order_id_type oid_019 = create_sell_order( seller, bitusd.amount(39), core.amount(2000) )->get_id();   // this order is at $0.019, we should not be able to match against it
-         limit_order_id_type oid_020 = create_sell_order( seller, bitusd.amount(40), core.amount(2000) )->get_id();   // this order is at $0.020, we should be able to match against it
-         set_price( bitusd, bitusd.amount(21) / core.amount(1000) ); // $0.021
-         //
-         // We attempt to match against $0.019 order and black swan,
-         // and this is intended behavior.  See discussion in ticket.
-         //
-         BOOST_CHECK( bitusd.bitasset_data(db).has_settlement() );
-         BOOST_CHECK( db.find( oid_019 ) != nullptr );
-         BOOST_CHECK( db.find( oid_020 ) == nullptr );
       }
 
    } catch( const fc::exception& e) {

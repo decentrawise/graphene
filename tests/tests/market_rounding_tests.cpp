@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test1 )
    publish_feed( bitusd, feedproducer, current_feed );
    // settlement price = 120 USD / 10 CORE, mssp = 120/11 USD/CORE
 
-   // This would match with call at price 120 USD / 11 CORE (assume hard fork core-342 and hard fork core-338 occur at same time),
+   // This would match with call at price 120 USD / 11 CORE,
    //   but call only owes 10 USD,
    // Since the call would pay off all debt, let it pay 1 CORE from collateral
    // The remaining 1 USD is too little to get any CORE, so the limit order will be cancelled
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test2 )
    publish_feed( bitusd, feedproducer, current_feed );
    // settlement price = 120 USD / 10 CORE, mssp = 120/11 USD/CORE
 
-   // This would match with call at price 120 USD / 11 CORE (assume hard fork core-342 and hard fork core-338 occur at same time),
+   // This would match with call at price 120 USD / 11 CORE,
    //   but call only owes 10 USD,
    // Since the call would pay off all debt, let it pay 1 CORE from collateral
    // The remaining USD will be left in the order on the market
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test1_after_hf_342 )
    publish_feed( bitusd, feedproducer, current_feed );
    // settlement price = 120 USD / 10 CORE, mssp = 120/11 USD/CORE
 
-   // This would match with call at price 120 USD / 11 CORE (assume hard fork core-342 and hard fork core-338 occur at same time),
+   // This would match with call at price 120 USD / 11 CORE,
    //   but call only owes 20 USD,
    //   so the seller will pay 20 USD and get 2 CORE, since 20 USD worths a little more than 1 CORE according to price 120/11,
    //   effective price is 20/2 which is not worse than the limit order's desired 33/3.
@@ -807,7 +807,7 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test2_after_hf_342 )
    publish_feed( bitusd, feedproducer, current_feed );
    // settlement price = 120 USD / 10 CORE, mssp = 120/11 USD/CORE
 
-   // This would match with call at price 120 USD / 11 CORE (assume hard fork core-342 and hard fork core-338 occur at same time),
+   // This would match with call at price 120 USD / 11 CORE,
    //   so the seller will get 1 CORE, and pay 11 USD since 1 CORE worths a little more than 10 USD according to price 120/11,
    //     and the extra 4 USD will be returned but not overpaid,
    //     effective price is 11/1 which is close to 120/11.

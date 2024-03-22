@@ -13,9 +13,9 @@ using namespace graphene::chain::test;
 BOOST_FIXTURE_TEST_SUITE(market_tests, database_fixture)
 
 /***
- * Reproduce bitshares-core issue #338 #343 #453 #606 #625 #649
+ * Reproduce bitshares-core issue #343 #453 #606 #625 #649
  */
-BOOST_AUTO_TEST_CASE(issue_338_etc)
+BOOST_AUTO_TEST_CASE(issue_649_etc)
 { try {
 
    set_expiration( db, trx );
@@ -72,8 +72,7 @@ BOOST_AUTO_TEST_CASE(issue_338_etc)
    cancel_limit_order( sell_high(db) );
    cancel_limit_order( sell_low(db) );
 
-   // current implementation: an incoming limit order will be filled at the
-   // requested price #338
+   // an incoming limit order will be filled at the requested price
    BOOST_CHECK( !create_sell_order(seller, bitusd.amount(7), core.amount(60)) );
    BOOST_CHECK_EQUAL( 993, get_balance(seller, bitusd) );
    BOOST_CHECK_EQUAL( 60, get_balance(seller, core) );
@@ -202,9 +201,9 @@ BOOST_AUTO_TEST_CASE(issue_338_etc)
 } FC_LOG_AND_RETHROW() }
 
 /***
- * Fixed bitshares-core issue #338 #343 #606 #625 #649
+ * Fixed bitshares-core issue #343 #606 #625 #649
  */
-BOOST_AUTO_TEST_CASE(hardfork_core_338_test)
+BOOST_AUTO_TEST_CASE(hardfork_core_343_test)
 { try {
 
    auto mi = db.get_global_properties().parameters.maintenance_interval;
@@ -294,7 +293,7 @@ BOOST_AUTO_TEST_CASE(hardfork_core_338_test)
    BOOST_CHECK_EQUAL( init_balance - 90 - 110 - 111, get_balance(buyer, core) );
    // sell order pays 10 USD, receives 111 CORE, remaining 690 USD for sale, still at price 7/59
 
-   // then it will match with call, at mssp: 1/11 = 690/7590 : #338 fixed
+   // then it will match with call, at mssp: 1/11 = 690/7590
    BOOST_CHECK_EQUAL( 2293, get_balance(seller, bitusd) );
    BOOST_CHECK_EQUAL( 7701, get_balance(seller, core) );
    BOOST_CHECK_EQUAL( 310, call.debt.value );
@@ -314,7 +313,7 @@ BOOST_AUTO_TEST_CASE(hardfork_core_338_test)
    BOOST_CHECK_EQUAL( db.find( buy_med )->for_sale.value, 110 );
    BOOST_CHECK_EQUAL( db.find( buy_low )->for_sale.value, 90 );
 
-   // fill price would be mssp: 1/11 = 700/7700 : #338 fixed
+   // fill price would be mssp: 1/11 = 700/7700
    BOOST_CHECK_EQUAL( 1593, get_balance(seller, bitusd) );
    BOOST_CHECK_EQUAL( 15401, get_balance(seller, core) );
    BOOST_CHECK_EQUAL( 310, call.debt.value );
@@ -834,12 +833,12 @@ BOOST_AUTO_TEST_CASE(hard_fork_453_cross_test)
 } FC_LOG_AND_RETHROW() }
 
 /***
- * Fixed bitshares-core issue #338 #453 #606: multiple order matching with black swan
+ * Fixed bitshares-core issue #453 #606: multiple order matching with black swan
  */
-BOOST_AUTO_TEST_CASE(hard_fork_338_cross_test)
+BOOST_AUTO_TEST_CASE(hard_fork_606_cross_test)
 { try { // create orders before hard fork, which will be matched on hard fork
    auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_338_TIME - mi); // assume all hard forks occur at same time
+   generate_blocks(HARDFORK_CORE_606_TIME - mi); // assume all hard forks occur at same time
    generate_block();
 
    set_expiration( db, trx );
@@ -1828,10 +1827,10 @@ BOOST_AUTO_TEST_CASE(mcr_bug_cross1270)
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(hardfork_core_338_test_after_hf1270)
+BOOST_AUTO_TEST_CASE(hardfork_core_343_test_after_hf1270)
 { try {
    hf1270 = true;
-   INVOKE(hardfork_core_338_test);
+   INVOKE(hardfork_core_343_test);
 
 } FC_LOG_AND_RETHROW() }
 

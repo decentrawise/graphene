@@ -468,7 +468,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
                   || call_itr->debt_type() != sell_asset_id
                   || call_itr->collateralization() > sell_abd->current_maintenance_collateralization )   // feed protected
                break;
-            // hard fork core-338 and core-625 took place at same time, not checking HARDFORK_CORE_338_TIME here.
             auto match_result = match( new_order_object, *call_itr, call_match_price,
                                        sell_abd->current_feed.settlement_price,
                                        sell_abd->current_feed.maintenance_collateral_ratio,
@@ -493,7 +492,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
                   || call_itr->debt_type() != sell_asset_id
                   || call_itr->call_price > ~sell_abd->current_feed.settlement_price )    // feed protected
                break;
-            // assume hard fork core-338 and core-625 will take place at same time, not checking HARDFORK_CORE_338_TIME here.
             auto match_result = match( new_order_object, *call_itr, call_match_price,
                                        sell_abd->current_feed.settlement_price,
                                        sell_abd->current_feed.maintenance_collateral_ratio,
@@ -951,7 +949,7 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     const auto& dyn_prop = get_dynamic_global_properties();
     auto maint_time = dyn_prop.next_maintenance_time;
     if( for_new_limit_order )
-       FC_ASSERT( maint_time <= HARDFORK_CORE_625_TIME ); // `for_new_limit_order` is only true before HF 338 / 625
+       FC_ASSERT( maint_time <= HARDFORK_CORE_625_TIME ); // `for_new_limit_order` is only true before HF 625
 
     if( !mia.is_market_issued() ) return false;
 
