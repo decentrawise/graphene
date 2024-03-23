@@ -94,11 +94,7 @@ object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_o
        obj.deferred_paid_fee = _deferred_paid_fee;
    });
    object_id_type order_id = new_order_object.id; // save this because we may remove the object by filling it
-   bool filled;
-   if( db().get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_625_TIME )
-      filled = db().apply_order_before_hardfork_625( new_order_object );
-   else
-      filled = db().apply_order( new_order_object );
+   bool filled = db().apply_order( new_order_object );
 
    GRAPHENE_ASSERT( !op.fill_or_kill || filled,
                     limit_order_create_kill_unfilled,
@@ -288,7 +284,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
       // check to see if the order needs to be margin called now, but don't allow black swans and require there to be
       // limit orders available that could be used to fill the order.
       // Note: the first call order may be unable to be updated if the second one is undercollateralized.
-      if( d.check_call_orders( *_debt_asset, false, false, _bitasset_data ) ) // don't allow black swan, not for new limit order
+      if( d.check_call_orders( *_debt_asset, false, _bitasset_data ) ) // don't allow black swan, not for new limit order
       {
          call_obj = d.find<call_order_object>(call_order_id);
 

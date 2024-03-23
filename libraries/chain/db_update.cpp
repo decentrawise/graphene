@@ -466,7 +466,7 @@ void database::update_expired_feeds()
       if( !b.current_feed.settlement_price.is_null() && !( b.current_feed == old_median_feed ) ) // `==` check is safe here
       {
          asset_ptr = &b.asset_id( *this );
-         check_call_orders( *asset_ptr, true, false, &b );
+         check_call_orders( *asset_ptr, true, &b );
       }
       // update CER
       if( update_cer )

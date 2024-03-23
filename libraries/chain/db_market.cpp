@@ -297,54 +297,6 @@ bool maybe_cull_small_order( database& db, const limit_order_object& order )
    return false;
 }
 
-bool database::apply_order_before_hardfork_625(const limit_order_object& new_order_object, bool allow_black_swan)
-{
-   auto order_id = new_order_object.id;
-   const asset_object& sell_asset = get(new_order_object.amount_for_sale().asset_id);
-   const asset_object& receive_asset = get(new_order_object.amount_to_receive().asset_id);
-
-   // Possible optimization: We only need to check calls if both are true:
-   //  - The new order is at the front of the book
-   //  - The new order is below the call limit price
-   bool called_some = check_call_orders(sell_asset, allow_black_swan, true); // the first time when checking, call order is maker
-   called_some |= check_call_orders(receive_asset, allow_black_swan, true); // the other side, same as above
-   if( called_some && !find_object(order_id) ) // then we were filled by call order
-      return true;
-
-   const auto& limit_price_idx = get_index_type<limit_order_index>().indices().get<by_price>();
-
-   // TODO: it should be possible to simply check the NEXT/PREV iterator after new_order_object to
-   // determine whether or not this order has "changed the book" in a way that requires us to
-   // check orders. For now I just lookup the lower bound and check for equality... this is log(n) vs
-   // constant time check. Potential optimization.
-
-   auto max_price = ~new_order_object.sell_price;
-   auto limit_itr = limit_price_idx.lower_bound(max_price.max());
-   auto limit_end = limit_price_idx.upper_bound(max_price);
-
-   bool finished = false;
-   while( !finished && limit_itr != limit_end )
-   {
-      auto old_limit_itr = limit_itr;
-      ++limit_itr;
-      // match returns match_result_type::only_maker_filled when only the old order was fully filled.
-      // In this case, we keep matching; otherwise, we stop.
-      finished = (match(new_order_object, *old_limit_itr, old_limit_itr->sell_price) != match_result_type::only_maker_filled);
-   }
-
-   // Possible optimization: only check calls if the new order completely filled some old order
-   // Do I need to check both assets?
-   check_call_orders(sell_asset, allow_black_swan); // after the new limit order filled some orders on the book,
-                                                    // if a call order matches another order, the call order is taker
-   check_call_orders(receive_asset, allow_black_swan); // the other side, same as above
-
-   const limit_order_object* updated_order_object = find< limit_order_object >( order_id );
-   if( updated_order_object == nullptr )
-      return true;
-
-   return maybe_cull_small_order( *this, *updated_order_object );
-}
-
 bool database::apply_order(const limit_order_object& new_order_object, bool allow_black_swan)
 {
    auto order_id = new_order_object.id;
@@ -435,7 +387,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
          auto call_min = price::min( recv_asset_id, sell_asset_id );
          while( !finished )
          {
-            // hard fork core-625
             // always check call order with least collateral ratio
             auto call_itr = call_collateral_idx.lower_bound( call_min );
             if( call_itr == call_collateral_idx.end()
@@ -460,7 +411,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
          auto call_min = price::min( recv_asset_id, sell_asset_id );
          while( !finished )
          {
-            // hard fork core-625 will take place
             // always check call order with least call_price
             auto call_itr = call_price_idx.lower_bound( call_min );
             if( call_itr == call_price_idx.end()
@@ -855,18 +805,15 @@ bool database::fill_settle_order( const force_settlement_object& settle, const a
  *  @param mia - the market issued asset that should be called.
  *  @param enable_black_swan - when adjusting collateral, triggering a black swan is invalid and will throw
  *                             if enable_black_swan is not set to true.
- *  @param for_new_limit_order - true if this function is called when matching call orders with a new limit order
  *  @param bitasset_ptr - an optional pointer to the bitasset_data object of the asset
  *
  *  @return true if a margin call was executed.
  */
-bool database::check_call_orders( const asset_object& mia, bool enable_black_swan, bool for_new_limit_order,
+bool database::check_call_orders( const asset_object& mia, bool enable_black_swan,
                                   const asset_bitasset_data_object* bitasset_ptr )
 { try {
     const auto& dyn_prop = get_dynamic_global_properties();
     auto maint_time = dyn_prop.next_maintenance_time;
-    if( for_new_limit_order )
-       FC_ASSERT( maint_time <= HARDFORK_CORE_625_TIME ); // `for_new_limit_order` is only true before HF 625
 
     if( !mia.is_market_issued() ) return false;
 
@@ -975,13 +922,9 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
        {  // fill order
           order_receives  = usd_for_sale * match_price; // round down, in favor of call order
 
-          // Be here, the limit order won't be paying something for nothing, since if it would, it would have
+          // Be here, the limit order won't be paying something for nothing, since if it would have
           //   been cancelled elsewhere already (a maker limit order won't be paying something for nothing):
-          // * after hard fork core-625, the limit order will be always a maker if entered this function;
-          // * before hard fork core-625,
-          //   * when the limit order is a taker, it could be paying something for nothing only when
-          //     the call order is smaller and is too small
-          //   * when the limit order is a maker, it won't be paying something for nothing
+          // * the limit order will be always a maker if entered this function;
           if( order_receives.amount == 0 ) // TODO this should not happen. remove the warning after confirmed
           {
              wlog( "Something for nothing issue occurred at block #${block}", ("block",head_num) );
@@ -1001,16 +944,16 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
        call_pays  = order_receives;
        order_pays = call_receives;
 
-       // when for_new_limit_order is true, the call order is maker, otherwise the call order is taker
-       fill_call_order( call_order, call_pays, call_receives, match_price, for_new_limit_order );
+       // the call order is taker
+       fill_call_order( call_order, call_pays, call_receives, match_price, false );
        if( !before_core_hardfork_1270 )
           call_collateral_itr = call_collateral_index.lower_bound( call_min );
        else
           call_price_itr = call_price_index.lower_bound( call_min );
 
        auto next_limit_itr = std::next( limit_itr );
-       // when for_new_limit_order is true, the limit order is taker, otherwise the limit order is maker
-       bool really_filled = fill_limit_order( limit_order, order_pays, order_receives, true, match_price, !for_new_limit_order );
+       // the limit order is maker
+       bool really_filled = fill_limit_order( limit_order, order_pays, order_receives, true, match_price, true );
        if( really_filled )
           limit_itr = next_limit_itr;
 

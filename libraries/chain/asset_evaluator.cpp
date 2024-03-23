@@ -691,7 +691,7 @@ void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasse
 
       if( to_check_call_orders )
          // Process margin calls, allow black swan, not for a new limit order
-         db_conn.check_call_orders( asset_being_updated, true, false, bitasset_to_update );
+         db_conn.check_call_orders( asset_being_updated, true, bitasset_to_update );
 
       return void_result();
 
@@ -755,7 +755,7 @@ void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_f
       a.update_median_feeds( head_time, next_maint_time );
    });
    // Process margin calls, allow black swan, not for a new limit order
-   d.check_call_orders( *asset_to_update, true, false, &bitasset_to_update );
+   d.check_call_orders( *asset_to_update, true, &bitasset_to_update );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
@@ -957,7 +957,7 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
             d.revive_bitasset(base);
       }
       // Process margin calls, allow black swan, not for a new limit order
-      d.check_call_orders( base, true, false, bitasset_ptr );
+      d.check_call_orders( base, true, bitasset_ptr );
    }
 
    return void_result();

@@ -22,8 +22,6 @@ BOOST_AUTO_TEST_CASE(short_positions_called)
 
    if(hf1270)
       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-   else
-      generate_blocks(HARDFORK_CORE_625_TIME - mi);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(short_positions_called)
    // This order slightly below the call price will be matched
    BOOST_CHECK( !create_sell_order(seller, bitusd.amount(700), core.amount(5900) ) );
 
-   // firstly it will match with buy_high, at buy_high's price: #625 fixed
+   // firstly it will match with buy_high, at buy_high's price
    BOOST_CHECK( !db.find( buy_high ) );
    BOOST_CHECK_EQUAL( db.find( buy_med )->for_sale.value, 110 );
    BOOST_CHECK_EQUAL( db.find( buy_low )->for_sale.value, 90 );
@@ -279,17 +277,15 @@ BOOST_AUTO_TEST_CASE(multiple_limit_order_filling)
 } FC_LOG_AND_RETHROW() }
 
 /***
- * Tests (big) limit order matching logic after #625 got fixed
+ * Tests (big) limit order matching logic
  */
-BOOST_AUTO_TEST_CASE(hardfork_core_625_big_limit_order_test)
+BOOST_AUTO_TEST_CASE(big_limit_order_test)
 { try {
 
    auto mi = db.get_global_properties().parameters.maintenance_interval;
 
    if(hf1270)
       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-   else
-      generate_blocks(HARDFORK_CORE_625_TIME - mi);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -1081,10 +1077,10 @@ BOOST_AUTO_TEST_CASE(multiple_limit_order_filling_after_hf1270)
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(hardfork_core_625_big_limit_order_test_after_hf1270)
+BOOST_AUTO_TEST_CASE(big_limit_order_test_after_hf1270)
 { try {
    hf1270 = true;
-   INVOKE(hardfork_core_625_big_limit_order_test);
+   INVOKE(big_limit_order_test);
 
 } FC_LOG_AND_RETHROW() }
 
