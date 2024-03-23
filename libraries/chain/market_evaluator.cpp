@@ -131,19 +131,9 @@ asset limit_order_cancel_evaluator::do_apply(const limit_order_cancel_operation&
 { try {
    database& d = db();
 
-   auto base_asset = _order->sell_price.base.asset_id;
-   auto quote_asset = _order->sell_price.quote.asset_id;
    auto refunded = _order->amount_for_sale();
 
    d.cancel_limit_order(*_order, false /* don't create a virtual op*/);
-
-   if( d.get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_606_TIME )
-   {
-      // Possible optimization: order can be called by canceling a limit order iff the canceled order was at the top of the book.
-      // Do I need to check calls in both assets?
-      d.check_call_orders(base_asset(d));
-      d.check_call_orders(quote_asset(d));
-   }
 
    return refunded;
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE

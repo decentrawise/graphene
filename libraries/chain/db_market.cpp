@@ -373,15 +373,9 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
 
    // Question: will a new limit order trigger a black swan event?
    //
-   // 1. as of writing, it's possible due to the call-order-and-limit-order overlapping issue:
-   //       https://github.com/bitshares/bitshares-core/issues/606 .
-   //    when it happens, a call order can be very big but don't match with the opposite,
-   //    even when price feed is too far away, further than swan price,
-   //    if the new limit order is in the same direction with the call orders, it can eat up all the opposite,
-   //    then the call order will lose support and trigger a black swan event.
-   // 2. after issue 606 is fixed, there will be no limit order on the opposite side "supporting" the call order,
+   // 1. as of now, there is no limit order on the opposite side "supporting" the call order,
    //    so a new order in the same direction with the call order won't trigger a black swan event.
-   // 3. calling is one direction. if the new limit order is on the opposite direction,
+   // 2. calling is one direction. if the new limit order is on the opposite direction,
    //    no matter if matches with the call, it won't trigger a black swan event.
    //    (if a match at MSSP caused a black swan event, it means the call order is already undercollateralized,
    //      which should trigger a black swan event earlier.)
@@ -929,7 +923,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 
     auto head_num = head_block_num();
 
-    bool before_core_hardfork_606 = ( maint_time <= HARDFORK_CORE_606_TIME ); // feed always trigger call
     bool before_core_hardfork_834 = ( maint_time <= HARDFORK_CORE_834_TIME ); // target collateral ratio option
 
     while( !check_for_blackswan( mia, enable_black_swan, &bitasset ) // TODO perhaps improve performance by passing in iterators
@@ -948,10 +941,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
        const limit_order_object& limit_order = *limit_itr;
        price match_price  = limit_order.sell_price;
        // There was a check `match_price.validate();` here, which is removed now because it always passes
-
-       // Old rule: margin calls can only buy high https://github.com/bitshares/bitshares-core/issues/606
-       if( before_core_hardfork_606 && match_price > ~call_order.call_price )
-          return margin_called;
 
        margin_called = true;
 

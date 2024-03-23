@@ -248,30 +248,15 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
 
 void database::clear_expired_orders()
 { try {
-         //Cancel expired limit orders
-         auto head_time = head_block_time();
-         auto maint_time = get_dynamic_global_properties().next_maintenance_time;
+   //Cancel expired limit orders
+   auto head_time = head_block_time();
 
-         bool before_core_hardfork_606 = ( maint_time <= HARDFORK_CORE_606_TIME ); // feed always trigger call
-
-         auto& limit_index = get_index_type<limit_order_index>().indices().get<by_expiration>();
-         while( !limit_index.empty() && limit_index.begin()->expiration <= head_time )
-         {
-            const limit_order_object& order = *limit_index.begin();
-            auto base_asset = order.sell_price.base.asset_id;
-            auto quote_asset = order.sell_price.quote.asset_id;
-            cancel_limit_order( order );
-            if( before_core_hardfork_606 )
-            {
-               // check call orders
-               // Comments below are copied from limit_order_cancel_evaluator::do_apply(...)
-               // Possible optimization: order can be called by cancelling a limit order
-               //   if the canceled order was at the top of the book.
-               // Do I need to check calls in both assets?
-               check_call_orders( base_asset( *this ) );
-               check_call_orders( quote_asset( *this ) );
-            }
-         }
+   auto& limit_index = get_index_type<limit_order_index>().indices().get<by_expiration>();
+   while( !limit_index.empty() && limit_index.begin()->expiration <= head_time )
+   {
+      const limit_order_object& order = *limit_index.begin();
+      cancel_limit_order( order );
+   }
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 void database::clear_expired_force_settlements()

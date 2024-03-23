@@ -13,9 +13,9 @@ using namespace graphene::chain::test;
 BOOST_FIXTURE_TEST_SUITE(market_tests, database_fixture)
 
 /***
- * Fixed bitshares-core issue #606 #625 #649
+ * Undercollateralized short positions call test cases
  */
-BOOST_AUTO_TEST_CASE(hardfork_core_606_test)
+BOOST_AUTO_TEST_CASE(short_positions_called)
 { try {
 
    auto mi = db.get_global_properties().parameters.maintenance_interval;
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(hardfork_core_606_test)
    if(hf1270)
       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
    else
-      generate_blocks(HARDFORK_CORE_606_TIME - mi);
+      generate_blocks(HARDFORK_CORE_625_TIME - mi);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(hardfork_core_606_test)
    BOOST_CHECK_EQUAL( 0, get_balance(buyer, bitusd) );
    BOOST_CHECK_EQUAL( init_balance - 90 - 110 - 111, get_balance(buyer, core) );
 
-   // This order slightly below the call price will be matched: #606 fixed
+   // This order slightly below the call price will be matched
    BOOST_CHECK( !create_sell_order(seller, bitusd.amount(700), core.amount(5900) ) );
 
    // firstly it will match with buy_high, at buy_high's price: #625 fixed
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(hardfork_core_606_test)
    // collateralization of call3 is 15900 / 990 = 16.06
 
    // adjust price feed to get call3 into black swan territory, but not the other call orders
-   // Note: after hard fork, black swan should occur when callateralization < mssp, but not at < feed
+   // Note: black swan should occur when callateralization < mssp, but not at < feed
    current_feed.settlement_price = asset(1, usd_id) / asset(16, core_id);
    publish_feed( usd_id(db), feedproducer_id(db), current_feed );
    // settlement price = 1/16, mssp = 10/176
