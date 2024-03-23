@@ -439,8 +439,6 @@ BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
 
    if(hf1270)
       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-   else
-      generate_blocks(HARDFORK_CORE_834_TIME - mi);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -623,8 +621,6 @@ BOOST_AUTO_TEST_CASE(target_cr_test_call_limit)
 
    if(hf1270)
       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-   else
-      generate_blocks(HARDFORK_CORE_834_TIME - mi);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 

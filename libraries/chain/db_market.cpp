@@ -399,7 +399,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
                                        sell_abd->current_maintenance_collateralization );
             // match returns match_result_type::only_taker_filled or match_result_type::both_filled when the new order was fully filled.
             // In this case, we stop matching; otherwise keep matching.
-            // since match can return 0 due to BSIP38 (hard fork core-834), we no longer only check if the result is 2.
             if (match_result == match_result_type::only_taker_filled || match_result == match_result_type::both_filled)
                finished = true;
          }
@@ -423,7 +422,6 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
                                        optional<price>() );
             // match returns match_result_type::only_taker_filled or match_result_type::both_filled when the new order was fully filled.
             // In this case, we stop matching; otherwise keep matching.
-            // since match can return 0 due to BSIP38 (hard fork core-834), we no longer only check if the result is 2.
             if (match_result == match_result_type::only_taker_filled || match_result == match_result_type::both_filled)
                finished = true;
          }
@@ -870,8 +868,6 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 
     auto head_num = head_block_num();
 
-    bool before_core_hardfork_834 = ( maint_time <= HARDFORK_CORE_834_TIME ); // target collateral ratio option
-
     while( !check_for_blackswan( mia, enable_black_swan, &bitasset ) // TODO perhaps improve performance by passing in iterators
            && limit_itr != limit_end
            && ( ( !before_core_hardfork_1270 && call_collateral_itr != call_collateral_end )
@@ -909,7 +905,7 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
                                                                 bitasset.current_feed.maintenance_collateral_ratio,
                                                                 bitasset.current_maintenance_collateralization );
        }
-       else if( !before_core_hardfork_834 )
+       else
        {
           usd_to_buy.amount = call_order.get_max_debt_to_cover( match_price,
                                                                 bitasset.current_feed.settlement_price,

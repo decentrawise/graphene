@@ -459,9 +459,8 @@ BOOST_AUTO_TEST_CASE( call_order_update_validation_test )
    op.validate(); // still valid
 }
 
-// Tests that target_cr option can't be set before hard fork core-834
-// TODO: remove this test case after hard fork
-BOOST_AUTO_TEST_CASE( call_order_update_target_cr_hardfork_time_test )
+// Tests that target_cr option
+BOOST_AUTO_TEST_CASE( call_order_update_target_cr_test )
 {
    try {
       set_expiration( db, trx );
@@ -511,12 +510,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_target_cr_hardfork_time_test )
          PUSH_TX( db, tx, ~0 );
       };
 
-      generate_blocks(HARDFORK_CORE_834_TIME);
-      set_expiration( db, trx );
-
-      BOOST_TEST_MESSAGE( "bob tries to propose a proposal with target_cr set, "
-                          "will success after hard fork time" );
-      // now able to propose
+      // bob is able to propose with target_cr set
       call_update_proposal( bob_id(db), alice_id(db), bitusd_id(db).amount(10), core_id(db).amount(40), 65535 );
 
       generate_block();
