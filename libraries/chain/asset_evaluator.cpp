@@ -586,38 +586,35 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
  * @brief Apply requested changes to bitasset options
  *
  * This applies the requested changes to the bitasset object. It also cleans up the
- * releated feeds
+ * related feeds
  *
  * @param op the requested operation
  * @param db the database
  * @param bdo the actual database object
  * @param asset_to_update the asset_object related to this bitasset_data_object
- * @returns true if the feed price is changed, and after hf core-868-890
+ * @returns true if the feed price is changed
  */
 static bool update_bitasset_object_options(
       const asset_update_bitasset_operation& op, database& db,
       asset_bitasset_data_object& bdo, const asset_object& asset_to_update )
 {
    const fc::time_point_sec next_maint_time = db.get_dynamic_global_properties().next_maintenance_time;
-   bool after_hf_core_868_890 = ( next_maint_time > HARDFORK_CORE_868_890_TIME );
 
    // If the minimum number of feeds to calculate a median has changed, we need to recalculate the median
    bool should_update_feeds = false;
    if( op.new_options.minimum_feeds != bdo.options.minimum_feeds )
       should_update_feeds = true;
 
-   // after hardfork core-868-890, we also should call update_median_feeds if the feed_lifetime_sec changed
-   if( after_hf_core_868_890
-         && op.new_options.feed_lifetime_sec != bdo.options.feed_lifetime_sec )
+   // we also should call update_median_feeds if the feed_lifetime_sec changed
+   if( op.new_options.feed_lifetime_sec != bdo.options.feed_lifetime_sec )
    {
       should_update_feeds = true;
    }
 
-   // feeds must be reset if the backing asset is changed after hardfork core-868-890
+   // feeds must be reset if the backing asset is changed
    bool backing_asset_changed = false;
    bool is_witness_or_committee_fed = false;
-   if( after_hf_core_868_890
-         && op.new_options.short_backing_asset != bdo.options.short_backing_asset )
+   if( op.new_options.short_backing_asset != bdo.options.short_backing_asset )
    {
       backing_asset_changed = true;
       should_update_feeds = true;
@@ -637,8 +634,7 @@ static bool update_bitasset_object_options(
       else
       {
          // for non-witness-feeding and non-committee-feeding assets, modify all feeds
-         // published by producers to nothing, since we can't simply remove them. For more information:
-         // https://github.com/bitshares/bitshares-core/pull/832#issuecomment-384112633
+         // published by producers to nothing, since we can't simply remove them.
          for( auto& current_feed : bdo.feeds )
          {
             current_feed.second.second.settlement_price = price();
@@ -651,24 +647,17 @@ static bool update_bitasset_object_options(
       const auto old_feed = bdo.current_feed;
       bdo.update_median_feeds( db.head_block_time(), next_maint_time );
 
-      // TODO review and refactor / cleanup after hard fork:
-      //      1. if hf_core_868_890 and core-935 occurred at same time
-      //      2. if wlog did not actually get called
-
       // We need to call check_call_orders if the price feed changes after hardfork core-935
       if( next_maint_time > HARDFORK_CORE_935_TIME )
          return ( !( old_feed == bdo.current_feed ) );
 
-      // We need to call check_call_orders if the settlement price changes after hardfork core-868-890
-      if( after_hf_core_868_890 )
+      // We need to call check_call_orders if the settlement price changes - TODO remove after core-935
+      if( old_feed.settlement_price != bdo.current_feed.settlement_price )
+         return true;
+      else
       {
-         if( old_feed.settlement_price != bdo.current_feed.settlement_price )
-            return true;
-         else
-         {
-            if( !( old_feed == bdo.current_feed ) )
-               wlog( "Settlement price did not change but current_feed changed at block ${b}", ("b",db.head_block_num()) );
-         }
+         if( !( old_feed == bdo.current_feed ) )
+            wlog( "Settlement price did not change but current_feed changed at block ${b}", ("b",db.head_block_num()) );
       }
    }
 

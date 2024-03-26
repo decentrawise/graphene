@@ -874,93 +874,6 @@ void update_median_feeds(database& db)
 }
 
 /******
- * @brief one-time data process for hard fork core-868-890
- *
- * Prior to hardfork 868, switching a bitasset's shorting asset would not reset its
- * feeds. This method will run at the hardfork time, and erase (or nullify) feeds
- * that have incorrect backing assets.
- * https://github.com/bitshares/bitshares-core/issues/868
- *
- * Prior to hardfork 890, changing a bitasset's feed expiration time would not
- * trigger a median feed update. This method will run at the hardfork time, and
- * correct all median feed data.
- * https://github.com/bitshares/bitshares-core/issues/890
- *
- * @param db the database
- * @param skip_check_call_orders true if check_call_orders() should not be called
- */
-// TODO: for better performance, this function can be removed if it actually updated nothing at hf time.
-//       * Also need to update related test cases
-//       * NOTE: the removal can't be applied to testnet
-void process_hf_868_890( database& db )
-{
-   const auto next_maint_time = db.get_dynamic_global_properties().next_maintenance_time;
-   const auto head_time = db.head_block_time();
-   const auto head_num = db.head_block_num();
-   wlog( "Processing hard fork core-868-890 at block ${n}", ("n",head_num) );
-   // for each market issued asset
-   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   for( auto asset_itr = asset_idx.lower_bound(true); asset_itr != asset_idx.end(); ++asset_itr )
-   {
-      const auto& current_asset = *asset_itr;
-      // Incorrect witness & committee feeds can simply be removed.
-      // For non-witness-fed and non-committee-fed assets, set incorrect
-      // feeds to price(), since we can't simply remove them. For more information:
-      // https://github.com/bitshares/bitshares-core/pull/832#issuecomment-384112633
-      bool is_witness_or_committee_fed = false;
-      if ( current_asset.options.flags & ( witness_fed_asset | committee_fed_asset ) )
-         is_witness_or_committee_fed = true;
-
-      // for each feed
-      const asset_bitasset_data_object& bitasset_data = current_asset.bitasset_data(db);
-      bool feeds_changed = false; // did any feed change
-      auto itr = bitasset_data.feeds.begin();
-      while( itr != bitasset_data.feeds.end() )
-      {
-         // If the feed is invalid
-         if ( itr->second.second.settlement_price.quote.asset_id != bitasset_data.options.short_backing_asset
-               && ( is_witness_or_committee_fed || itr->second.second.settlement_price != price() ) )
-         {
-            feeds_changed = true;
-            db.modify( bitasset_data, [&itr, is_witness_or_committee_fed]( asset_bitasset_data_object& obj )
-            {
-               if( is_witness_or_committee_fed )
-               {
-                  // erase the invalid feed
-                  itr = obj.feeds.erase(itr);
-               }
-               else
-               {
-                  // nullify the invalid feed
-                  obj.feeds[itr->first].second.settlement_price = price();
-                  ++itr;
-               }
-            });
-         }
-         else
-         {
-            // Feed is valid. Skip it.
-            ++itr;
-         }
-      } // end loop of each feed
-
-      // if any feed was modified, print a warning message
-      if( feeds_changed )
-      {
-         wlog( "Found invalid feed for asset ${asset_sym} (${asset_id}) during hardfork core-868-890",
-               ("asset_sym", current_asset.symbol)("asset_id", current_asset.id) );
-      }
-
-      // always update the median feed due to https://github.com/bitshares/bitshares-core/issues/890
-      db.modify( bitasset_data, [head_time,next_maint_time]( asset_bitasset_data_object &obj ) {
-         obj.update_median_feeds( head_time, next_maint_time );
-      });
-
-   } // for each market issued asset
-   wlog( "Done processing hard fork core-868-890 at block ${n}", ("n",head_num) );
-}
-
-/******
  * @brief one-time data process for hard fork core-935
  *
  * Prior to hardfork 935, `check_call_orders` may be unintendedly skipped when
@@ -1140,11 +1053,6 @@ void database::perform_chain_maintenance(const signed_block& next_block)
          next_maintenance_time += (uint32_t)( (y+1) * maintenance_interval );
       }
    }
-
-   // Process inconsistent price feeds
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_868_890_TIME)
-         && (next_maintenance_time > HARDFORK_CORE_868_890_TIME) )
-      process_hf_868_890( *this );
 
    // Explicitly call check_call_orders of all markets
    if( (dgpo.next_maintenance_time <= HARDFORK_CORE_935_TIME) && (next_maintenance_time > HARDFORK_CORE_935_TIME) )
