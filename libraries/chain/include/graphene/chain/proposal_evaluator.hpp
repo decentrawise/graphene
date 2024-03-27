@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-   class hardfork_visitor_1479
+   class proposal_eval_visitor
    {
    public:
       typedef void result_type;
@@ -36,7 +36,7 @@ namespace graphene { namespace chain {
          flat_set<account_id_type> _required_active_auths;
          flat_set<account_id_type> _required_owner_auths;
 
-         hardfork_visitor_1479 vtor_1479;
+         proposal_eval_visitor vtor_eval;
    };
 
    class proposal_update_evaluator : public evaluator<proposal_update_evaluator>

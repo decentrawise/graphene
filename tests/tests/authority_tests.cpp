@@ -2001,7 +2001,6 @@ BOOST_AUTO_TEST_CASE( self_approving_proposal )
    ACTORS( (alice) );
    fund( alice );
 
-   generate_blocks( HARDFORK_CORE_1479_TIME );
    trx.clear();
    set_expiration( db, trx );
 
@@ -2015,16 +2014,11 @@ BOOST_AUTO_TEST_CASE( self_approving_proposal )
    pop.fee_paying_account = alice_id;
    pop.expiration_time = db.head_block_time() + fc::days(1);
    trx.operations.push_back(pop);
-   const proposal_id_type pid1 { PUSH_TX( db, trx, ~0 ).operation_results[0].get<object_id_type>() };
+   GRAPHENE_CHECK_THROW( PUSH_TX( db, trx, ~0 ), fc::exception );
    trx.clear();
-   BOOST_REQUIRE_EQUAL( 0u, pid1.instance.value );
-   db.get(pid1);
 
    trx.operations.push_back(pup);
-   PUSH_TX( db, trx, ~0 );
-
-   // Proposal failed and still exists
-   db.get(pid1);
+   GRAPHENE_CHECK_THROW(PUSH_TX(db, trx, ~0), fc::exception);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( self_deleting_proposal )
@@ -2032,7 +2026,6 @@ BOOST_AUTO_TEST_CASE( self_deleting_proposal )
    ACTORS( (alice) );
    fund( alice );
 
-   generate_blocks( HARDFORK_CORE_1479_TIME );
    trx.clear();
    set_expiration( db, trx );
 
@@ -2046,20 +2039,15 @@ BOOST_AUTO_TEST_CASE( self_deleting_proposal )
    pop.fee_paying_account = alice_id;
    pop.expiration_time = db.head_block_time() + fc::days(1);
    trx.operations.push_back( pop );
-   const proposal_id_type pid1 { PUSH_TX( db, trx, ~0 ).operation_results[0].get<object_id_type>() };
+   GRAPHENE_CHECK_THROW(PUSH_TX(db, trx, ~0), fc::exception);
    trx.clear();
-   BOOST_REQUIRE_EQUAL( 0u, pid1.instance.value );
-   db.get(pid1);
 
    proposal_update_operation pup;
    pup.fee_paying_account = alice_id;
    pup.proposal = proposal_id_type(0);
    pup.active_approvals_to_add.insert( alice_id );
    trx.operations.push_back(pup);
-   PUSH_TX( db, trx, ~0 );
-
-   // Proposal failed and still exists
-   db.get(pid1);
+   GRAPHENE_CHECK_THROW( PUSH_TX( db, trx, ~0 ), fc::exception );
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

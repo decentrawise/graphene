@@ -10,14 +10,14 @@ namespace detail {
    void check_vesting_balance_policy_hf_1268(const fc::time_point_sec& block_time, const vesting_policy_initializer& policy);
 }
 
-struct proposal_operation_hardfork_visitor
+struct proposal_operation_visitor
 {
    typedef void result_type;
    const database& db;
    const fc::time_point_sec block_time;
    const fc::time_point_sec next_maintenance_time;
 
-   proposal_operation_hardfork_visitor( const database& _db, const fc::time_point_sec bt )
+   proposal_operation_visitor( const database& _db, const fc::time_point_sec bt )
    : db( _db ), block_time(bt), next_maintenance_time( db.get_dynamic_global_properties().next_maintenance_time ) {}
 
    template<typename T>
@@ -77,14 +77,14 @@ struct proposal_operation_hardfork_visitor
    }
 };
 
-void hardfork_visitor_1479::operator()(const proposal_update_operation &v)
+void proposal_eval_visitor::operator()(const proposal_update_operation &v)
 {
    if( nested_update_count == 0 || v.proposal.instance.value > max_update_instance )
       max_update_instance = v.proposal.instance.value;
    nested_update_count++;
 }
 
-void hardfork_visitor_1479::operator()(const proposal_delete_operation &v)
+void proposal_eval_visitor::operator()(const proposal_delete_operation &v)
 {
    if( nested_update_count == 0 || v.proposal.instance.value > max_update_instance )
       max_update_instance = v.proposal.instance.value;
@@ -92,7 +92,7 @@ void hardfork_visitor_1479::operator()(const proposal_delete_operation &v)
 }
 
 // loop and self visit in proposals
-void hardfork_visitor_1479::operator()(const graphene::chain::proposal_create_operation &v)
+void proposal_eval_visitor::operator()(const graphene::chain::proposal_create_operation &v)
 {
    for (const op_wrapper &op : v.proposed_ops)
       op.op.visit(*this);
@@ -104,9 +104,9 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
 
    // Calling the proposal hardfork visitor
    const fc::time_point_sec block_time = d.head_block_time();
-   proposal_operation_hardfork_visitor vtor( d, block_time );
+   proposal_operation_visitor vtor( d, block_time );
    vtor( o );
-   vtor_1479( o );
+   vtor_eval( o );
 
    const auto& global_parameters = d.get_global_properties().parameters;
 
@@ -177,19 +177,8 @@ object_id_type proposal_create_evaluator::do_apply(const proposal_create_operati
       proposal.required_owner_approvals.insert( _required_owner_auths.begin(), _required_owner_auths.end() );
       proposal.required_active_approvals.insert( _required_active_auths.begin(), _required_active_auths.end() );
 
-      if( d.head_block_time() > HARDFORK_CORE_1479_TIME )
-         FC_ASSERT( vtor_1479.nested_update_count == 0 || proposal.id.instance() > vtor_1479.max_update_instance,
-                    "Cannot update/delete a proposal with a future id!" );
-      else if( vtor_1479.nested_update_count > 0 && proposal.id.instance() <= vtor_1479.max_update_instance )
-      {
-         // prevent approval
-         transfer_operation top;
-         top.from = GRAPHENE_NULL_ACCOUNT;
-         top.to = GRAPHENE_RELAXED_COMMITTEE_ACCOUNT;
-         top.amount = asset( GRAPHENE_MAX_SHARE_SUPPLY );
-         proposal.proposed_transaction.operations.emplace_back( top );
-         wlog( "Issue 1479: ${p}", ("p",proposal) );
-      }
+      FC_ASSERT( vtor_eval.nested_update_count == 0 || proposal.id.instance() > vtor_eval.max_update_instance,
+                  "Cannot update/delete a proposal with a future id!" );
    });
 
    return proposal.id;
