@@ -53,36 +53,28 @@ The default configuration is:
 
 # Docker Compose
 
-With docker compose, multiple nodes can be managed with a single
+With docker compose, multiple services can be managed with a single
 `docker-compose.yaml` file:
 
-    version: '3'
-    services:
-     main:
-      # Image to run
-      image: decentrawise/graphene:latest
-      # 
-      volumes:
-       - ./docker/conf/:/etc/graphene/
-      # Optional parameters
-      environment:
-       - GRAPHENED_ARGS=--help
+## Graphene Builder service
 
+This is a standard development environment for use by all core developers.
 
-    version: '3'
-    services:
-     fullnode:
-      # Image to run
-      image: decentrawise/graphene:latest
-      environment:
-      # Optional parameters
-      environment:
-       - GRAPHENED_ARGS=--help
-      ports:
-       - "0.0.0.0:8090:8090"
-      volumes:
-      - "graphene-fullnode:/var/lib/graphene"
+The graphene code is mapped into the container at `/graphene`, so that any
+changes made to the code at the host, will be reflected into the build
+environment automatically.
 
+### Startup
+
+`docker-compose up -d`
+
+or
+
+`docker-compose up -d builder` if we just want to start the builder service
+
+### Shell access
+
+`./docker/exec-bash.sh builder` to gain shell access to the build environment
 
 # Docker Hub
 

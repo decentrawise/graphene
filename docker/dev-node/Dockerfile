@@ -39,14 +39,7 @@ WORKDIR /graphene
 
 # Compile
 RUN \
-  ( git submodule sync --recursive || \
-    find `pwd`  -type f -name .git | \
-    while read f; do \
-      rel="$(echo "${f#$PWD/}" | sed 's=[^/]*/=../=g')"; \
-      sed -i "s=: .*/.git/=: $rel/=" "$f"; \
-    done && \
-    git submodule sync --recursive \
-  ) && \
+  git submodule deinit --all && \
   git submodule update --init --recursive && \
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -92,9 +85,9 @@ ENV HOME /var/lib/graphene
 RUN chown graphene:graphene -R /var/lib/graphene
 
 # default exec/config files
-ADD docker/default_config.ini /etc/graphene/config.ini
-ADD docker/default_logging.ini /etc/graphene/logging.ini
-ADD docker/graphene-entry.sh /usr/local/bin/graphene-entry.sh
+ADD docker/config/default_config.ini /etc/graphene/config.ini
+ADD docker/config/default_logging.ini /etc/graphene/logging.ini
+ADD docker/dev-node/graphene-entry.sh /usr/local/bin/graphene-entry.sh
 RUN chmod a+x /usr/local/bin/graphene-entry.sh
 
 # Volume

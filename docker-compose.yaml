@@ -1,0 +1,11 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: docker/builder/Dockerfile
+    container_name: graphene-builder
+    ports:
+      - 8090:8090
+      - 1776:1776
+    volumes:
+      - .:/graphene
