@@ -885,8 +885,6 @@ BOOST_AUTO_TEST_CASE(mcr_bug_increase_after1270)
 BOOST_AUTO_TEST_CASE(mcr_bug_decrease_before1270)
 { try {
 
-   auto mi = db.get_global_properties().parameters.maintenance_interval;
-   generate_blocks(HARDFORK_CORE_935_TIME - mi);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
 

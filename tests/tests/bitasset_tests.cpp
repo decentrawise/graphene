@@ -712,9 +712,9 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
 }
 
 /*********
- * @brief Call check_call_orders after current_feed changed but not only settlement_price changed.
+ * @brief Call check_call_orders after current_feed changed
  */
-BOOST_AUTO_TEST_CASE( hf_935_test )
+BOOST_AUTO_TEST_CASE( bitasset_feeds_test )
 { try {
    uint32_t skip = database::skip_witness_signature
                  | database::skip_transaction_signatures
@@ -724,19 +724,14 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
                  | database::skip_merkle_check
                  ;
 
-   for( int i = 0; i < 6; ++i )
+   for( int i = 0; i < 4; ++i )
    {
       // idump( (i) );
       
       int blocks = 0;
       auto mi = db.get_global_properties().parameters.maintenance_interval;
 
-      if( i == 2 ) // go beyond hard fork 935
-      {
-         generate_blocks( HARDFORK_CORE_935_TIME - mi, true, skip );
-         generate_blocks( db.get_dynamic_global_properties().next_maintenance_time, true, skip );
-      }
-      else if( i == 4 ) // go beyond hard fork 1270
+      if( i == 2 ) // go beyond hard fork 1270
       {
          generate_blocks( HARDFORK_CORE_1270_TIME - mi, true, skip );
          generate_blocks( db.get_dynamic_global_properties().next_maintenance_time, true, skip );
@@ -859,27 +854,8 @@ BOOST_AUTO_TEST_CASE( hf_935_test )
          trx.clear();
       }
 
-      // if it's before hard fork 935
-      if( db.get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_935_TIME )
-      {
-         // median should have changed
-         BOOST_CHECK( usd_id(db).bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
-         if( i % 2 == 0 ) // MCR test, MCR should be 350%
-            BOOST_CHECK_EQUAL( usd_id(db).bitasset_data(db).current_feed.maintenance_collateral_ratio, 3500 );
-         else // MSSR test, MSSR should be 125%
-            BOOST_CHECK_EQUAL( usd_id(db).bitasset_data(db).current_feed.maximum_short_squeeze_ratio, 1250 );
-
-         // the limit order should be still there, because `check_call_order` was incorrectly skipped
-         BOOST_CHECK( db.find( sell_id ) );
-
-         // go beyond hard fork 935
-         blocks += generate_blocks(HARDFORK_CORE_935_TIME - mi, true, skip);
-         blocks += generate_blocks(db.get_dynamic_global_properties().next_maintenance_time, true, skip);
-      }
-
-      // after hard fork 935, the limit order is filled only for the MSSR test
-      if( db.get_dynamic_global_properties().next_maintenance_time > HARDFORK_CORE_935_TIME &&
-          db.get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_1270_TIME)
+      // before hard fork 1270, the limit order is filled only for the MSSR test
+      if( db.get_dynamic_global_properties().next_maintenance_time <= HARDFORK_CORE_1270_TIME)
       {
          // check median
          BOOST_CHECK( usd_id(db).bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );

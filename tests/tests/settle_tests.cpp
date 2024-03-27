@@ -15,8 +15,6 @@ BOOST_FIXTURE_TEST_SUITE( settle_tests, database_fixture )
 BOOST_AUTO_TEST_CASE( settle_rounding_test )
 {
    try {
-      auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_935_TIME - mi);   // TODO: remove after passing without it
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration( db, trx );
 

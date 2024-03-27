@@ -126,15 +126,10 @@ database_fixture_base::~database_fixture_base()
 void database_fixture_base::init_genesis( database_fixture_base& fixture )
 {
    fixture.genesis_state.initial_timestamp = fc::time_point_sec(GRAPHENE_TESTING_GENESIS_TIMESTAMP);
-   if (fixture.current_test_name == "hf_935_test")
-   {
-      fixture.genesis_state.initial_active_witnesses = 20;
-   }
-   else {
-      fixture.genesis_state.initial_active_witnesses = 10;
-      fixture.genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
-      fixture.genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
-   }
+
+   fixture.genesis_state.initial_active_witnesses = 10;
+   fixture.genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
+   fixture.genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
 
    for( unsigned int i = 0; i < fixture.genesis_state.initial_active_witnesses; ++i )
    {
