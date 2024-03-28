@@ -1173,11 +1173,9 @@ BOOST_FIXTURE_TEST_CASE( get_required_signatures_test, database_fixture )
       {
          //wdump( (tx)(available_keys) );
          set<public_key_type> result_set = tx.get_required_signatures( db.get_chain_id(), available_keys,
-                                                                       get_active, get_owner, false );
-         set<public_key_type> result_set2 = tx.get_required_signatures( db.get_chain_id(), available_keys,
-                                                                       get_active, get_owner, true );
+                                                                       get_active, get_owner );
          //wdump( (result_set)(result_set2)(ref_set) );
-         return result_set == ref_set && result_set2 == ref_set;
+         return result_set == ref_set;
       } ;
 
       set_auth( well_id, authority( 60, alice_id, 50, bob_id, 50 ) );
@@ -1290,11 +1288,9 @@ BOOST_FIXTURE_TEST_CASE( nonminimal_sig_test, database_fixture )
       {
          //wdump( (tx)(available_keys) );
          set<public_key_type> result_set = tx.get_required_signatures( db.get_chain_id(), available_keys,
-                                                                       get_active, get_owner, false );
-         set<public_key_type> result_set2 = tx.get_required_signatures( db.get_chain_id(), available_keys,
-                                                                       get_active, get_owner, true );
+                                                                       get_active, get_owner );
          //wdump( (result_set)(result_set2)(ref_set) );
-         return result_set == ref_set && result_set2 == ref_set;
+         return result_set == ref_set;
       } ;
 
       auto chk_min = [&](
@@ -1305,11 +1301,9 @@ BOOST_FIXTURE_TEST_CASE( nonminimal_sig_test, database_fixture )
       {
          //wdump( (tx)(available_keys) );
          set<public_key_type> result_set = tx.minimize_required_signatures( db.get_chain_id(), available_keys,
-                                                                            get_active, get_owner, false );
-         set<public_key_type> result_set2 = tx.minimize_required_signatures( db.get_chain_id(), available_keys,
-                                                                            get_active, get_owner, true );
+                                                                            get_active, get_owner );
          //wdump( (result_set)(result_set2)(ref_set) );
-         return result_set == ref_set && result_set2 == ref_set;
+         return result_set == ref_set;
       } ;
 
       set_auth( roco_id, authority( 2, styx_id, 1, thud_id, 2 ) );
@@ -1326,11 +1320,11 @@ BOOST_FIXTURE_TEST_CASE( nonminimal_sig_test, database_fixture )
       BOOST_CHECK( chk( tx, { alice_public_key, bob_public_key }, { alice_public_key, bob_public_key } ) );
       BOOST_CHECK( chk_min( tx, { alice_public_key, bob_public_key }, { alice_public_key } ) );
 
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, true ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ), fc::exception );
       sign( tx, alice_private_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
    }
    catch(fc::exception& e)
    {
@@ -1340,7 +1334,7 @@ BOOST_FIXTURE_TEST_CASE( nonminimal_sig_test, database_fixture )
 }
 
 /*
- * Active vs Owner https://github.com/bitshares/bitshares-core/issues/584
+ * Active vs Owner
  *
  * All weights and all thresholds are 1, so every single key should be able to sign if within max_depth
  *
@@ -1404,20 +1398,6 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
          return &(aid(db).owner);
       } ;
 
-      auto chk = [&](
-         const signed_transaction& tx,
-         bool after_hf_584,
-         flat_set<public_key_type> available_keys,
-         set<public_key_type> ref_set
-         ) -> bool
-      {
-         //wdump( (tx)(available_keys) );
-         set<public_key_type> result_set = tx.get_required_signatures( db.get_chain_id(), available_keys,
-                                                                       get_active, get_owner, after_hf_584 );
-         //wdump( (result_set)(ref_set) );
-         return result_set == ref_set;
-      } ;
-
       fc::ecc::private_key alice_active_key = fc::ecc::private_key::regenerate(fc::digest("alice_active"));
       fc::ecc::private_key alice_owner_key = fc::ecc::private_key::regenerate(fc::digest("alice_owner"));
       fc::ecc::private_key bob_active_key = fc::ecc::private_key::regenerate(fc::digest("bob_active"));
@@ -1469,147 +1449,74 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
       tx.operations.push_back( op );
       set_expiration( db, tx );
 
-      // https://github.com/bitshares/bitshares-core/issues/584
-      // If not allow non-immediate owner to authorize
-      BOOST_CHECK( chk( tx, false, { alice_owner_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { alice_active_pub }, { alice_active_pub } ) );
-      BOOST_CHECK( chk( tx, false, { alice_active_pub, alice_owner_pub }, { alice_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, false, { bob_owner_pub }, { bob_owner_pub } ) );
-      BOOST_CHECK( chk( tx, false, { bob_active_pub }, { bob_active_pub } ) );
-      BOOST_CHECK( chk( tx, false, { bob_active_pub, bob_owner_pub }, { bob_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, false, { cindy_owner_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { cindy_active_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { cindy_active_pub, cindy_owner_pub }, { } ) );
-
-      BOOST_CHECK( chk( tx, false, { daisy_owner_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { daisy_active_pub }, { daisy_active_pub } ) );
-      BOOST_CHECK( chk( tx, false, { daisy_active_pub, daisy_owner_pub }, { daisy_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, false, { edwin_owner_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { edwin_active_pub }, { edwin_active_pub } ) );
-      BOOST_CHECK( chk( tx, false, { edwin_active_pub, edwin_owner_pub }, { edwin_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, false, { frank_owner_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { frank_active_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { frank_active_pub, frank_owner_pub }, { } ) );
-
-      BOOST_CHECK( chk( tx, false, { gavin_owner_pub }, { } ) );
-      BOOST_CHECK( chk( tx, false, { gavin_active_pub }, { gavin_active_pub } ) );
-      BOOST_CHECK( chk( tx, false, { gavin_active_pub, gavin_owner_pub }, { gavin_active_pub } ) );
-
-      // If allow non-immediate owner to authorize
-      BOOST_CHECK( chk( tx, true, { alice_owner_pub }, { alice_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { alice_active_pub }, { alice_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { alice_active_pub, alice_owner_pub }, { alice_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, true, { bob_owner_pub }, { bob_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { bob_active_pub }, { bob_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { bob_active_pub, bob_owner_pub }, { bob_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, true, { cindy_owner_pub }, { cindy_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { cindy_active_pub }, { cindy_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { cindy_active_pub, cindy_owner_pub }, { cindy_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, true, { daisy_owner_pub }, { daisy_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { daisy_active_pub }, { daisy_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { daisy_active_pub, daisy_owner_pub }, { daisy_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, true, { edwin_owner_pub }, { edwin_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { edwin_active_pub }, { edwin_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { edwin_active_pub, edwin_owner_pub }, { edwin_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, true, { frank_owner_pub }, { frank_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { frank_active_pub }, { frank_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { frank_active_pub, frank_owner_pub }, { frank_active_pub } ) );
-
-      BOOST_CHECK( chk( tx, true, { gavin_owner_pub }, { gavin_owner_pub } ) );
-      BOOST_CHECK( chk( tx, true, { gavin_active_pub }, { gavin_active_pub } ) );
-      BOOST_CHECK( chk( tx, true, { gavin_active_pub, gavin_owner_pub }, { gavin_active_pub } ) );
-
       sign( tx, alice_owner_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, alice_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
       tx.clear_signatures();
 
       sign( tx, bob_owner_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
       tx.clear_signatures();
 
       sign( tx, bob_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
       tx.clear_signatures();
 
       sign( tx, cindy_owner_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, cindy_active_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, daisy_owner_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, daisy_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
       tx.clear_signatures();
 
       sign( tx, edwin_owner_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, edwin_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
       tx.clear_signatures();
 
       sign( tx, frank_owner_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, frank_active_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, gavin_owner_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ), fc::exception );
-      GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx, database::skip_transaction_dupe_check ), fc::exception );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
 
       sign( tx, gavin_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
       tx.clear_signatures();
 
       // proposal tests
@@ -1667,14 +1574,13 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
       approve_proposal( pid, bob_id, false, bob_active_key );
       BOOST_CHECK( !db.find( pid ) );
 
-      // Cindy's approval doesn't work
       pid = new_proposal();
       approve_proposal( pid, cindy_id, true, cindy_owner_key );
-      BOOST_CHECK( db.find( pid ) );
+      BOOST_CHECK( !db.find( pid ) );
 
       pid = new_proposal();
       approve_proposal( pid, cindy_id, false, cindy_active_key );
-      BOOST_CHECK( db.find( pid ) );
+      BOOST_CHECK( !db.find( pid ) );
 
       pid = new_proposal();
       approve_proposal( pid, daisy_id, true, daisy_owner_key );
@@ -1692,14 +1598,13 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
       approve_proposal( pid, edwin_id, false, edwin_active_key );
       BOOST_CHECK( !db.find( pid ) );
 
-      // Frank's approval doesn't work
       pid = new_proposal();
       approve_proposal( pid, frank_id, true, frank_owner_key );
-      BOOST_CHECK( db.find( pid ) );
+      BOOST_CHECK( !db.find( pid ) );
 
       pid = new_proposal();
       approve_proposal( pid, frank_id, false, frank_active_key );
-      BOOST_CHECK( db.find( pid ) );
+      BOOST_CHECK( !db.find( pid ) );
 
       pid = new_proposal();
       approve_proposal( pid, gavin_id, true, gavin_owner_key );
@@ -1710,10 +1615,6 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
       BOOST_CHECK( !db.find( pid ) );
 
       generate_block( database::skip_transaction_dupe_check );
-
-      // pass the hard fork time
-      generate_blocks( HARDFORK_CORE_584_TIME, true, database::skip_transaction_dupe_check );
-      set_expiration( db, tx );
 
       // signing tests
       sign( tx, alice_owner_key );
@@ -1771,63 +1672,6 @@ BOOST_FIXTURE_TEST_CASE( parent_owner_test, database_fixture )
       sign( tx, gavin_active_key );
       PUSH_TX( db, tx, database::skip_transaction_dupe_check );
       tx.clear_signatures();
-
-      // proposal tests
-      pid = new_proposal();
-      approve_proposal( pid, alice_id, true, alice_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, alice_id, false, alice_active_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, bob_id, true, bob_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, bob_id, false, bob_active_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, cindy_id, true, cindy_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, cindy_id, false, cindy_active_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, daisy_id, true, daisy_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, daisy_id, false, daisy_active_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, edwin_id, true, edwin_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, edwin_id, false, edwin_active_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, frank_id, true, frank_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, frank_id, false, frank_active_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, gavin_id, true, gavin_owner_key );
-      BOOST_CHECK( !db.find( pid ) );
-
-      pid = new_proposal();
-      approve_proposal( pid, gavin_id, false, gavin_active_key );
-      BOOST_CHECK( !db.find( pid ) );
 
       generate_block( database::skip_transaction_dupe_check );
    }
@@ -1954,29 +1798,29 @@ BOOST_FIXTURE_TEST_CASE( missing_owner_auth_test, database_fixture )
       tx.operations.push_back( op );
 
       // not signed, should throw tx_missing_owner_auth
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_missing_owner_auth );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, true ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_missing_owner_auth );
 
       // signed with alice's active key, should throw tx_missing_owner_auth
       sign( tx, alice_active_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_missing_owner_auth );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, true ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_missing_owner_auth );
 
       // signed with alice's owner key, should not throw
       tx.clear_signatures();
       sign( tx, alice_owner_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
 
       // signed with both alice's owner key and active key,
       // it does not throw due to https://github.com/bitshares/bitshares-core/issues/580
       sign( tx, alice_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
 
       // creating a transaction that needs active permission
       tx.clear();
@@ -1985,27 +1829,27 @@ BOOST_FIXTURE_TEST_CASE( missing_owner_auth_test, database_fixture )
       tx.operations.push_back( op );
 
       // not signed, should throw tx_missing_active_auth
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_missing_active_auth );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, true ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_missing_active_auth );
 
       // signed with alice's active key, should not throw
       sign( tx, alice_active_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
 
       // signed with alice's owner key, should not throw
       tx.clear_signatures();
       sign( tx, alice_owner_key );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, false );
-      tx.verify_authority( db.get_chain_id(), get_active, get_owner, true );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
+      tx.verify_authority( db.get_chain_id(), get_active, get_owner );
 
       // signed with both alice's owner key and active key, should throw tx_irrelevant_sig
       sign( tx, alice_active_key );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, false ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_irrelevant_sig );
-      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner, true ),
+      GRAPHENE_REQUIRE_THROW( tx.verify_authority( db.get_chain_id(), get_active, get_owner ),
                               graphene::chain::tx_irrelevant_sig );
 
    }

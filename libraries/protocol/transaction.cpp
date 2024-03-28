@@ -145,7 +145,7 @@ namespace graphene { namespace protocol {
          bool check_authority( account_id_type id )
          {
             if( approved_by.find(id) != approved_by.end() ) return true;
-            return check_authority( get_active(id) ) || ( allow_non_immediate_owner && check_authority( get_owner(id) ) );
+            return check_authority( get_active(id) ) || check_authority( get_owner(id) );
          }
 
          /**
@@ -181,7 +181,7 @@ namespace graphene { namespace protocol {
                   if( depth == max_recursion )
                      continue;
                   if( check_authority( get_active( a.first ), depth+1 )
-                        || ( allow_non_immediate_owner && check_authority( get_owner( a.first ), depth+1 ) ) )
+                        || check_authority( get_owner( a.first ), depth+1 ) )
                   {
                      approved_by.insert( a.first );
                      total_weight += a.second;
@@ -214,12 +214,10 @@ namespace graphene { namespace protocol {
          sign_state( const flat_set<public_key_type>& sigs,
                      const std::function<const authority*(account_id_type)>& active,
                      const std::function<const authority*(account_id_type)>& owner,
-                     bool allow_owner,
                      uint32_t max_recursion_depth = GRAPHENE_MAX_SIG_CHECK_DEPTH,
                      const flat_set<public_key_type>& keys = empty_keyset )
          :  get_active(active),
             get_owner(owner),
-            allow_non_immediate_owner(allow_owner),
             max_recursion(max_recursion_depth),
             available_keys(keys)
          {
@@ -231,7 +229,6 @@ namespace graphene { namespace protocol {
          const std::function<const authority*(account_id_type)>& get_active;
          const std::function<const authority*(account_id_type)>& get_owner;
 
-         const bool                       allow_non_immediate_owner;
          const uint32_t                   max_recursion;
          const flat_set<public_key_type>& available_keys;
 
@@ -243,7 +240,6 @@ namespace graphene { namespace protocol {
    void verify_authority( const vector<operation>& ops, const flat_set<public_key_type>& sigs,
                         const std::function<const authority*(account_id_type)>& get_active,
                         const std::function<const authority*(account_id_type)>& get_owner,
-                        bool allow_non_immediate_owner,
                         uint32_t max_recursion_depth,
                         bool  allow_committe,
                         const flat_set<account_id_type>& active_aprovals,
@@ -260,7 +256,7 @@ namespace graphene { namespace protocol {
          GRAPHENE_ASSERT( required_active.find(GRAPHENE_COMMITTEE_ACCOUNT) == required_active.end(),
                         invalid_committee_approval, "Committee account may only propose transactions" );
 
-      sign_state s( sigs, get_active, get_owner, allow_non_immediate_owner, max_recursion_depth );
+      sign_state s( sigs, get_active, get_owner, max_recursion_depth );
       for( auto& id : active_aprovals )
          s.approved_by.insert( id );
       for( auto& id : owner_approvals )
@@ -316,7 +312,6 @@ namespace graphene { namespace protocol {
       const flat_set<public_key_type>& available_keys,
       const std::function<const authority*(account_id_type)>& get_active,
       const std::function<const authority*(account_id_type)>& get_owner,
-      bool allow_non_immediate_owner,
       uint32_t max_recursion_depth )const
    {
       flat_set<account_id_type> required_active;
@@ -325,7 +320,7 @@ namespace graphene { namespace protocol {
       get_required_authorities( required_active, required_owner, other );
 
       const flat_set<public_key_type>& signature_keys = get_signature_keys( chain_id );
-      sign_state s( signature_keys, get_active, get_owner, allow_non_immediate_owner, max_recursion_depth, available_keys );
+      sign_state s( signature_keys, get_active, get_owner, max_recursion_depth, available_keys );
 
       for( const auto& auth : other )
          s.check_authority(&auth);
@@ -351,7 +346,6 @@ namespace graphene { namespace protocol {
       const flat_set<public_key_type>& available_keys,
       const std::function<const authority*(account_id_type)>& get_active,
       const std::function<const authority*(account_id_type)>& get_owner,
-      bool allow_non_immediate_owner,
       uint32_t max_recursion
       ) const
    {
@@ -364,7 +358,7 @@ namespace graphene { namespace protocol {
          try
          {
             graphene::protocol::verify_authority( operations, result, get_active, get_owner,
-                                                allow_non_immediate_owner, max_recursion );
+                                                max_recursion );
             continue;  // element stays erased if verify_authority is ok
          }
          catch( const tx_missing_owner_auth& e ) {}
@@ -409,11 +403,10 @@ namespace graphene { namespace protocol {
       const chain_id_type& chain_id,
       const std::function<const authority*(account_id_type)>& get_active,
       const std::function<const authority*(account_id_type)>& get_owner,
-      bool allow_non_immediate_owner,
       uint32_t max_recursion )const
    { try {
       graphene::protocol::verify_authority( operations, get_signature_keys( chain_id ), get_active, get_owner,
-                                          allow_non_immediate_owner, max_recursion );
+                                          max_recursion );
    } FC_CAPTURE_AND_RETHROW( (*this) ) } // GCOVR_EXCL_LINE
 
 } } // graphene::protocol

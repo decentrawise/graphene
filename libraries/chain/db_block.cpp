@@ -673,10 +673,9 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    if( 0 == (skip & skip_transaction_signatures) )
    {
-      bool allow_non_immediate_owner = ( head_block_time() >= HARDFORK_CORE_584_TIME );
       auto get_active = [this]( account_id_type id ) { return &id(*this).active; };
       auto get_owner  = [this]( account_id_type id ) { return &id(*this).owner;  };
-      trx.verify_authority(chain_id, get_active, get_owner, allow_non_immediate_owner,
+      trx.verify_authority(chain_id, get_active, get_owner,
                            get_global_properties().parameters.max_authority_depth);
    }
 

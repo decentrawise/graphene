@@ -105,7 +105,6 @@ BOOST_AUTO_TEST_CASE( get_potential_signatures_owner_and_active )
 }
 
 /// Testing get_potential_signatures and get_required_signatures for non-immediate owner authority issue.
-/// https://github.com/bitshares/bitshares-core/issues/584
 BOOST_AUTO_TEST_CASE( get_signatures_non_immediate_owner )
 {
    try {
@@ -162,23 +161,6 @@ BOOST_AUTO_TEST_CASE( get_signatures_non_immediate_owner )
       op.to = account_id_type();
       trx_a.operations.push_back(op);
 
-      // get potential signatures
-      graphene::app::database_api db_api(db);
-      set<public_key_type> pub_keys = db_api.get_potential_signatures( trx_a );
-
-      BOOST_CHECK( pub_keys.find( pub_key_active ) != pub_keys.end() );
-      BOOST_CHECK( pub_keys.find( pub_key_owner ) != pub_keys.end() );
-      BOOST_CHECK( pub_keys.find( a_pub_key_active ) != pub_keys.end() );
-      // doesn't work due to https://github.com/bitshares/bitshares-core/issues/584
-      BOOST_CHECK( pub_keys.find( a_pub_key_owner ) == pub_keys.end() );
-      BOOST_CHECK( pub_keys.find( o_pub_key_active ) != pub_keys.end() );
-      // doesn't work due to https://github.com/bitshares/bitshares-core/issues/584
-      BOOST_CHECK( pub_keys.find( o_pub_key_owner ) == pub_keys.end() );
-
-      // get required signatures
-      pub_keys = db_api.get_required_signatures( trx_a, { a_pub_key_owner, o_pub_key_owner } );
-      BOOST_CHECK( pub_keys.empty() );
-
       // this op requires owner
       signed_transaction trx_o;
       account_update_operation auop;
@@ -186,30 +168,10 @@ BOOST_AUTO_TEST_CASE( get_signatures_non_immediate_owner )
       auop.owner = authority(1, pub_key_owner, 1);
       trx_o.operations.push_back(auop);
 
-      // get potential signatures
-      pub_keys = db_api.get_potential_signatures( trx_o );
-
-      // active authorities doesn't help in this case
-      BOOST_CHECK( pub_keys.find( pub_key_active ) == pub_keys.end() );
-      BOOST_CHECK( pub_keys.find( a_pub_key_active ) == pub_keys.end() );
-      BOOST_CHECK( pub_keys.find( a_pub_key_owner ) == pub_keys.end() );
-
-      // owner authorities should be ok
-      BOOST_CHECK( pub_keys.find( pub_key_owner ) != pub_keys.end() );
-      BOOST_CHECK( pub_keys.find( o_pub_key_active ) != pub_keys.end() );
-      // doesn't work due to https://github.com/bitshares/bitshares-core/issues/584
-      BOOST_CHECK( pub_keys.find( o_pub_key_owner ) == pub_keys.end() );
-
-      // get required signatures
-      pub_keys = db_api.get_required_signatures( trx_o, { a_pub_key_owner, o_pub_key_owner } );
-      BOOST_CHECK( pub_keys.empty() );
-
-      // go beyond hard fork
-      generate_blocks( HARDFORK_CORE_584_TIME, true );
-
       // for the transaction that requires active
       // get potential signatures
-      pub_keys = db_api.get_potential_signatures( trx_a );
+      graphene::app::database_api db_api(db);
+      set<public_key_type> pub_keys = db_api.get_potential_signatures( trx_a );
 
       // all authorities should be ok
       BOOST_CHECK( pub_keys.find( pub_key_active ) != pub_keys.end() );
