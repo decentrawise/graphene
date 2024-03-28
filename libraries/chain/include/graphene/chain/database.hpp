@@ -364,8 +364,17 @@ namespace graphene { namespace chain {
           * @param trade_amount the quantity that the fee calculation is based upon
           * @param is_maker TRUE if this is the fee for a maker, FALSE if taker
           */
-         asset calculate_market_fee(const asset_object &recv_asset, const asset &trade_amount);
+         asset calculate_market_fee( const asset_object &recv_asset, const asset &trade_amount );
+         /// @brief Pay market fees to asset owner
+         /// @param recv_asset   the asset (passed in to avoid lookup)
+         /// @param receives     the trade size
+         /// @return             the fees paid
          asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
+         /// @brief Pay market fees to asset owner and rewards to referrer program
+         /// @param seller       the account to check for referral program
+         /// @param recv_asset   the asset (passed in to avoid lookup)
+         /// @param receives     the trade size
+         /// @return             the fees paid
          asset pay_market_fees( const account_object& seller, const asset_object& recv_asset, const asset& receives );
          /// @}
 

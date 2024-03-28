@@ -5,11 +5,6 @@
 
 namespace graphene { namespace chain {
 
-namespace detail {
-   void check_asset_options_hf_1268(const fc::time_point_sec& block_time, const asset_options& options);
-   void check_vesting_balance_policy_hf_1268(const fc::time_point_sec& block_time, const vesting_policy_initializer& policy);
-}
-
 struct proposal_operation_visitor
 {
    typedef void result_type;
@@ -23,18 +18,6 @@ struct proposal_operation_visitor
    template<typename T>
    void operator()(const T &v) const {}
 
-   // hf_1268
-   void operator()(const graphene::chain::asset_create_operation &v) const {
-      detail::check_asset_options_hf_1268(block_time, v.common_options);
-   }
-   // hf_1268
-   void operator()(const graphene::chain::asset_update_operation &v) const {
-      detail::check_asset_options_hf_1268(block_time, v.new_options);
-   }
-   // hf_1268
-   void operator()(const graphene::chain::vesting_balance_create_operation &v) const {
-      detail::check_vesting_balance_policy_hf_1268(block_time, v.policy);
-   }
    // As a virtual operation which has no evaluator `asset_settle_cancel_operation`
    // originally won't be packed into blocks, yet its loose `validate()` method
    // make it able to slip into blocks.

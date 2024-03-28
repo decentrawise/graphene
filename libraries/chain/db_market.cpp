@@ -660,9 +660,8 @@ bool database::fill_limit_order( const limit_order_object& order, const asset& p
    const account_object& seller = order.seller(*this);
    const asset_object& recv_asset = receives.asset_id(*this);
 
-   auto issuer_fees = ( head_block_time() < HARDFORK_1268_TIME ) ? 
-      pay_market_fees(recv_asset, receives) : 
-      pay_market_fees(seller, recv_asset, receives);
+   // pay market fees to asset owner and reward referrer and registrar
+   auto issuer_fees = pay_market_fees(seller, recv_asset, receives);
 
    pay_order( seller, receives - issuer_fees, pays );
 
@@ -1010,6 +1009,7 @@ asset database::pay_market_fees(const account_object& seller, const asset_object
 {
    const auto issuer_fees = calculate_market_fee( recv_asset, receives );
    FC_ASSERT( issuer_fees <= receives, "Market fee shouldn't be greater than receives");
+   
    //Don't dirty undo state if not actually collecting any fees
    if ( issuer_fees.amount > 0 )
    {
