@@ -737,7 +737,6 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
-      generate_blocks(HARDFORK_CORE_1468_TIME);
       set_expiration( db, trx );
       set_htlc_committee_parameters();
       generate_block();

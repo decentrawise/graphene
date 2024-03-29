@@ -53,9 +53,6 @@ void_result committee_member_update_global_parameters_evaluator::do_evaluate(con
 { try {
    FC_ASSERT(trx_state->_is_proposed_trx);
 
-   FC_ASSERT( db().head_block_time() > HARDFORK_CORE_1468_TIME || !o.new_parameters.extensions.value.updatable_htlc_options.valid(), 
-         "Unable to set HTLC parameters until hardfork." );
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 

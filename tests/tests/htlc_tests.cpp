@@ -39,9 +39,8 @@ void generate_random_preimage(uint16_t key_size, std::vector<char>& vec)
 	return;
 }
 
-void advance_past_hardfork(database_fixture* db_fixture)
+void test_setup(database_fixture* db_fixture)
 {
-   db_fixture->generate_blocks(HARDFORK_CORE_1468_TIME);
    set_expiration(db_fixture->db, db_fixture->trx);
    db_fixture->set_htlc_committee_parameters();
    set_expiration(db_fixture->db, db_fixture->trx);
@@ -56,7 +55,7 @@ try {
 
    transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
 
-   advance_past_hardfork(this);
+   test_setup(this);
 
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(256);
@@ -163,7 +162,7 @@ try {
    transfer( committee_account, bob_id, graphene::chain::asset(init_balance) );
    transfer( committee_account, joker_id, graphene::chain::asset(init_balance) );
 
-   advance_past_hardfork(this);
+   test_setup(this);
    
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(preimage_size);
@@ -245,7 +244,7 @@ try {
 BOOST_AUTO_TEST_CASE( other_peoples_money )
 {
 try {
-   advance_past_hardfork(this);
+   test_setup(this);
 
    // Initialize committee by voting for each member and for desired count and HTLC parameters
    vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
@@ -305,72 +304,7 @@ try {
 BOOST_AUTO_TEST_CASE( htlc_hardfork_test )
 { 
    try {
-      {
-         // try to set committee parameters before hardfork
-         proposal_create_operation cop = proposal_create_operation::committee_proposal(
-               db.get_global_properties().parameters, db.head_block_time());
-         cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-         cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-         committee_member_update_global_parameters_operation cmuop;
-         graphene::chain::htlc_options new_params;
-         new_params.max_preimage_size = 2048;
-         new_params.max_timeout_secs = 60 * 60 * 24 * 28;
-         cmuop.new_parameters.extensions.value.updatable_htlc_options = new_params;
-         cop.proposed_ops.emplace_back(cmuop);
-         trx.operations.push_back(cop);
-         // update with signatures
-         proposal_update_operation uop;
-         uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-         uop.active_approvals_to_add = {get_account("init0").get_id(), get_account("init1").get_id(),
-                                       get_account("init2").get_id(), get_account("init3").get_id(),
-                                       get_account("init4").get_id(), get_account("init5").get_id(),
-                                       get_account("init6").get_id(), get_account("init7").get_id()};
-         trx.operations.push_back(uop);
-         sign( trx, init_account_priv_key );
-         BOOST_TEST_MESSAGE("Sending proposal.");
-         GRAPHENE_CHECK_THROW(db.push_transaction(trx), fc::exception);
-         BOOST_TEST_MESSAGE("Verifying that proposal did not succeeed.");
-         BOOST_CHECK(!db.get_global_properties().parameters.extensions.value.updatable_htlc_options.valid());
-         trx.clear();
-      }
-
-      {
-         BOOST_TEST_MESSAGE("Attempting to set HTLC fees before hard fork.");
-
-         // get existing fee_schedule
-         const chain_parameters& existing_params = db.get_global_properties().parameters;
-         const fee_schedule_type& existing_fee_schedule = *(existing_params.current_fees);
-         // create a new fee_shedule
-         std::shared_ptr<fee_schedule_type> new_fee_schedule = std::make_shared<fee_schedule_type>();
-         new_fee_schedule->scale = existing_fee_schedule.scale;
-         // replace the old with the new
-         flat_map<uint64_t, graphene::chain::fee_parameters> params_map = get_htlc_fee_parameters();
-         for(auto param : existing_fee_schedule.parameters)
-         {
-            auto itr = params_map.find(param.which());
-            if (itr == params_map.end())
-               new_fee_schedule->parameters.insert(param);
-            else
-            {
-               new_fee_schedule->parameters.insert( (*itr).second);
-            }
-         }
-         proposal_create_operation cop = proposal_create_operation::committee_proposal(
-               db.get_global_properties().parameters, db.head_block_time());
-         cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
-         cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-         committee_member_update_global_parameters_operation uop;
-         uop.new_parameters.current_fees = new_fee_schedule;
-         cop.proposed_ops.emplace_back(uop);
-         cop.fee = asset( 100000 );
-         trx.operations.push_back( cop );
-         GRAPHENE_CHECK_THROW(db.push_transaction( trx ), fc::exception);
-         trx.clear();
-      }
-
-      // now things should start working...
-      BOOST_TEST_MESSAGE("Advancing to HTLC hardfork time.");
-      advance_past_hardfork(this);
+      test_setup(this);
 
       // Initialize committee by voting for each member and for desired count and HTLC parameters
       vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
@@ -451,95 +385,6 @@ BOOST_AUTO_TEST_CASE( htlc_hardfork_test )
             = current_fee_schedule.get<htlc_create_operation>();
       BOOST_CHECK_EQUAL(htlc_fee.fee, 2 * GRAPHENE_BLOCKCHAIN_PRECISION);
       
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE( htlc_before_hardfork )
-{ try {
-   ACTORS((alice)(bob));
-
-   int64_t init_balance(100000);
-
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
-
-   uint16_t preimage_size = 256;
-   std::vector<char> pre_image(256);
-   generate_random_preimage(preimage_size, pre_image);
-
-   graphene::chain::htlc_id_type alice_htlc_id;
-   // clear everything out
-   generate_block();
-   trx.clear();
-
-   // Alice tries to put a contract on the blockchain
-   {
-      graphene::chain::htlc_create_operation create_operation;
-
-      create_operation.amount = graphene::chain::asset( 10000 );
-      create_operation.to = bob_id;
-      create_operation.claim_period_seconds = 60;
-      create_operation.preimage_hash = hash_it<fc::sha256>( pre_image );
-      create_operation.preimage_size = preimage_size;
-      create_operation.from = alice_id;
-      trx.operations.push_back(create_operation);
-      sign(trx, alice_private_key);
-      GRAPHENE_CHECK_THROW(PUSH_TX(db, trx, ~0), fc::exception);
-      trx.clear();
-   }
-
-   // Propose htlc_create
-   {
-      proposal_create_operation pco;
-      pco.expiration_time = db.head_block_time() + fc::minutes(1);
-      pco.fee_paying_account = alice_id;
-
-      graphene::chain::htlc_create_operation create_operation;
-      create_operation.amount = graphene::chain::asset( 10000 );
-      create_operation.to = bob_id;
-      create_operation.claim_period_seconds = 60;
-      create_operation.preimage_hash = hash_it<fc::sha256>( pre_image );
-      create_operation.preimage_size = preimage_size;
-      create_operation.from = alice_id;
-
-      pco.proposed_ops.emplace_back( create_operation );
-      trx.operations.push_back( pco );
-      GRAPHENE_CHECK_THROW( PUSH_TX( db, trx, ~0 ), fc::assert_exception );
-      trx.clear();
-   }
-
-   // Propose htlc_redeem
-   {
-      proposal_create_operation pco;
-      pco.expiration_time = db.head_block_time() + fc::minutes(1);
-      pco.fee_paying_account = alice_id;
-
-      graphene::chain::htlc_redeem_operation rop;
-      rop.redeemer = bob_id;
-      rop.htlc_id = alice_htlc_id;
-      string preimage_str = "Arglebargle";
-      rop.preimage.insert( rop.preimage.begin(), preimage_str.begin(), preimage_str.end() );
-
-      pco.proposed_ops.emplace_back( rop );
-      trx.operations.push_back( pco );
-      GRAPHENE_CHECK_THROW( PUSH_TX( db, trx, ~0 ), fc::assert_exception );
-      trx.clear();
-   }
-
-   // Propose htlc_extend
-   {
-      proposal_create_operation pco;
-      pco.expiration_time = db.head_block_time() + fc::minutes(1);
-      pco.fee_paying_account = alice_id;
-
-      graphene::chain::htlc_extend_operation xop;
-      xop.htlc_id = alice_htlc_id;
-      xop.seconds_to_add = 100;
-      xop.update_issuer = alice_id;
-
-      pco.proposed_ops.emplace_back( xop );
-      trx.operations.push_back( pco );
-      GRAPHENE_CHECK_THROW( PUSH_TX( db, trx, ~0 ), fc::assert_exception );
-      trx.clear();
-   }
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( fee_calculations )
@@ -623,7 +468,7 @@ try {
    fund( alice, graphene::chain::asset(init_balance) );
    fund( bob, graphene::chain::asset(init_balance) );
 
-   advance_past_hardfork(this);
+   test_setup(this);
 
    // blacklist bob
    {
@@ -739,7 +584,6 @@ try {
 
    transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
 
-   generate_blocks(HARDFORK_CORE_1468_TIME);
    set_expiration( db, trx );
 
    set_htlc_committee_parameters();
