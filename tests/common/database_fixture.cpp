@@ -126,15 +126,10 @@ database_fixture_base::~database_fixture_base()
 void database_fixture_base::init_genesis( database_fixture_base& fixture )
 {
    fixture.genesis_state.initial_timestamp = fc::time_point_sec(GRAPHENE_TESTING_GENESIS_TIMESTAMP);
-   if (fixture.current_test_name == "hf_935_test")
-   {
-      fixture.genesis_state.initial_active_witnesses = 20;
-   }
-   else {
-      fixture.genesis_state.initial_active_witnesses = 10;
-      fixture.genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
-      fixture.genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
-   }
+
+   fixture.genesis_state.initial_active_witnesses = 10;
+   fixture.genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
+   fixture.genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
 
    for( unsigned int i = 0; i < fixture.genesis_state.initial_active_witnesses; ++i )
    {
@@ -500,8 +495,7 @@ fc::ecc::private_key database_fixture_base::generate_private_key(string seed)
 
 string database_fixture_base::generate_anon_acct_name()
 {
-   // names of the form "anon-acct-x123" ; the "x" is necessary
-   //    to workaround issue #46
+   // names of the form "anon-acct-x123" ; the "x" is a necessary workaround
    return "anon-acct-x" + std::to_string( anon_acct_count++ );
 }
 
@@ -1167,8 +1161,7 @@ void database_fixture_base::publish_feed( const asset_object& mia, const account
    if( op.feed.core_exchange_rate.is_null() )
    {
       op.feed.core_exchange_rate = op.feed.settlement_price;
-      if( db.head_block_time() > HARDFORK_480_TIME )
-         op.feed.core_exchange_rate.quote.asset_id = asset_id_type();
+      op.feed.core_exchange_rate.quote.asset_id = asset_id_type();
    }
    trx.operations.emplace_back( std::move(op) );
 

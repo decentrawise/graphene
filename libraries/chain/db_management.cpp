@@ -235,7 +235,7 @@ void database::close(bool rewinding)
 
    // Since pop_block() will move tx's in the popped blocks into pending,
    // we have to clear_pending() after we're done popping to get a clean
-   // DB state (issue #336).
+   // DB state
    clear_pending();
 
    ilog( "Writing object database to disk at block ${i}, please DO NOT kill the program", ("i", head_block_num()) );

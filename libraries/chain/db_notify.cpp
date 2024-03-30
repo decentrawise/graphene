@@ -102,8 +102,6 @@ struct get_impacted_account_visitor
    void operator()( const asset_update_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // issuer
-      if( op.new_issuer )
-         _impacted.insert( *(op.new_issuer) );
    }
    void operator()( const asset_update_issuer_operation& op )
    {

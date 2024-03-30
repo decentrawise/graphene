@@ -227,8 +227,7 @@ public:
    signed_transaction create_asset(string issuer, string symbol, uint8_t precision, asset_options common,
          fc::optional<bitasset_options> bitasset_opts, bool broadcast = false);
 
-   signed_transaction update_asset(string symbol, optional<string> new_issuer, asset_options new_options,
-         bool broadcast );
+   signed_transaction update_asset(string symbol, asset_options new_options, bool broadcast );
 
    signed_transaction update_asset_issuer(string symbol, string new_issuer, bool broadcast );
 

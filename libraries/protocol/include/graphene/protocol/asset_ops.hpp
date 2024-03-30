@@ -258,6 +258,9 @@ namespace graphene { namespace protocol {
     * @note This operation cannot be used to update BitAsset-specific options. For these options, use @ref
     * asset_update_bitasset_operation instead.
     *
+    * @note This operation cannot be used to update asset issuer. For that use @ref asset_update_issuer_operation
+    * instead.
+    *
     * @pre @ref issuer SHALL be an existing account and MUST match asset_object::issuer on @ref asset_to_update
     * @pre @ref fee SHALL be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
     * @pre @ref new_options SHALL be internally consistent, as verified by @ref validate()
@@ -275,9 +278,6 @@ namespace graphene { namespace protocol {
       asset           fee;
       account_id_type issuer;
       asset_id_type   asset_to_update;
-
-      /// If the asset is to be given a new issuer, specify his ID here.
-      optional<account_id_type>   new_issuer;
 
       asset_options               new_options;
       extensions_type             extensions;
@@ -564,7 +564,6 @@ FC_REFLECT( graphene::protocol::asset_update_operation,
             (fee)
             (issuer)
             (asset_to_update)
-            (new_issuer)
             (new_options)
             (extensions)
           )

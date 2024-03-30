@@ -180,7 +180,7 @@ namespace graphene { namespace protocol {
     *
     *  CR * DEBT/COLLAT or DEBT/(COLLAT/CR)
     *
-    *  Note: this function is only used before core-1270 hard fork.
+    *  Note: this function is candidate to be (re)moved, as call price is not cached anymore.
     */
    price price::call_price( const asset& debt, const asset& collateral, uint16_t collateral_ratio)
    { try {
@@ -225,9 +225,6 @@ namespace graphene { namespace protocol {
       FC_ASSERT( maximum_short_squeeze_ratio <= GRAPHENE_MAX_COLLATERAL_RATIO );
       FC_ASSERT( maintenance_collateral_ratio >= GRAPHENE_MIN_COLLATERAL_RATIO );
       FC_ASSERT( maintenance_collateral_ratio <= GRAPHENE_MAX_COLLATERAL_RATIO );
-      // Note: there was code here calling `max_short_squeeze_price();` before core-1270 hard fork,
-      //       in order to make sure that it doesn't overflow,
-      //       but the code doesn't actually check overflow, and it won't overflow, so the code is removed.
 
       // Note: not checking `maintenance_collateral_ratio >= maximum_short_squeeze_ratio` since launch
    } FC_CAPTURE_AND_RETHROW( (*this) ) }
@@ -244,23 +241,6 @@ namespace graphene { namespace protocol {
          return true;
       }
       FC_CAPTURE_AND_RETHROW( (*this) )
-   }
-
-   // This function is kept here due to potential different behavior in edge cases.
-   // TODO check after core-1270 hard fork to see if we can safely remove it
-   price price_feed::max_short_squeeze_price_before_hf_1270()const
-   {
-      // settlement price is in debt/collateral
-      boost::rational<uint128_t> sp( settlement_price.base.amount.value, settlement_price.quote.amount.value );
-      boost::rational<uint128_t> ratio( GRAPHENE_COLLATERAL_RATIO_DENOM, maximum_short_squeeze_ratio );
-      auto cp = sp * ratio;
-
-      while( cp.numerator() > GRAPHENE_MAX_SHARE_SUPPLY || cp.denominator() > GRAPHENE_MAX_SHARE_SUPPLY )
-         cp = boost::rational<uint128_t>( (cp.numerator() >> 1)+(cp.numerator()&1),
-                                          (cp.denominator() >> 1)+(cp.denominator()&1) );
-
-      return (  asset( static_cast<int64_t>(cp.numerator()), settlement_price.base.asset_id )
-               / asset( static_cast<int64_t>(cp.denominator()), settlement_price.quote.asset_id ) );
    }
 
    price price_feed::max_short_squeeze_price()const

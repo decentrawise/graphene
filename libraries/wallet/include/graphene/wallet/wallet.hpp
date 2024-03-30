@@ -802,8 +802,7 @@ class wallet_api
       string read_memo( const memo_data& memo )const;
 
 
-      /** Sign a message using an account's memo key. The signature is generated as in
-       *    https://github.com/xeroc/python-graphenelib/blob/d9634d74/graphenecommon/message.py#L64 .
+      /** Sign a message using an account's memo key
        *
        * @param signer the name or id of signing account
        * @param message text to sign
@@ -1104,15 +1103,12 @@ class wallet_api
        * \c update_bitasset() instead.
        *
        * @param symbol_or_id the symbol or id of the asset to update
-       * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
-       *                   null if you wish to remain the issuer of the asset
        * @param new_options the new asset_options object, which will entirely replace the existing
        *                    options.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the asset
        */
       signed_transaction update_asset( const string& symbol_or_id,
-                                       const optional<string>& new_issuer,
                                        const asset_options& new_options,
                                        bool broadcast = false )const;
 
@@ -1289,8 +1285,8 @@ class wallet_api
        *
        * In order to revive a market-pegged asset after global settlement (aka
        * black swan), investors can bid collateral in order to take over part of
-       * the debt and the settlement fund, see BSIP-0018. Updating an existing
-       * bid to cover 0 debt will delete the bid.
+       * the debt and the settlement fund. Updating an existing bid to cover 0
+       * debt will delete the bid.
        *
        * @param bidder the name or id of the account making the bid
        * @param debt_amount the amount of debt of the named asset to bid for
@@ -1445,7 +1441,7 @@ class wallet_api
        * Update your votes for workers
        *
        * @param account The account which will pay the fee and update votes.
-       * @param delta {"vote_for" : [...], "vote_against" : [...], "vote_abstain" : [...]}
+       * @param delta {"vote_approve" : [...], "vote_abstain" : [...]}
        * @param broadcast true if you wish to broadcast the transaction.
        * @return the signed transaction
        */

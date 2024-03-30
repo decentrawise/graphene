@@ -48,47 +48,31 @@ void verify_account_votes( const database& db, const account_options& options )
    FC_ASSERT( db.find(options.voting_account), "Invalid proxy account specified." );
 
    uint32_t max_vote_id = gpo.next_available_vote_id;
-   bool has_worker_votes = false;
    for( auto id : options.votes )
    {
       FC_ASSERT( id < max_vote_id, "Can not vote for ${id} which does not exist.", ("id",id) );
-      has_worker_votes |= (id.type() == vote_id_type::worker);
    }
 
-   if( has_worker_votes && (db.head_block_time() >= HARDFORK_607_TIME) )
-   {
-      const auto& against_worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_against>();
-      for( auto id : options.votes )
-      {
-         if( id.type() == vote_id_type::worker )
-         {
-            FC_ASSERT( against_worker_idx.find( id ) == against_worker_idx.end(),
-                       "Can no longer vote against a worker." );
-         }
-      }
-   }
-   if ( db.head_block_time() >= HARDFORK_CORE_143_TIME ) {
-      const auto& approve_worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_for>();
-      const auto& committee_idx = db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-      const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
-      for ( auto id : options.votes ) {
-         switch ( id.type() ) {
-            case vote_id_type::committee:
-               FC_ASSERT( committee_idx.find(id) != committee_idx.end(),
-                          "Can not vote for ${id} which does not exist.", ("id",id) );
-               break;
-            case vote_id_type::witness:
-               FC_ASSERT( witness_idx.find(id) != witness_idx.end(),
-                          "Can not vote for ${id} which does not exist.", ("id",id) );
-               break;
-            case vote_id_type::worker:
-               FC_ASSERT( approve_worker_idx.find( id ) != approve_worker_idx.end(),
-                          "Can not vote for ${id} which does not exist.", ("id",id) );
-               break;
-            default:
-               FC_THROW( "Invalid Vote Type: ${id}", ("id", id) );
-               break;
-         }
+   const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
+   const auto& committee_idx = db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
+   const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
+   for ( auto id : options.votes ) {
+      switch ( id.type() ) {
+         case vote_id_type::committee:
+            FC_ASSERT( committee_idx.find(id) != committee_idx.end(),
+                        "Can not vote for ${id} which does not exist.", ("id",id) );
+            break;
+         case vote_id_type::witness:
+            FC_ASSERT( witness_idx.find(id) != witness_idx.end(),
+                        "Can not vote for ${id} which does not exist.", ("id",id) );
+            break;
+         case vote_id_type::worker:
+            FC_ASSERT( worker_idx.find( id ) != worker_idx.end(),
+                        "Can not vote for ${id} which does not exist.", ("id",id) );
+            break;
+         default:
+            FC_THROW( "Invalid Vote Type: ${id}", ("id", id) );
+            break;
       }
    }
 }
@@ -96,11 +80,6 @@ void verify_account_votes( const database& db, const account_options& options )
 void_result account_create_evaluator::do_evaluate( const account_create_operation& op )
 { try {
    database& d = db();
-   if( d.head_block_time() < HARDFORK_516_TIME )
-   {
-      FC_ASSERT( !op.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !op.extensions.value.active_special_authority.valid() );
-   }
 
    FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
    FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
@@ -136,28 +115,10 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
 { try {
 
    database& d = db();
-   uint16_t referrer_percent = o.referrer_percent;
-   bool has_small_percent = (
-         (db().head_block_time() <= HARDFORK_453_TIME)
-      && (o.referrer != o.registrar  )
-      && (o.referrer_percent != 0    )
-      && (o.referrer_percent <= 0x100)
-      );
-
-   if( has_small_percent )
-   {
-      if( referrer_percent >= 100 )
-      {
-         wlog( "between 100% and 0x100%:  ${o}", ("o", o) );
-      }
-      referrer_percent = referrer_percent*100;
-      if( referrer_percent > GRAPHENE_100_PERCENT )
-         referrer_percent = GRAPHENE_100_PERCENT;
-   }
 
    const auto& global_properties = d.get_global_properties();
 
-   const auto& new_acnt_object = d.create<account_object>( [&o,&d,&global_properties,referrer_percent]( account_object& obj )
+   const auto& new_acnt_object = d.create<account_object>( [&o,&d,&global_properties]( account_object& obj )
    {
          obj.registrar = o.registrar;
          obj.referrer = o.referrer;
@@ -166,7 +127,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          const auto& params = global_properties.parameters;
          obj.network_fee_percentage = params.network_percent_of_fee;
          obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
-         obj.referrer_rewards_percentage = referrer_percent;
+         obj.referrer_rewards_percentage = o.referrer_percent;
 
          obj.name             = o.name;
          obj.owner            = o.owner;
@@ -191,17 +152,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.creation_block_num = d._current_block_num;
          obj.creation_time      = d._current_block_time;
    });
-
-   /*
-   if( has_small_percent )
-   {
-      wlog( "Account affected by #453 registered in block ${n}:  ${na} reg=${reg} ref=${ref}:${refp} ltr=${ltr}:${ltrp}",
-         ("n", db().head_block_num()) ("na", new_acnt_object.id)
-         ("reg", o.registrar) ("ref", o.referrer) ("ltr", new_acnt_object.lifetime_referrer)
-         ("refp", new_acnt_object.referrer_rewards_percentage) ("ltrp", new_acnt_object.lifetime_referrer_fee_percentage) );
-      wlog( "Affected account object is ${o}", ("o", new_acnt_object) );
-   }
-   */
 
    const auto& dynamic_properties = d.get_dynamic_global_properties();
    d.modify(dynamic_properties, [](dynamic_global_property_object& p) {
@@ -247,11 +197,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
 void_result account_update_evaluator::do_evaluate( const account_update_operation& o )
 { try {
    database& d = db();
-   if( d.head_block_time() < HARDFORK_516_TIME )
-   {
-      FC_ASSERT( !o.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !o.extensions.value.active_special_authority.valid() );
-   }
 
    try
    {
@@ -407,13 +352,11 @@ void_result account_upgrade_evaluator::do_apply(const account_upgrade_evaluator:
          a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - a.network_fee_percentage;
       } else if( a.is_annual_member(d.head_block_time()) ) {
          // Renew an annual subscription that's still in effect.
-         FC_ASSERT( d.head_block_time() <= HARDFORK_613_TIME );
          FC_ASSERT(a.membership_expiration_date - d.head_block_time() < fc::days(3650),
                    "May not extend annual membership more than a decade into the future.");
          a.membership_expiration_date += fc::days(365);
       } else {
          // Upgrade from basic account.
-         FC_ASSERT( d.head_block_time() <= HARDFORK_613_TIME );
          a.statistics(d).process_fees(a, d);
          assert(a.is_basic_account(d.head_block_time()));
          a.referrer = a.get_id();

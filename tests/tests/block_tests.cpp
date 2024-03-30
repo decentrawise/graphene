@@ -399,9 +399,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
             BOOST_CHECK_EQUAL(b.block_num(), 14u + j);
             GRAPHENE_CHECK_THROW(PUSH_BLOCK( db1, b ), fc::exception);
 
-            // At this point, `fetch_block_by_number` will fetch block from fork_db,
-            //    so unable to reproduce the issue which is fixed in PR #938
-            //    https://github.com/bitshares/bitshares-core/pull/938
+            // At this point, `fetch_block_by_number` will fetch block from fork_db
             fc::optional<signed_block> previous_block = db1.fetch_block_by_number(1);
             BOOST_CHECK ( previous_block.valid() );
             uint32_t db1_blocks = db1.head_block_num();
@@ -433,7 +431,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
       }
 
       {
-         // PR #938 make sure db is in a good state https://github.com/bitshares/bitshares-core/pull/938
+         // make sure db is in a good state
          BOOST_TEST_MESSAGE( "Checking whether all blocks on disk are good" );
          fc::optional<signed_block> previous_block = db1.fetch_block_by_number(1);
          BOOST_CHECK ( previous_block.valid() );
@@ -963,7 +961,11 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
+   // Initialize committee by voting for each member and for desired count
+   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
+   set_expiration(db, trx);
 
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
@@ -1559,7 +1561,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       BOOST_TEST_MESSAGE("update_account_keys:  this test will take a few minutes...");
 
       // Originally we had a loop here to go from use_address=0 to 1
-      // Live chain do not allow this so it had to be removed: https://github.com/bitshares/bitshares-core/issues/565
+      // Live chain do not allow this so it had to be removed
       vector< public_key_type > key_ids = numbered_key_id[ 0 ];
       for( int num_owner_keys=1; num_owner_keys<=2; num_owner_keys++ )
       {
@@ -1657,10 +1659,9 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
    }
 }
 
-// The next test is commented out as it will fail in current bitshares implementation
+// The next test is commented out as it will fail in current implementation
 // where "witnesses should never sign 2 consecutive blocks" is not enforced.
-// https://github.com/bitshares/bitshares-core/issues/565
-// Leaving it here to use it if we implement.later
+// Leaving it here to use it if we implement later.
 
 /**
  *  To have a secure random number we need to ensure that the same
@@ -1834,7 +1835,6 @@ BOOST_FIXTURE_TEST_CASE( temp_account_balance, database_fixture )
 /// * push blocks that are too large.
 /// If we add some logging in signed_transaction::get_signature_keys(), we can see if the code will extract public key(s)
 /// from signature(s) of same transactions multiple times.
-/// See https://github.com/bitshares/bitshares-core/pull/1251
 ///
 BOOST_FIXTURE_TEST_CASE( block_size_test, database_fixture )
 {

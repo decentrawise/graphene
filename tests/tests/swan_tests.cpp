@@ -86,16 +86,6 @@ struct swan_fixture : database_fixture {
       FC_ASSERT( swan().bitasset_data(db).current_feed.settlement_price.is_null() );
     }
 
-    void wait_for_hf_core_216() {
-      generate_blocks( HARDFORK_CORE_216_TIME );
-      generate_block();
-    }
-    void wait_for_hf_core_1270() {
-       auto mi = db.get_global_properties().parameters.maintenance_interval;
-       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-       wait_for_maintenance();
-    }
-
     void wait_for_maintenance() {
       generate_blocks( db.get_dynamic_global_properties().next_maintenance_time );
       generate_block();
@@ -122,15 +112,11 @@ BOOST_FIXTURE_TEST_SUITE( swan_tests, swan_fixture )
  */
 BOOST_AUTO_TEST_CASE( black_swan )
 { try {
-      if(hf1270)
-         wait_for_hf_core_1270();
-
       init_standard_swan();
 
       force_settle( borrower(), swan().amount(100) );
 
       expire_feed();
-      wait_for_hf_core_216();
 
       force_settle( borrower(), swan().amount(100) );
 
@@ -152,7 +138,7 @@ BOOST_AUTO_TEST_CASE( black_swan )
  * Black swan occurs when price feed falls, triggered by settlement
  * order.
  */
-BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
+BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
 { try {
 
       ACTORS((buyer)(seller)(borrower)(borrower2)(settler)(feeder));
@@ -192,7 +178,7 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
 
       // situations to test:
       // 1. minus short squeeze protection would be black swan, otherwise no
-      // 2. issue 346 (price feed drops followed by force settle, drop should trigger BS)
+      // 2. price feed drops followed by force settle, drop should trigger BS
       // 3. feed price < D/C of least collateralized short < call price < highest bid
 
       auto set_price = [&](
@@ -234,28 +220,7 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
          force_settle( settler, bitusd.amount(100) );
 
          // wait for forced settlement to execute
-         // this would throw on Sep.18 testnet, see #346 (https://github.com/cryptonomex/graphene/issues/346)
          wait_for_settlement();
-      }
-
-      // issue 350 (https://github.com/cryptonomex/graphene/issues/350)
-      {
-         // ok, new asset
-         const asset_object& bitusd = setup_asset();
-         top_up();
-         set_price( bitusd, bitusd.amount(40) / core.amount(1000) ); // $0.04
-         borrow( borrower, bitusd.amount(100), asset(5000) );    // 2x collat
-         transfer( borrower, seller, bitusd.amount(100) );
-         limit_order_id_type oid_019 = create_sell_order( seller, bitusd.amount(39), core.amount(2000) )->get_id();   // this order is at $0.019, we should not be able to match against it
-         limit_order_id_type oid_020 = create_sell_order( seller, bitusd.amount(40), core.amount(2000) )->get_id();   // this order is at $0.020, we should be able to match against it
-         set_price( bitusd, bitusd.amount(21) / core.amount(1000) ); // $0.021
-         //
-         // We attempt to match against $0.019 order and black swan,
-         // and this is intended behavior.  See discussion in ticket.
-         //
-         BOOST_CHECK( bitusd.bitasset_data(db).has_settlement() );
-         BOOST_CHECK( db.find( oid_019 ) != nullptr );
-         BOOST_CHECK( db.find( oid_020 ) == nullptr );
       }
 
    } catch( const fc::exception& e) {
@@ -269,11 +234,6 @@ BOOST_AUTO_TEST_CASE( black_swan_issue_346 )
 BOOST_AUTO_TEST_CASE( revive_recovered )
 { try {
       init_standard_swan( 700 );
-
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
 
       // revive after price recovers
       set_feed( 700, 800 );
@@ -303,13 +263,7 @@ BOOST_AUTO_TEST_CASE( recollateralize )
 { try {
       init_standard_swan( 700 );
 
-      // no hardfork yet
-      GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), back().amount(1000), swan().amount(100) ), fc::exception );
-
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
+      expire_feed();
 
       int64_t b2_balance = get_balance( borrower2(), back() );
       bid_collateral( borrower2(), back().amount(1000), swan().amount(100) );
@@ -402,11 +356,6 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
 { try {
       limit_order_id_type oid = init_standard_swan( 1000 );
 
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
-
       set_expiration( db, trx );
       cancel_limit_order( oid(db) );
       force_settle( borrower(), swan().amount(1000) );
@@ -432,11 +381,6 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
  */
 BOOST_AUTO_TEST_CASE( revive_empty )
 { try {
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
-
       limit_order_id_type oid = init_standard_swan( 1000 );
 
       cancel_limit_order( oid(db) );
@@ -459,11 +403,6 @@ BOOST_AUTO_TEST_CASE( revive_empty )
  */
 BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
 { try {
-      if(hf1270)
-         wait_for_hf_core_1270();
-      else
-         wait_for_hf_core_216();
-
       standard_users();
       standard_asset();
 
@@ -507,57 +446,11 @@ BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
    }
 }
 
-BOOST_AUTO_TEST_CASE(black_swan_after_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(black_swan);
-
-} FC_LOG_AND_RETHROW() }
-
-// black_swan_issue_346_hf1270 is skipped as it is already failing with HARDFORK_CORE_834_TIME
-
-BOOST_AUTO_TEST_CASE(revive_recovered_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_recovered);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(recollateralize_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(recollateralize);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(revive_empty_recovered_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_empty_recovered);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(revive_empty_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_empty);
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(revive_empty_with_bid_hf1270)
-{ try {
-   hf1270 = true;
-   INVOKE(revive_empty_with_bid);
-
-} FC_LOG_AND_RETHROW() }
-
 /** Creates a black swan, bids on more than outstanding debt
  */
 BOOST_AUTO_TEST_CASE( overflow )
 { try {
    init_standard_swan( 700 );
-
-   wait_for_hf_core_216();
 
    bid_collateral( borrower(),  back().amount(2200), swan().amount(GRAPHENE_MAX_SHARE_SUPPLY - 1) );
    bid_collateral( borrower2(), back().amount(2100), swan().amount(1399) );

@@ -35,6 +35,8 @@ max_debt_to_cover = max_amount_to_sell * match_price
                   = ( (debt + x) * tCR * fp_coll_amt * mp_debt_amt - collateral * fp_debt_amt * DENOM * mp_debt_amt)
                     / (tCR * mp_debt_amt * fp_coll_amt - fp_debt_amt * DENOM * mp_coll_amt)
 */
+// TODO: This function needs to be refactored along with others to make maintenance_collateralization non-optional
+// since it is the actual way now
 share_type call_order_object::get_max_debt_to_cover( price match_price,
                                                      price feed_price,
                                                      const uint16_t maintenance_collateral_ratio,
@@ -47,23 +49,20 @@ share_type call_order_object::get_max_debt_to_cover( price match_price,
    FC_ASSERT( feed_price.base.asset_id == call_price.base.asset_id
               && feed_price.quote.asset_id == call_price.quote.asset_id );
 
-   bool after_core_hardfork_1270 = maintenance_collateralization.valid();
+   bool has_mc = maintenance_collateralization.valid();
 
    // be defensive here, make sure maintenance_collateralization is in collateral / debt format
-   if( after_core_hardfork_1270 )
+   if (has_mc)
    {
       FC_ASSERT( maintenance_collateralization->base.asset_id == call_price.base.asset_id
                  && maintenance_collateralization->quote.asset_id == call_price.quote.asset_id );
    }
 
-   // According to the feed protection rule (https://github.com/cryptonomex/graphene/issues/436),
-   // a call order should only be called when its collateral ratio is not higher than required maintenance collateral ratio.
+   // According to the feed protection rule, a call order should only be called when its collateral ratio is
+   // not higher than required maintenance collateral ratio.
    // Although this should be guaranteed by the caller of this function, we still check here to be defensive.
    // Theoretically this check can be skipped for better performance.
-   //
-   // Before core-1270 hard fork, we check with call_price; afterwards, we check with collateralization().
-   if( ( !after_core_hardfork_1270 && call_price > feed_price )
-       || ( after_core_hardfork_1270 && collateralization() > *maintenance_collateralization ) )
+   if( has_mc ? collateralization() > *maintenance_collateralization : call_price > feed_price )
       return 0;
 
    if( !target_collateral_ratio.valid() ) // target cr is not set
@@ -71,9 +70,7 @@ share_type call_order_object::get_max_debt_to_cover( price match_price,
 
    uint16_t tcr = std::max( *target_collateral_ratio, maintenance_collateral_ratio ); // use mcr if target cr is too small
 
-   price target_collateralization = ( after_core_hardfork_1270 ?
-                                      feed_price * ratio_type( tcr, GRAPHENE_COLLATERAL_RATIO_DENOM ) :
-                                      price() );
+   price target_collateralization = feed_price * ratio_type( tcr, GRAPHENE_COLLATERAL_RATIO_DENOM );
 
    // be defensive here, make sure match_price is in collateral / debt format
    if( match_price.base.asset_id != call_price.base.asset_id )
@@ -115,9 +112,9 @@ share_type call_order_object::get_max_debt_to_cover( price match_price,
       return debt;
    FC_ASSERT( to_pay.amount < collateral && to_cover.amount < debt );
 
-   // Check whether the collateral ratio after filled is high enough
-   // Before core-1270 hard fork, we check with call_price; afterwards, we check with collateralization().
-   std::function<bool()> result_is_good = after_core_hardfork_1270 ?
+   // Check whether the collateral ratio after filled is high enough with collateralization()
+   // If no maintenance collateralizaiton has been passed, we check with call_price
+   std::function<bool()> result_is_good = has_mc ?
       std::function<bool()>( [this,&to_cover,&to_pay,target_collateralization]() -> bool
       {
          price new_collateralization = ( get_collateral() - to_pay ) / ( get_debt() - to_cover );

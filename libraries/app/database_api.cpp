@@ -1952,8 +1952,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
    const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-   const auto& for_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_for>();
-   const auto& against_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_against>();
+   const auto& worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_id>();
 
    vector<variant> result;
    result.reserve( votes.size() );
@@ -1981,26 +1980,18 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
          }
          case vote_id_type::worker:
          {
-            auto itr = for_worker_idx.find( id );
-            if( itr != for_worker_idx.end() ) {
+            auto itr = worker_idx.find( id );
+            if( itr != worker_idx.end() ) {
                result.emplace_back( variant( *itr, 4 ) ); // Depth of worker_object is 3, add 1 here to be safe.
                                                           // If we want to extract the balance object inside,
                                                           //   need to increase this value
             }
             else {
-               auto itr = against_worker_idx.find( id );
-               if( itr != against_worker_idx.end() ) {
-                  result.emplace_back( variant( *itr, 4 ) ); // Depth of worker_object is 3, add 1 here to be safe.
-                                                             // If we want to extract the balance object inside,
-                                                             //   need to increase this value
-               }
-               else {
-                  result.emplace_back( variant() );
-               }
+               result.emplace_back( variant() );
             }
             break;
          }
-         case vote_id_type::VOTE_TYPE_COUNT: break; // supress unused enum value warnings
+         case vote_id_type::VOTE_TYPE_COUNT: break; // surpress unused enum value warnings
          default:
             FC_CAPTURE_AND_THROW( fc::out_of_range_exception, (id) );
       }
@@ -2046,12 +2037,10 @@ set<public_key_type> database_api_impl::get_required_signatures( const signed_tr
                                                             const flat_set<public_key_type>& available_keys )const
 {
    auto chain_time = _db.head_block_time();
-   bool allow_non_immediate_owner = ( chain_time >= HARDFORK_CORE_584_TIME );
    auto result = trx.get_required_signatures( _db.get_chain_id(),
                                        available_keys,
                                        [&]( account_id_type id ){ return &id(_db).active; },
                                        [&]( account_id_type id ){ return &id(_db).owner; },
-                                       allow_non_immediate_owner,
                                        _db.get_global_properties().parameters.max_authority_depth );
    return result;
 }
@@ -2068,7 +2057,6 @@ set<address> database_api::get_potential_address_signatures( const signed_transa
 set<public_key_type> database_api_impl::get_potential_signatures( const signed_transaction& trx )const
 {
    auto chain_time = _db.head_block_time();
-   bool allow_non_immediate_owner = ( chain_time >= HARDFORK_CORE_584_TIME );
 
    set<public_key_type> result;
    auto get_active = [this, &result]( account_id_type id ){
@@ -2087,7 +2075,6 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
    trx.get_required_signatures( _db.get_chain_id(),
                                 flat_set<public_key_type>(),
                                 get_active, get_owner,
-                                allow_non_immediate_owner,
                                 _db.get_global_properties().parameters.max_authority_depth );
 
    // Insert keys in required "other" authories
@@ -2105,7 +2092,6 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
 set<address> database_api_impl::get_potential_address_signatures( const signed_transaction& trx )const
 {
    auto chain_time = _db.head_block_time();
-   bool allow_non_immediate_owner = ( chain_time >= HARDFORK_CORE_584_TIME );
 
    set<address> result;
    auto get_active = [this, &result]( account_id_type id ){
@@ -2124,7 +2110,6 @@ set<address> database_api_impl::get_potential_address_signatures( const signed_t
    trx.get_required_signatures( _db.get_chain_id(),
                                 flat_set<public_key_type>(),
                                 get_active, get_owner,
-                                allow_non_immediate_owner,
                                 _db.get_global_properties().parameters.max_authority_depth );
    return result;
 }
@@ -2136,11 +2121,9 @@ bool database_api::verify_authority( const signed_transaction& trx )const
 
 bool database_api_impl::verify_authority( const signed_transaction& trx )const
 {
-   bool allow_non_immediate_owner = ( _db.head_block_time() >= HARDFORK_CORE_584_TIME );
    trx.verify_authority( _db.get_chain_id(),
                          [this]( account_id_type id ){ return &id(_db).active; },
                          [this]( account_id_type id ){ return &id(_db).owner; },
-                         allow_non_immediate_owner,
                          _db.get_global_properties().parameters.max_authority_depth );
    return true;
 }

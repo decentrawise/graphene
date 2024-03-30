@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE( direct_index_test )
    // but the secondary has not updated its representation
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( required_approval_index_test ) // see https://github.com/bitshares/bitshares-core/issues/1719
+BOOST_AUTO_TEST_CASE( required_approval_index_test )
 { try {
    ACTORS( (alice)(bob)(charlie)(agnetha)(benny)(carlos) );
 

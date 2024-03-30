@@ -314,7 +314,6 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_nominal_case )
 
 /**
  * Test asset whitelisting feature for withdrawals.
- * Reproduces https://github.com/bitshares/bitshares-core/issues/942 and tests the fix for it.
  */
 BOOST_AUTO_TEST_CASE( withdraw_permission_whitelist_asset_test )
 { try {
@@ -697,9 +696,19 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       const asset_object& obj = bit_usd_id(db);
       op.asset_to_update = bit_usd_id;
       op.issuer = obj.issuer;
-      op.new_issuer = nathan_id;
       op.new_options = obj.options;
       op.new_options.flags &= ~witness_fed_asset;
+      trx.operations.push_back(op);
+      PUSH_TX( db, trx, ~0 );
+      generate_block();
+      trx.clear();
+   }
+   {
+      asset_update_issuer_operation op;
+      const asset_object& obj = bit_usd_id(db);
+      op.asset_to_update = bit_usd_id;
+      op.issuer = obj.issuer;
+      op.new_issuer = nathan_id;
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       generate_block();
@@ -989,14 +998,6 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
 
    generate_block( skip );
 
-  for( int i=0; i<2; i++ )
-  {
-   if( i == 1 )
-   {
-      auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_342_TIME - mi, true, skip);
-      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time, true, skip);
-   }
    set_expiration( db, trx );
 
    ACTORS((nathan)(ben)(valentine)(dan));
@@ -1069,22 +1070,16 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
    BOOST_CHECK_EQUAL(get_balance(valentine_id, bit_usd_id), 0);
    BOOST_CHECK_EQUAL(get_balance(valentine_id, asset_id_type()), 10045);
    BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 0);
-   if( i == 1 ) // BSIP35: better rounding
-   {
-      BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10090);
-      BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9850);
-   }
-   else
-   {
-      BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10091);
-      BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9849);
-   }
+   
+   // Better rounding
+   BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 10090);
+   BOOST_CHECK_EQUAL(get_balance(dan_id, asset_id_type()), 9850);
    BOOST_CHECK_EQUAL(get_balance(dan_id, bit_usd_id), 0);
 
    // undo above tx's and reset
    generate_block( skip );
    db.pop_block();
-  }
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( worker_create_test )
@@ -1117,8 +1112,7 @@ BOOST_AUTO_TEST_CASE( worker_create_test )
    BOOST_CHECK(worker.daily_pay == 1000);
    BOOST_CHECK(worker.work_begin_date == db.head_block_time() + 10);
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
-   BOOST_CHECK(worker.vote_for.type() == vote_id_type::worker);
-   BOOST_CHECK(worker.vote_against.type() == vote_id_type::worker);
+   BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
    const vesting_balance_object& balance = worker.worker.get<vesting_balance_worker_type>().balance(db);
    BOOST_CHECK(balance.owner == nathan_id);
@@ -1137,7 +1131,7 @@ BOOST_AUTO_TEST_CASE( worker_pay_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(worker_id_type()(db).vote_for);
+      op.new_options->votes.insert(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1177,7 +1171,7 @@ BOOST_AUTO_TEST_CASE( worker_pay_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.erase(worker_id_type()(db).vote_for);
+      op.new_options->votes.erase(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1241,8 +1235,7 @@ BOOST_AUTO_TEST_CASE( refund_worker_test )
    BOOST_CHECK(worker.daily_pay == 1000);
    BOOST_CHECK(worker.work_begin_date == db.head_block_time() + 10);
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
-   BOOST_CHECK(worker.vote_for.type() == vote_id_type::worker);
-   BOOST_CHECK(worker.vote_against.type() == vote_id_type::worker);
+   BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
    transfer(committee_account, nathan_id, asset(100000));
 
@@ -1250,7 +1243,7 @@ BOOST_AUTO_TEST_CASE( refund_worker_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(worker_id_type()(db).vote_for);
+      op.new_options->votes.insert(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1314,8 +1307,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
    BOOST_CHECK(worker.daily_pay == 1000);
    BOOST_CHECK(worker.work_begin_date == db.head_block_time() + 10);
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
-   BOOST_CHECK(worker.vote_for.type() == vote_id_type::worker);
-   BOOST_CHECK(worker.vote_against.type() == vote_id_type::worker);
+   BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
    transfer(committee_account, nathan_id, asset(100000));
 
@@ -1323,7 +1315,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(worker_id_type()(db).vote_for);
+      op.new_options->votes.insert(worker_id_type()(db).vote_id);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1366,14 +1358,6 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
    generate_block( skip );
 
-  for( int i=0; i<2; i++ )
-  {
-   if( i == 1 )
-   {
-      auto mi = db.get_global_properties().parameters.maintenance_interval;
-      generate_blocks(HARDFORK_CORE_342_TIME - mi, true, skip);
-      generate_blocks(db.get_dynamic_global_properties().next_maintenance_time, true, skip);
-   }
    set_expiration( db, trx );
 
    int blocks = 0;
@@ -1533,16 +1517,9 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
       int64_t call1_payout =                0;
       int64_t call2_payout =       550*99/100;
-      int64_t call3_payout = 49 + 2950*99/100;
-      int64_t call4_payout =      4000*99/100;
-      int64_t call5_payout =      5000*99/100;
-
-      if( i == 1 ) // BSIP35: better rounding
-      {
-         call3_payout = 49 + (2950*99+100-1)/100; // round up
-         call4_payout =      (4000*99+100-1)/100; // round up
-         call5_payout =      (5000*99+100-1)/100; // round up
-      }
+      int64_t call3_payout = 49 + (2950*99+100-1)/100; // round up
+      int64_t call4_payout =      (4000*99+100-1)/100; // round up
+      int64_t call5_payout =      (5000*99+100-1)/100; // round up
 
       BOOST_CHECK_EQUAL( get_balance(shorter1_id, core_id), initial_balance-2*1000 );  // full collat still tied up
       BOOST_CHECK_EQUAL( get_balance(shorter2_id, core_id), initial_balance-2*1999 );  // full collat still tied up
@@ -1580,7 +1557,7 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
       db.pop_block();
       --blocks;
    }
-  }
+
 }
 
 BOOST_AUTO_TEST_CASE( assert_op_test )
@@ -1879,7 +1856,7 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
          account_update_operation vote_op;
          vote_op.account = alice_id;
          vote_op.new_options = alice_id(db).options;
-         vote_op.new_options->votes.insert(wid(db).vote_for);
+         vote_op.new_options->votes.insert(wid(db).vote_id);
          signed_transaction vote_tx;
          vote_tx.operations.push_back(vote_op);
          set_expiration( db, vote_tx );
@@ -1983,8 +1960,6 @@ BOOST_AUTO_TEST_CASE( vbo_withdraw_different )
 BOOST_AUTO_TEST_CASE( top_n_special )
 {
    ACTORS( (alice)(bob)(chloe)(dan)(izzy)(stan) );
-
-   generate_blocks( HARDFORK_516_TIME );
 
    try
    {
@@ -2134,8 +2109,6 @@ BOOST_AUTO_TEST_CASE( buyback )
 {
    ACTORS( (alice)(bob)(chloe)(dan)(izzy)(philbin) );
    upgrade_to_lifetime_member(philbin_id);
-
-   generate_blocks( HARDFORK_555_TIME );
 
    try
    {

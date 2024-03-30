@@ -5,87 +5,26 @@
 
 namespace graphene { namespace chain {
 
-namespace detail {
-   void check_asset_options_hf_1268(const fc::time_point_sec& block_time, const asset_options& options);
-   void check_vesting_balance_policy_hf_1268(const fc::time_point_sec& block_time, const vesting_policy_initializer& policy);
-}
-
-struct proposal_operation_hardfork_visitor
+struct proposal_operation_visitor
 {
    typedef void result_type;
    const database& db;
    const fc::time_point_sec block_time;
    const fc::time_point_sec next_maintenance_time;
 
-   proposal_operation_hardfork_visitor( const database& _db, const fc::time_point_sec bt )
+   proposal_operation_visitor( const database& _db, const fc::time_point_sec bt )
    : db( _db ), block_time(bt), next_maintenance_time( db.get_dynamic_global_properties().next_maintenance_time ) {}
 
    template<typename T>
    void operator()(const T &v) const {}
 
-   void operator()(const graphene::chain::call_order_update_operation &v) const {
-
-      // TODO If this never ASSERTs before HF 1465, it can be removed
-      FC_ASSERT( block_time < SOFTFORK_CORE_1465_TIME 
-            || block_time > HARDFORK_CORE_1465_TIME
-            || v.delta_debt.asset_id == asset_id_type(113) // CNY
-            || v.delta_debt.amount < 0 
-            || (v.delta_debt.asset_id( db ).bitasset_data_id
-            && (*(v.delta_debt.asset_id( db ).bitasset_data_id))( db ).is_prediction_market )
-            , "Soft fork - preventing proposal with call_order_update!" );
-   }
-   // hf_1268
-   void operator()(const graphene::chain::asset_create_operation &v) const {
-      detail::check_asset_options_hf_1268(block_time, v.common_options);
-   }
-   // hf_1268
-   void operator()(const graphene::chain::asset_update_operation &v) const {
-      detail::check_asset_options_hf_1268(block_time, v.new_options);
-   }
-   // hf_1268
-   void operator()(const graphene::chain::vesting_balance_create_operation &v) const {
-      detail::check_vesting_balance_policy_hf_1268(block_time, v.policy);
-   }
-   // hf_588
-   // issue #588
-   //
    // As a virtual operation which has no evaluator `asset_settle_cancel_operation`
    // originally won't be packed into blocks, yet its loose `validate()` method
    // make it able to slip into blocks.
-   //
-   // We need to forbid this operation being packed into blocks via proposal but
-   // this will lead to a hardfork (this operation in proposal will denied by new
-   // node while accept by old node), so a hardfork guard code needed and a
-   // consensus upgrade over all nodes needed in future. And because the
-   // `validate()` method not suitable to check database status, so we put the
-   // code here.
-   //
-   // After the hardfork, all nodes will deny packing this operation into a block,
-   // and then we will check whether exists a proposal containing this kind of
-   // operation, if not exists, we can harden the `validate()` method to deny
-   // it in a earlier stage.
-   //
+   // And because the `validate()` method not suitable to check database status,
+   // so we put the code here.
    void operator()(const graphene::chain::asset_settle_cancel_operation &v) const {
-      if (block_time > HARDFORK_CORE_588_TIME) {
-         FC_ASSERT(!"Virtual operation");
-      }
-   }
-   void operator()(const graphene::chain::committee_member_update_global_parameters_operation &op) const {
-      if (block_time < HARDFORK_CORE_1468_TIME) {
-         FC_ASSERT(!op.new_parameters.extensions.value.updatable_htlc_options.valid(), "Unable to set HTLC options before hardfork 1468");
-         FC_ASSERT(!op.new_parameters.current_fees->exists<htlc_create_operation>());
-         FC_ASSERT(!op.new_parameters.current_fees->exists<htlc_redeem_operation>());
-         FC_ASSERT(!op.new_parameters.current_fees->exists<htlc_extend_operation>());
-      }
-   }
-   void operator()(const graphene::chain::htlc_create_operation &op) const {
-      FC_ASSERT( block_time >= HARDFORK_CORE_1468_TIME, "Not allowed until hardfork 1468" );
-   }
-   void operator()(const graphene::chain::htlc_redeem_operation &op) const {
-      FC_ASSERT( block_time >= HARDFORK_CORE_1468_TIME, "Not allowed until hardfork 1468" );
-   }
-   void operator()(const graphene::chain::htlc_extend_operation &op) const {
-      FC_ASSERT( block_time >= HARDFORK_CORE_1468_TIME, "Not allowed until hardfork 1468" );
+      FC_ASSERT(!"Virtual operation");
    }
    // loop and self visit in proposals
    void operator()(const graphene::chain::proposal_create_operation &v) const {
@@ -104,26 +43,14 @@ struct proposal_operation_hardfork_visitor
    }
 };
 
-struct hardfork_visitor_214 // non-recursive proposal visitor
-{
-   typedef void result_type;
-
-   template<typename T>
-   void operator()(const T &v) const {}
-
-   void operator()(const proposal_update_operation &v) const {
-      FC_ASSERT(false, "Not allowed until hardfork 214");
-   }
-};
-
-void hardfork_visitor_1479::operator()(const proposal_update_operation &v)
+void proposal_eval_visitor::operator()(const proposal_update_operation &v)
 {
    if( nested_update_count == 0 || v.proposal.instance.value > max_update_instance )
       max_update_instance = v.proposal.instance.value;
    nested_update_count++;
 }
 
-void hardfork_visitor_1479::operator()(const proposal_delete_operation &v)
+void proposal_eval_visitor::operator()(const proposal_delete_operation &v)
 {
    if( nested_update_count == 0 || v.proposal.instance.value > max_update_instance )
       max_update_instance = v.proposal.instance.value;
@@ -131,7 +58,7 @@ void hardfork_visitor_1479::operator()(const proposal_delete_operation &v)
 }
 
 // loop and self visit in proposals
-void hardfork_visitor_1479::operator()(const graphene::chain::proposal_create_operation &v)
+void proposal_eval_visitor::operator()(const graphene::chain::proposal_create_operation &v)
 {
    for (const op_wrapper &op : v.proposed_ops)
       op.op.visit(*this);
@@ -141,17 +68,11 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
 { try {
    const database& d = db();
 
-   // Calling the proposal hardfork visitor
+   // Calling the proposal operation visitor
    const fc::time_point_sec block_time = d.head_block_time();
-   proposal_operation_hardfork_visitor vtor( d, block_time );
+   proposal_operation_visitor vtor( d, block_time );
    vtor( o );
-   if( block_time < HARDFORK_CORE_214_TIME )
-   { // cannot be removed after hf, unfortunately
-      hardfork_visitor_214 hf214;
-      for (const op_wrapper &op : o.proposed_ops)
-         op.op.visit( hf214 );
-   }
-   vtor_1479( o );
+   vtor_eval( o );
 
    const auto& global_parameters = d.get_global_properties().parameters;
 
@@ -222,19 +143,8 @@ object_id_type proposal_create_evaluator::do_apply(const proposal_create_operati
       proposal.required_owner_approvals.insert( _required_owner_auths.begin(), _required_owner_auths.end() );
       proposal.required_active_approvals.insert( _required_active_auths.begin(), _required_active_auths.end() );
 
-      if( d.head_block_time() > HARDFORK_CORE_1479_TIME )
-         FC_ASSERT( vtor_1479.nested_update_count == 0 || proposal.id.instance() > vtor_1479.max_update_instance,
-                    "Cannot update/delete a proposal with a future id!" );
-      else if( vtor_1479.nested_update_count > 0 && proposal.id.instance() <= vtor_1479.max_update_instance )
-      {
-         // prevent approval
-         transfer_operation top;
-         top.from = GRAPHENE_NULL_ACCOUNT;
-         top.to = GRAPHENE_RELAXED_COMMITTEE_ACCOUNT;
-         top.amount = asset( GRAPHENE_MAX_SHARE_SUPPLY );
-         proposal.proposed_transaction.operations.emplace_back( top );
-         wlog( "Issue 1479: ${p}", ("p",proposal) );
-      }
+      FC_ASSERT( vtor_eval.nested_update_count == 0 || proposal.id.instance() > vtor_eval.max_update_instance,
+                  "Cannot update/delete a proposal with a future id!" );
    });
 
    return proposal.id;

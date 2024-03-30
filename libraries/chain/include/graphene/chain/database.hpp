@@ -269,7 +269,7 @@ namespace graphene { namespace chain {
          /// price better for their owners).
          void globally_settle_asset(const asset_object &bitasset, const price &settle_price);
          void cancel_settle_order(const force_settlement_object& order, bool create_virtual_op = true);
-         void cancel_limit_order(const limit_order_object& order, bool create_virtual_op = true, bool skip_cancel_fee = false);
+         void cancel_limit_order(const limit_order_object& order, bool create_virtual_op = true);
          void revive_bitasset( const asset_object& bitasset );
          void cancel_bid(const collateral_bid_object& bid, bool create_virtual_op = true);
          void execute_bid( const collateral_bid_object& bid, share_type debt_covered, share_type collateral_from_fund, const price_feed& current_feed );
@@ -287,12 +287,9 @@ namespace graphene { namespace chain {
           * This function takes a new limit order, and runs the markets attempting to match it with existing orders
           * already on the books.
           */
-         ///@{
-         bool apply_order_before_hardfork_625(const limit_order_object& new_order_object, bool allow_black_swan = true);
          bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
-         ///@}
 
-         bool check_call_orders(const asset_object &mia, bool enable_black_swan = true, bool for_new_limit_order = false,
+         bool check_call_orders(const asset_object &mia, bool enable_black_swan = true,
                                 const asset_bitasset_data_object *bitasset_ptr = nullptr);
 
          // Note: Ideally this should be private.
@@ -367,8 +364,17 @@ namespace graphene { namespace chain {
           * @param trade_amount the quantity that the fee calculation is based upon
           * @param is_maker TRUE if this is the fee for a maker, FALSE if taker
           */
-         asset calculate_market_fee(const asset_object &recv_asset, const asset &trade_amount);
+         asset calculate_market_fee( const asset_object &recv_asset, const asset &trade_amount );
+         /// @brief Pay market fees to asset owner
+         /// @param recv_asset   the asset (passed in to avoid lookup)
+         /// @param receives     the trade size
+         /// @return             the fees paid
          asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
+         /// @brief Pay market fees to asset owner and rewards to referrer program
+         /// @param seller       the account to check for referral program
+         /// @param recv_asset   the asset (passed in to avoid lookup)
+         /// @param receives     the trade size
+         /// @return             the fees paid
          asset pay_market_fees( const account_object& seller, const asset_object& recv_asset, const asset& receives );
          /// @}
 
@@ -633,9 +639,6 @@ namespace graphene { namespace chain {
 
          // Counts nested proposal updates
          uint32_t                           _undo_session_nesting_depth = 0;
-
-         /// Tracks assets affected by bitshares-core issue #453 before hard fork #615 in one block
-         flat_set<asset_id_type>           _issue_453_affected_assets;
 
          /// Pointers to core asset object and global objects who will have immutable addresses after created
          ///@{

@@ -22,7 +22,6 @@ BOOST_FIXTURE_TEST_SUITE( basic_tests, database_fixture )
 
 /**
  * Verify that names are RFC-1035 compliant https://tools.ietf.org/html/rfc1035
- * https://github.com/cryptonomex/graphene/issues/15
  */
 BOOST_AUTO_TEST_CASE( valid_name_test )
 {
@@ -569,7 +568,7 @@ BOOST_AUTO_TEST_CASE( merkle_root )
 }
 
 /**
- * Reproduces https://github.com/bitshares/bitshares-core/issues/888 and tests fix for it.
+ * Bitasset feed expiration
  */
 BOOST_AUTO_TEST_CASE( bitasset_feed_expiration_test )
 {

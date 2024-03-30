@@ -244,7 +244,6 @@ void database::update_witnesses( fork_item& fork_entry )const
  */
 processed_transaction database::push_transaction( const precomputable_transaction& trx, uint32_t skip )
 { try {
-   // see https://github.com/bitshares/bitshares-core/issues/1573
    FC_ASSERT( fc::raw::pack_size( trx ) < (1024 * 1024), "Transaction exceeds maximum transaction size." );
    processed_transaction result;
    detail::with_skip_flags( *this, skip, [&]()
@@ -329,19 +328,9 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
       remove(proposal);
       session.merge();
    } catch ( const fc::exception& e ) {
-      if( head_block_time() <= HARDFORK_483_TIME )
-      {
-         for( size_t i=old_applied_ops_size,n=_applied_ops.size(); i<n; i++ )
-         {
-            ilog( "removing failed operation from applied_ops: ${op}", ("op", *(_applied_ops[i])) );
-            _applied_ops[i].reset();
-         }
-      }
-      else
-      {
-         _current_virtual_op = old_vop;
-         _applied_ops.resize( old_applied_ops_size );
-      }
+      _current_virtual_op = old_vop;
+      _applied_ops.resize( old_applied_ops_size );
+
       wlog( "${e}", ("e",e.to_detail_string() ) );
       throw;
    }
@@ -595,8 +584,6 @@ void database::_apply_block( const signed_block& next_block )
 
    _current_block_time   = next_block.timestamp;
 
-   _issue_453_affected_assets.clear();
-
    signed_block processed_block( next_block ); // make a copy
    for( auto& trx : processed_block.transactions )
    {
@@ -685,10 +672,9 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    if( 0 == (skip & skip_transaction_signatures) )
    {
-      bool allow_non_immediate_owner = ( head_block_time() >= HARDFORK_CORE_584_TIME );
       auto get_active = [this]( account_id_type id ) { return &id(*this).active; };
       auto get_owner  = [this]( account_id_type id ) { return &id(*this).owner;  };
-      trx.verify_authority(chain_id, get_active, get_owner, allow_non_immediate_owner,
+      trx.verify_authority(chain_id, get_active, get_owner,
                            get_global_properties().parameters.max_authority_depth);
    }
 
@@ -710,8 +696,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
                  ("trx.expiration",trx.expiration)("now",now)("max_til_exp",chain_parameters.maximum_time_until_expiration));
       FC_ASSERT( now <= trx.expiration, "", ("now",now)("trx.exp",trx.expiration) );
       if ( 0 == (skip & skip_block_size_check ) ) // don't waste time on replay
-         FC_ASSERT( head_block_time() <= HARDFORK_CORE_1573_TIME
-               || trx.get_packed_size() <= chain_parameters.maximum_transaction_size,
+         FC_ASSERT( trx.get_packed_size() <= chain_parameters.maximum_transaction_size,
                "Transaction exceeds maximum transaction size." );
    }
 

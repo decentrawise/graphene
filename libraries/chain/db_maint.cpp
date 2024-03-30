@@ -112,13 +112,11 @@ void database::update_worker_votes()
    const auto& idx = get_index_type<worker_index>().indices().get<by_account>();
    auto itr = idx.begin();
    auto itr_end = idx.end();
-   bool allow_negative_votes = (head_block_time() < HARDFORK_607_TIME);
    while( itr != itr_end )
    {
-      modify( *itr, [this,allow_negative_votes]( worker_object& obj )
+      modify( *itr, [this]( worker_object& obj )
       {
-         obj.total_votes_for = _vote_tally_buffer[obj.vote_for];
-         obj.total_votes_against = allow_negative_votes ? _vote_tally_buffer[obj.vote_against] : 0;
+         obj.total_votes = _vote_tally_buffer[obj.vote_id];
       });
       ++itr;
    }
@@ -132,15 +130,15 @@ void database::pay_workers( share_type& budget )
    // TODO optimization: add by_expiration index to avoid iterating through all objects
    get_index_type<worker_index>().inspect_all_objects([head_time, &active_workers](const object& o) {
       const worker_object& w = static_cast<const worker_object&>(o);
-      if( w.is_active(head_time) && w.approving_stake() > 0 )
+      if( w.is_active(head_time) && w.total_votes > 0 )
          active_workers.emplace_back(w);
    });
 
    // worker with more votes is preferred
    // if two workers exactly tie for votes, worker with lower ID is preferred
    std::sort(active_workers.begin(), active_workers.end(), [](const worker_object& wa, const worker_object& wb) {
-      share_type wa_vote = wa.approving_stake();
-      share_type wb_vote = wb.approving_stake();
+      share_type wa_vote = wa.total_votes;
+      share_type wb_vote = wb.total_votes;
       if( wa_vote != wb_vote )
          return wa_vote > wb_vote;
       return wa.id < wb.id;
@@ -227,42 +225,10 @@ void database::update_active_witnesses()
    // Update witness authority
    modify( get(GRAPHENE_WITNESS_ACCOUNT), [this,&wits]( account_object& a )
    {
-      if( head_block_time() < HARDFORK_533_TIME )
-      {
-         uint64_t total_votes = 0;
-         map<account_id_type, uint64_t> weights;
-         a.active.weight_threshold = 0;
-         a.active.clear();
-
-         for( const witness_object& wit : wits )
-         {
-            weights.emplace(wit.witness_account, _vote_tally_buffer[wit.vote_id]);
-            total_votes += _vote_tally_buffer[wit.vote_id];
-         }
-
-         // total_votes is 64 bits. Subtract the number of leading low bits from 64 to get the number of useful bits,
-         // then I want to keep the most significant 16 bits of what's left.
-         uint64_t votes_msb = boost::multiprecision::detail::find_msb(total_votes);
-         constexpr uint8_t bits_to_keep_minus_one = 15;
-         uint64_t bits_to_drop = (votes_msb > bits_to_keep_minus_one) ? (votes_msb - bits_to_keep_minus_one) : 0;
-         for( const auto& weight : weights )
-         {
-            // Ensure that everyone has at least one vote. Zero weights aren't allowed.
-            uint16_t votes = std::max((uint16_t)(weight.second >> bits_to_drop), uint16_t(1) );
-            a.active.account_auths[weight.first] += votes;
-            a.active.weight_threshold += votes;
-         }
-
-         a.active.weight_threshold /= 2;
-         a.active.weight_threshold += 1;
-      }
-      else
-      {
-         vote_counter vc;
-         for( const witness_object& wit : wits )
-            vc.add( wit.witness_account, _vote_tally_buffer[wit.vote_id] );
-         vc.finish( a.active );
-      }
+      vote_counter vc;
+      for( const witness_object& wit : wits )
+         vc.add( wit.witness_account, _vote_tally_buffer[wit.vote_id] );
+      vc.finish( a.active );
    } );
 
    modify( gpo, [&wits]( global_property_object& gp )
@@ -331,43 +297,10 @@ void database::update_active_committee_members()
       const account_object& committee_account = get(GRAPHENE_COMMITTEE_ACCOUNT);
       modify( committee_account, [this,&committee_members](account_object& a)
       {
-         if( head_block_time() < HARDFORK_533_TIME )
-         {
-            uint64_t total_votes = 0;
-            map<account_id_type, uint64_t> weights;
-            a.active.weight_threshold = 0;
-            a.active.clear();
-
-            for( const committee_member_object& cm : committee_members )
-            {
-               weights.emplace( cm.committee_member_account, _vote_tally_buffer[cm.vote_id] );
-               total_votes += _vote_tally_buffer[cm.vote_id];
-            }
-
-            // total_votes is 64 bits.
-            // Subtract the number of leading low bits from 64 to get the number of useful bits,
-            // then I want to keep the most significant 16 bits of what's left.
-            uint64_t votes_msb = boost::multiprecision::detail::find_msb(total_votes);
-            constexpr uint8_t bits_to_keep_minus_one = 15;
-            uint64_t bits_to_drop = (votes_msb > bits_to_keep_minus_one) ? (votes_msb - bits_to_keep_minus_one) : 0;
-            for( const auto& weight : weights )
-            {
-               // Ensure that everyone has at least one vote. Zero weights aren't allowed.
-               uint16_t votes = std::max((uint16_t)(weight.second >> bits_to_drop), uint16_t(1) );
-               a.active.account_auths[weight.first] += votes;
-               a.active.weight_threshold += votes;
-            }
-
-            a.active.weight_threshold /= 2;
-            a.active.weight_threshold += 1;
-         }
-         else
-         {
-            vote_counter vc;
-            for( const committee_member_object& cm : committee_members )
-               vc.add( cm.committee_member_account, _vote_tally_buffer[cm.vote_id] );
-            vc.finish( a.active );
-         }
+         vote_counter vc;
+         for( const committee_member_object& cm : committee_members )
+            vc.add( cm.committee_member_account, _vote_tally_buffer[cm.vote_id] );
+         vc.finish( a.active );
       });
       modify( get(GRAPHENE_RELAXED_COMMITTEE_ACCOUNT), [&committee_account](account_object& a)
       {
@@ -755,37 +688,6 @@ void create_buyback_orders( database& db )
    return;
 }
 
-void deprecate_annual_members( database& db )
-{
-   const auto& account_idx = db.get_index_type<account_index>().indices().get<by_id>();
-   fc::time_point_sec now = db.head_block_time();
-   for( const account_object& acct : account_idx )
-   {
-      try
-      {
-         transaction_evaluation_state upgrade_context(&db);
-         upgrade_context.skip_fee_schedule_check = true;
-
-         if( acct.is_annual_member( now ) )
-         {
-            account_upgrade_operation upgrade_vop;
-            upgrade_vop.fee = asset( 0, asset_id_type() );
-            upgrade_vop.account_to_upgrade = acct.id;
-            upgrade_vop.upgrade_to_lifetime_member = true;
-            db.apply_operation( upgrade_context, upgrade_vop );
-         }
-      }
-      catch( const fc::exception& e )
-      {
-         // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
-         wlog( "Skipping annual member deprecate processing for account ${a} (${an}) at block ${n}; exception was ${e}",
-               ("a", acct.id)("an", acct.name)("n", db.head_block_num())("e", e.to_detail_string()) );
-         continue;
-      }
-   }
-   return;
-}
-
 void database::process_bids( const asset_bitasset_data_object& bad )
 {
    if( bad.is_prediction_market || bad.current_feed.settlement_price.is_null() )
@@ -851,79 +753,18 @@ void database::process_bids( const asset_bitasset_data_object& bad )
    _cancel_bids_and_revive_mpa( to_revive, bad );
 }
 
-/// Reset call_price of all call orders according to their remaining collateral and debt.
-/// Do not update orders of prediction markets because we're sure they're up to date.
-void update_call_orders_hf_343( database& db )
-{
-   // Update call_price
-   wlog( "Updating all call orders for hardfork core-343 at block ${n}", ("n",db.head_block_num()) );
-   asset_id_type current_asset;
-   const asset_bitasset_data_object* abd = nullptr;
-   // by_collateral index won't change after call_price updated, so it's safe to iterate
-   for( const auto& call_obj : db.get_index_type<call_order_index>().indices().get<by_collateral>() )
-   {
-      if( current_asset != call_obj.debt_type() ) // debt type won't be asset_id_type(), abd will always get initialized
-      {
-         current_asset = call_obj.debt_type();
-         abd = &current_asset(db).bitasset_data(db);
-      }
-      if( !abd || abd->is_prediction_market ) // nothing to do with PM's; check !abd just to be safe
-         continue;
-      db.modify( call_obj, [abd]( call_order_object& call ) {
-         call.call_price  =  price::call_price( call.get_debt(), call.get_collateral(),
-                                                abd->current_feed.maintenance_collateral_ratio );
-      });
-   }
-   wlog( "Done updating all call orders for hardfork core-343 at block ${n}", ("n",db.head_block_num()) );
-}
-
-/// Reset call_price of all call orders to (1,1) since it won't be used in the future.
-/// Update PMs as well.
-void update_call_orders_hf_1270( database& db )
-{
-   // Update call_price
-   wlog( "Updating all call orders for hardfork core-1270 at block ${n}", ("n",db.head_block_num()) );
-   for( const auto& call_obj : db.get_index_type<call_order_index>().indices().get<by_id>() )
-   {
-      db.modify( call_obj, []( call_order_object& call ) {
-         call.call_price.base.amount = 1;
-         call.call_price.quote.amount = 1;
-      });
-   }
-   wlog( "Done updating all call orders for hardfork core-1270 at block ${n}", ("n",db.head_block_num()) );
-}
-
-/// Match call orders for all bitAssets, including PMs.
-void match_call_orders( database& db )
-{
-   // Match call orders
-   wlog( "Matching call orders at block ${n}", ("n",db.head_block_num()) );
-   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   auto itr = asset_idx.lower_bound( true /** market issued */ );
-   auto itr_end = asset_idx.end();
-   while( itr != itr_end )
-   {
-      const asset_object& a = *itr;
-      ++itr;
-      // be here, next_maintenance_time should have been updated already
-      db.check_call_orders( a ); // allow black swan, and call orders are taker
-   }
-   wlog( "Done matching call orders at block ${n}", ("n",db.head_block_num()) );
-}
-
 void database::process_bitassets()
 {
    time_point_sec head_time = head_block_time();
    uint32_t head_epoch_seconds = head_time.sec_since_epoch();
-   bool after_hf_core_518 = ( head_time >= HARDFORK_CORE_518_TIME ); // clear expired feeds
 
-   const auto& update_bitasset = [this,&head_time,head_epoch_seconds,after_hf_core_518]
+   const auto& update_bitasset = [this,&head_time,head_epoch_seconds]
                                  ( asset_bitasset_data_object &o )
    {
       o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
 
       // clear expired feeds if smartcoin (witness_fed or committee_fed) && check overflow
-      if( after_hf_core_518 && o.options.feed_lifetime_sec < head_epoch_seconds
+      if( o.options.feed_lifetime_sec < head_epoch_seconds
             && ( 0 != ( o.asset_id(*this).options.flags & ( witness_fed_asset | committee_fed_asset ) ) ) )
       {
          fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
@@ -947,211 +788,6 @@ void database::process_bitassets()
       modify( d, update_bitasset );
       if( d.has_settlement() )
          process_bids(d);
-   }
-}
-
-/****
- * @brief a one-time data process to correct max_supply
- *
- * NOTE: while exceeding max_supply happened in mainnet, it seemed to have corrected
- * itself before HF 1465. But this method must remain to correct some assets in testnet
- */
-void process_hf_1465( database& db )
-{
-   const auto head_num = db.head_block_num();
-   wlog( "Processing hard fork core-1465 at block ${n}", ("n",head_num) );
-   // for each market issued asset
-   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   const auto asset_end = asset_idx.end();
-   for( auto asset_itr = asset_idx.lower_bound(true); asset_itr != asset_end; ++asset_itr )
-   {
-      const auto& current_asset = *asset_itr;
-      graphene::chain::share_type current_supply = current_asset.dynamic_data(db).current_supply;
-      graphene::chain::share_type max_supply = current_asset.options.max_supply;
-      if (current_supply > max_supply && max_supply != GRAPHENE_MAX_SHARE_SUPPLY)
-      {
-         wlog( "Adjusting max_supply of ${asset} because current_supply (${current_supply}) is greater than ${old}.",
-               ("asset", current_asset.symbol)
-               ("current_supply", current_supply.value)
-               ("old", max_supply));
-         db.modify<asset_object>( current_asset, [current_supply](asset_object& obj) {
-            obj.options.max_supply = graphene::chain::share_type(std::min(current_supply.value,
-                                                                          GRAPHENE_MAX_SHARE_SUPPLY));
-         });
-      }
-   }
-}
-
-void update_median_feeds(database& db)
-{
-   time_point_sec head_time = db.head_block_time();
-   time_point_sec next_maint_time = db.get_dynamic_global_properties().next_maintenance_time;
-
-   const auto update_bitasset = [head_time, next_maint_time]( asset_bitasset_data_object &o )
-   {
-      o.update_median_feeds( head_time, next_maint_time );
-   };
-
-   for( const auto& d : db.get_index_type<asset_bitasset_data_index>().indices() )
-   {
-      db.modify( d, update_bitasset );
-   }
-}
-
-/******
- * @brief one-time data process for hard fork core-868-890
- *
- * Prior to hardfork 868, switching a bitasset's shorting asset would not reset its
- * feeds. This method will run at the hardfork time, and erase (or nullify) feeds
- * that have incorrect backing assets.
- * https://github.com/bitshares/bitshares-core/issues/868
- *
- * Prior to hardfork 890, changing a bitasset's feed expiration time would not
- * trigger a median feed update. This method will run at the hardfork time, and
- * correct all median feed data.
- * https://github.com/bitshares/bitshares-core/issues/890
- *
- * @param db the database
- * @param skip_check_call_orders true if check_call_orders() should not be called
- */
-// TODO: for better performance, this function can be removed if it actually updated nothing at hf time.
-//       * Also need to update related test cases
-//       * NOTE: the removal can't be applied to testnet
-void process_hf_868_890( database& db, bool skip_check_call_orders )
-{
-   const auto next_maint_time = db.get_dynamic_global_properties().next_maintenance_time;
-   const auto head_time = db.head_block_time();
-   const auto head_num = db.head_block_num();
-   wlog( "Processing hard fork core-868-890 at block ${n}", ("n",head_num) );
-   // for each market issued asset
-   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   for( auto asset_itr = asset_idx.lower_bound(true); asset_itr != asset_idx.end(); ++asset_itr )
-   {
-      const auto& current_asset = *asset_itr;
-      // Incorrect witness & committee feeds can simply be removed.
-      // For non-witness-fed and non-committee-fed assets, set incorrect
-      // feeds to price(), since we can't simply remove them. For more information:
-      // https://github.com/bitshares/bitshares-core/pull/832#issuecomment-384112633
-      bool is_witness_or_committee_fed = false;
-      if ( current_asset.options.flags & ( witness_fed_asset | committee_fed_asset ) )
-         is_witness_or_committee_fed = true;
-
-      // for each feed
-      const asset_bitasset_data_object& bitasset_data = current_asset.bitasset_data(db);
-      // NOTE: We'll only need old_feed if HF343 hasn't rolled out yet
-      auto old_feed = bitasset_data.current_feed;
-      bool feeds_changed = false; // did any feed change
-      auto itr = bitasset_data.feeds.begin();
-      while( itr != bitasset_data.feeds.end() )
-      {
-         // If the feed is invalid
-         if ( itr->second.second.settlement_price.quote.asset_id != bitasset_data.options.short_backing_asset
-               && ( is_witness_or_committee_fed || itr->second.second.settlement_price != price() ) )
-         {
-            feeds_changed = true;
-            db.modify( bitasset_data, [&itr, is_witness_or_committee_fed]( asset_bitasset_data_object& obj )
-            {
-               if( is_witness_or_committee_fed )
-               {
-                  // erase the invalid feed
-                  itr = obj.feeds.erase(itr);
-               }
-               else
-               {
-                  // nullify the invalid feed
-                  obj.feeds[itr->first].second.settlement_price = price();
-                  ++itr;
-               }
-            });
-         }
-         else
-         {
-            // Feed is valid. Skip it.
-            ++itr;
-         }
-      } // end loop of each feed
-
-      // if any feed was modified, print a warning message
-      if( feeds_changed )
-      {
-         wlog( "Found invalid feed for asset ${asset_sym} (${asset_id}) during hardfork core-868-890",
-               ("asset_sym", current_asset.symbol)("asset_id", current_asset.id) );
-      }
-
-      // always update the median feed due to https://github.com/bitshares/bitshares-core/issues/890
-      db.modify( bitasset_data, [head_time,next_maint_time]( asset_bitasset_data_object &obj ) {
-         obj.update_median_feeds( head_time, next_maint_time );
-      });
-
-      bool median_changed = ( old_feed.settlement_price != bitasset_data.current_feed.settlement_price );
-      bool median_feed_changed = ( !( old_feed == bitasset_data.current_feed ) );
-      if( median_feed_changed )
-      {
-         wlog( "Median feed for asset ${asset_sym} (${asset_id}) changed during hardfork core-868-890",
-               ("asset_sym", current_asset.symbol)("asset_id", current_asset.id) );
-      }
-
-      // Note: due to bitshares-core issue #935, the check below (using median_changed) is incorrect.
-      //       However, `skip_check_call_orders` will likely be true in both testnet and mainnet,
-      //         so effectively the incorrect code won't make a difference.
-      //       Additionally, we have code to update all call orders again during hardfork core-935
-      // TODO cleanup after hard fork
-      if( !skip_check_call_orders && median_changed ) // check_call_orders should be called
-      {
-         db.check_call_orders( current_asset );
-      }
-      else if( !skip_check_call_orders && median_feed_changed )
-      {
-         wlog( "Incorrectly skipped check_call_orders for asset ${asset_sym} (${asset_id}) during hardfork core-868-890",
-               ("asset_sym", current_asset.symbol)("asset_id", current_asset.id) );
-      }
-   } // for each market issued asset
-   wlog( "Done processing hard fork core-868-890 at block ${n}", ("n",head_num) );
-}
-
-/******
- * @brief one-time data process for hard fork core-935
- *
- * Prior to hardfork 935, `check_call_orders` may be unintendedly skipped when
- * median price feed has changed. This method will run at the hardfork time, and
- * call `check_call_orders` for all markets.
- * https://github.com/bitshares/bitshares-core/issues/935
- *
- * @param db the database
- */
-// TODO: for better performance, this function can be removed if it actually updated nothing at hf time.
-//       * Also need to update related test cases
-//       * NOTE: perhaps the removal can't be applied to testnet
-void process_hf_935( database& db )
-{
-   bool changed_something = false;
-   const asset_bitasset_data_object* bitasset = nullptr;
-   bool settled_before_check_call;
-   bool settled_after_check_call;
-   // for each market issued asset
-   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   for( auto asset_itr = asset_idx.lower_bound(true); asset_itr != asset_idx.end(); ++asset_itr )
-   {
-      const auto& current_asset = *asset_itr;
-
-      if( !changed_something )
-      {
-         bitasset = &current_asset.bitasset_data( db );
-         settled_before_check_call = bitasset->has_settlement(); // whether already force settled
-      }
-
-      bool called_some = db.check_call_orders( current_asset );
-
-      if( !changed_something )
-      {
-         settled_after_check_call = bitasset->has_settlement(); // whether already force settled
-
-         if( settled_before_check_call != settled_after_check_call || called_some )
-         {
-            changed_something = true;
-            wlog( "process_hf_935 changed something" );
-         }
-      }
    }
 }
 
@@ -1290,52 +926,10 @@ void database::perform_chain_maintenance(const signed_block& next_block)
       }
    }
 
-   if( (dgpo.next_maintenance_time < HARDFORK_613_TIME) && (next_maintenance_time >= HARDFORK_613_TIME) )
-      deprecate_annual_members(*this);
-
-   // To reset call_price of all call orders, then match by new rule, for hard fork core-343
-   bool to_update_and_match_call_orders_for_hf_343 = false;
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_343_TIME) && (next_maintenance_time > HARDFORK_CORE_343_TIME) )
-      to_update_and_match_call_orders_for_hf_343 = true;
-
-   // Process inconsistent price feeds
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_868_890_TIME)
-         && (next_maintenance_time > HARDFORK_CORE_868_890_TIME) )
-      process_hf_868_890( *this, to_update_and_match_call_orders_for_hf_343 );
-
-   // Explicitly call check_call_orders of all markets
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_935_TIME) && (next_maintenance_time > HARDFORK_CORE_935_TIME)
-         && !to_update_and_match_call_orders_for_hf_343 )
-      process_hf_935( *this );
-
-   // To reset call_price of all call orders, then match by new rule, for hard fork core-1270
-   bool to_update_and_match_call_orders_for_hf_1270 = false;
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_1270_TIME) && (next_maintenance_time > HARDFORK_CORE_1270_TIME) )
-      to_update_and_match_call_orders_for_hf_1270 = true;
-
-   // make sure current_supply is less than or equal to max_supply
-   if ( dgpo.next_maintenance_time <= HARDFORK_CORE_1465_TIME && next_maintenance_time > HARDFORK_CORE_1465_TIME )
-      process_hf_1465(*this);
-
    modify(dgpo, [next_maintenance_time](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
       d.accounts_registered_this_interval = 0;
    });
-
-   // We need to do it after updated next_maintenance_time, to apply new rules here, for hard fork core-343
-   if( to_update_and_match_call_orders_for_hf_343 )
-   {
-      update_call_orders_hf_343(*this);
-      match_call_orders(*this);
-   }
-
-   // We need to do it after updated next_maintenance_time, to apply new rules here, for hard fork core-1270.
-   if( to_update_and_match_call_orders_for_hf_1270 )
-   {
-      update_call_orders_hf_1270(*this);
-      update_median_feeds(*this);
-      match_call_orders(*this);
-   }
 
    process_bitassets();
 
