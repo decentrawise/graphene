@@ -773,21 +773,10 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
             should_revive = true;
          else // if current supply is not zero, when collateral ratio of settlement fund is greater than MCR, revive the asset
          {
-            if( next_maint_time <= HARDFORK_CORE_1270_TIME )
-            {
-               // before core-1270 hard fork, calculate call_price and compare to median feed
-               if( ~price::call_price( asset(mia_dyn.current_supply, o.asset_id),
-                                       asset(bad.settlement_fund, bad.options.short_backing_asset),
-                                       bad.current_feed.maintenance_collateral_ratio ) < bad.current_feed.settlement_price )
-                  should_revive = true;
-            }
-            else
-            {
-               // after core-1270 hard fork, calculate collateralization and compare to maintenance_collateralization
-               if( price( asset( bad.settlement_fund, bad.options.short_backing_asset ),
-                          asset( mia_dyn.current_supply, o.asset_id ) ) > bad.current_maintenance_collateralization )
-                  should_revive = true;
-            }
+            // calculate collateralization and compare to maintenance_collateralization
+            if( price( asset( bad.settlement_fund, bad.options.short_backing_asset ),
+                        asset( mia_dyn.current_supply, o.asset_id ) ) > bad.current_maintenance_collateralization )
+               should_revive = true;
          }
          if( should_revive )
             d.revive_bitasset(base);
@@ -799,14 +788,11 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) } // GCOVR_EXCL_LINE
 
-
-
 void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_operation& o )
 { try {
    FC_ASSERT( o.amount_to_claim.asset_id(db()).issuer == o.issuer, "Asset fees may only be claimed by the issuer" );
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
-
 
 void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operation& o )
 { try {
@@ -824,7 +810,6 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
-
 
 void_result asset_claim_pool_evaluator::do_evaluate( const asset_claim_pool_operation& o )
 { try {
@@ -849,6 +834,5 @@ void_result asset_claim_pool_evaluator::do_apply( const asset_claim_pool_operati
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
-
 
 } } // graphene::chain

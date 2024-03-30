@@ -86,12 +86,6 @@ struct swan_fixture : database_fixture {
       FC_ASSERT( swan().bitasset_data(db).current_feed.settlement_price.is_null() );
     }
 
-    void wait_for_hf_core_1270() {
-       auto mi = db.get_global_properties().parameters.maintenance_interval;
-       generate_blocks(HARDFORK_CORE_1270_TIME - mi);
-       wait_for_maintenance();
-    }
-
     void wait_for_maintenance() {
       generate_blocks( db.get_dynamic_global_properties().next_maintenance_time );
       generate_block();
@@ -118,8 +112,6 @@ BOOST_FIXTURE_TEST_SUITE( swan_tests, swan_fixture )
  */
 BOOST_AUTO_TEST_CASE( black_swan )
 { try {
-      wait_for_hf_core_1270();
-
       init_standard_swan();
 
       force_settle( borrower(), swan().amount(100) );
@@ -243,8 +235,6 @@ BOOST_AUTO_TEST_CASE( revive_recovered )
 { try {
       init_standard_swan( 700 );
 
-      wait_for_hf_core_1270();
-
       // revive after price recovers
       set_feed( 700, 800 );
       BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
@@ -273,7 +263,7 @@ BOOST_AUTO_TEST_CASE( recollateralize )
 { try {
       init_standard_swan( 700 );
 
-      wait_for_hf_core_1270();
+      expire_feed();
 
       int64_t b2_balance = get_balance( borrower2(), back() );
       bid_collateral( borrower2(), back().amount(1000), swan().amount(100) );
@@ -366,8 +356,6 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
 { try {
       limit_order_id_type oid = init_standard_swan( 1000 );
 
-      wait_for_hf_core_1270();
-
       set_expiration( db, trx );
       cancel_limit_order( oid(db) );
       force_settle( borrower(), swan().amount(1000) );
@@ -393,8 +381,6 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
  */
 BOOST_AUTO_TEST_CASE( revive_empty )
 { try {
-      wait_for_hf_core_1270();
-
       limit_order_id_type oid = init_standard_swan( 1000 );
 
       cancel_limit_order( oid(db) );
@@ -417,8 +403,6 @@ BOOST_AUTO_TEST_CASE( revive_empty )
  */
 BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
 { try {
-      wait_for_hf_core_1270();
-
       standard_users();
       standard_asset();
 

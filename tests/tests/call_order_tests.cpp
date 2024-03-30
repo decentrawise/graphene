@@ -11,6 +11,7 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( call_order_tests, database_fixture )
 
+// TODO: this test needs to be refactored to use maintenance collateralization in get_max_debt_to_cover()
 BOOST_AUTO_TEST_CASE( call_order_object_test )
 { try {
    // assume GRAPHENE_COLLATERAL_RATIO_DENOM is 1000 in this test case

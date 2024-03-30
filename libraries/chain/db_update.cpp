@@ -167,40 +167,21 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
     auto settle_price = bitasset.current_feed.settlement_price;
     if( settle_price.is_null() ) return false; // no feed
 
-    const call_order_object* call_ptr = nullptr; // place holder for the call order with least collateral ratio
-
     asset_id_type debt_asset_id = bitasset.asset_id;
     auto call_min = price::min( bitasset.options.short_backing_asset, debt_asset_id );
 
-    auto maint_time = get_dynamic_global_properties().next_maintenance_time;
-    bool before_core_hardfork_1270 = ( maint_time <= HARDFORK_CORE_1270_TIME ); // call price caching issue
-
-    if( before_core_hardfork_1270 ) // before core-1270 hard fork, check with call_price
-    {
-       const auto& call_price_index = get_index_type<call_order_index>().indices().get<by_price>();
-       auto call_itr = call_price_index.lower_bound( call_min );
-       if( call_itr == call_price_index.end() ) // no call order
-          return false;
-       call_ptr = &(*call_itr);
-    }
-    else // after core-1270 hard fork, check with collateralization
-    {
-       const auto& call_collateral_index = get_index_type<call_order_index>().indices().get<by_collateral>();
-       auto call_itr = call_collateral_index.lower_bound( call_min );
-       if( call_itr == call_collateral_index.end() ) // no call order
-          return false;
-       call_ptr = &(*call_itr);
-    }
-    if( call_ptr->debt_type() != debt_asset_id ) // no call order
+    //check with collateralization
+    const auto& call_collateral_index = get_index_type<call_order_index>().indices().get<by_collateral>();
+    auto call_itr = call_collateral_index.lower_bound( call_min );
+    
+    if( call_itr == call_collateral_index.end() ) // no call order
        return false;
 
-    price highest = settle_price;
-    if( maint_time > HARDFORK_CORE_1270_TIME )
-       // We won't check for black swan on incoming limit order, so need to check with MSSP here
-       highest = bitasset.current_feed.max_short_squeeze_price();
-    else
-       // We won't check for black swan on incoming limit order, so need to check with MSSP here
-       highest = bitasset.current_feed.max_short_squeeze_price_before_hf_1270();
+    if( call_itr->debt_type() != debt_asset_id ) // no call order
+       return false;
+
+    // We won't check for black swan on incoming limit order, so need to check with MSSP here
+    price highest = bitasset.current_feed.max_short_squeeze_price();
 
     const limit_order_index& limit_index = get_index_type<limit_order_index>();
     const auto& limit_price_index = limit_index.indices().get<by_price>();
@@ -220,10 +201,10 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
        highest = std::max( limit_itr->sell_price, highest );
     }
 
-    auto least_collateral = call_ptr->collateralization();
+    auto least_collateral = call_itr->collateralization();
     if( ~least_collateral >= highest  ) 
     {
-       wdump( (*call_ptr) );
+       wdump( (*call_itr) );
        elog( "Black Swan detected on asset ${symbol} (${id}) at block ${b}: \n"
              "   Least collateralized call: ${lc}  ${~lc}\n"
            //  "   Highest Bid:               ${hb}  ${~hb}\n"

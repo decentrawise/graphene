@@ -753,40 +753,6 @@ void database::process_bids( const asset_bitasset_data_object& bad )
    _cancel_bids_and_revive_mpa( to_revive, bad );
 }
 
-/// Reset call_price of all call orders to (1,1) since it won't be used in the future.
-/// Update PMs as well.
-void update_call_orders_hf_1270( database& db )
-{
-   // Update call_price
-   wlog( "Updating all call orders for hardfork core-1270 at block ${n}", ("n",db.head_block_num()) );
-   for( const auto& call_obj : db.get_index_type<call_order_index>().indices().get<by_id>() )
-   {
-      db.modify( call_obj, []( call_order_object& call ) {
-         call.call_price.base.amount = 1;
-         call.call_price.quote.amount = 1;
-      });
-   }
-   wlog( "Done updating all call orders for hardfork core-1270 at block ${n}", ("n",db.head_block_num()) );
-}
-
-/// Match call orders for all bitAssets, including PMs.
-void match_call_orders( database& db )
-{
-   // Match call orders
-   wlog( "Matching call orders at block ${n}", ("n",db.head_block_num()) );
-   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_type>();
-   auto itr = asset_idx.lower_bound( true /** market issued */ );
-   auto itr_end = asset_idx.end();
-   while( itr != itr_end )
-   {
-      const asset_object& a = *itr;
-      ++itr;
-      // be here, next_maintenance_time should have been updated already
-      db.check_call_orders( a ); // allow black swan, and call orders are taker
-   }
-   wlog( "Done matching call orders at block ${n}", ("n",db.head_block_num()) );
-}
-
 void database::process_bitassets()
 {
    time_point_sec head_time = head_block_time();
@@ -822,22 +788,6 @@ void database::process_bitassets()
       modify( d, update_bitasset );
       if( d.has_settlement() )
          process_bids(d);
-   }
-}
-
-void update_median_feeds(database& db)
-{
-   time_point_sec head_time = db.head_block_time();
-   time_point_sec next_maint_time = db.get_dynamic_global_properties().next_maintenance_time;
-
-   const auto update_bitasset = [head_time, next_maint_time]( asset_bitasset_data_object &o )
-   {
-      o.update_median_feeds( head_time, next_maint_time );
-   };
-
-   for( const auto& d : db.get_index_type<asset_bitasset_data_index>().indices() )
-   {
-      db.modify( d, update_bitasset );
    }
 }
 
@@ -976,23 +926,10 @@ void database::perform_chain_maintenance(const signed_block& next_block)
       }
    }
 
-   // To reset call_price of all call orders, then match by new rule, for hard fork core-1270
-   bool to_update_and_match_call_orders_for_hf_1270 = false;
-   if( (dgpo.next_maintenance_time <= HARDFORK_CORE_1270_TIME) && (next_maintenance_time > HARDFORK_CORE_1270_TIME) )
-      to_update_and_match_call_orders_for_hf_1270 = true;
-
    modify(dgpo, [next_maintenance_time](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
       d.accounts_registered_this_interval = 0;
    });
-
-   // We need to do it after updated next_maintenance_time, to apply new rules here, for hard fork core-1270.
-   if( to_update_and_match_call_orders_for_hf_1270 )
-   {
-      update_call_orders_hf_1270(*this);
-      update_median_feeds(*this);
-      match_call_orders(*this);
-   }
 
    process_bitassets();
 
