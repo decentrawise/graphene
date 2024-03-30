@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       BOOST_CHECK_EQUAL(witnesses.begin()[10].instance.value, 22u);
 
       // witness0 has been removed but it was a feeder before
-      // Feed persist in the blockchain, this reproduces the issue
+      // Feed persist in the blockchain
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       itr = bitasset_data.feeds.begin();
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);

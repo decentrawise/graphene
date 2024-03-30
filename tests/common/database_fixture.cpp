@@ -495,8 +495,7 @@ fc::ecc::private_key database_fixture_base::generate_private_key(string seed)
 
 string database_fixture_base::generate_anon_acct_name()
 {
-   // names of the form "anon-acct-x123" ; the "x" is necessary
-   //    to workaround issue #46
+   // names of the form "anon-acct-x123" ; the "x" is a necessary workaround
    return "anon-acct-x" + std::to_string( anon_acct_count++ );
 }
 

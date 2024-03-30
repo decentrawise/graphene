@@ -68,7 +68,7 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
 { try {
    const database& d = db();
 
-   // Calling the proposal hardfork visitor
+   // Calling the proposal operation visitor
    const fc::time_point_sec block_time = d.head_block_time();
    proposal_operation_visitor vtor( d, block_time );
    vtor( o );

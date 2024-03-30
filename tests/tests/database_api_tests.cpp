@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( get_potential_signatures_owner_and_active )
    } FC_LOG_AND_RETHROW()
 }
 
-/// Testing get_potential_signatures and get_required_signatures for non-immediate owner authority issue.
+/// Testing get_potential_signatures and get_required_signatures for non-immediate owner authority
 BOOST_AUTO_TEST_CASE( get_signatures_non_immediate_owner )
 {
    try {

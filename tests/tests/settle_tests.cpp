@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       const call_order_object& call_michael = *borrow(michael, bitusd.amount(6), core.amount(8));
       call_order_id_type call_michael_id = call_michael.get_id();
 
-      // add settle order and check rounding issue
+      // add settle order and check rounding
       const operation_result result = force_settle(rachel, bitusd.amount(4));
 
       force_settlement_id_type settle_id { result.get<object_id_type>() };
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
 
       BOOST_CHECK_EQUAL( bitusd_id(db).dynamic_data(db).current_supply.value, 1006 ); // 1000 + 6
 
-      // settle more and check rounding issue
+      // settle more and check rounding
       // by default 20% of total supply can be settled per maintenance interval, here we test less than it
       set_expiration( db, trx );
       const operation_result result2 = force_settle(rachel_id(db), bitusd_id(db).amount(34));
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       transfer(paul_id, rachel_id, asset(300, bitusd_id));
       borrow(michael_id(db), bitusd_id(db).amount(2), core_id(db).amount(3));
 
-      // settle even more and check rounding issue
+      // settle even more and check rounding
       // by default 20% of total supply can be settled per maintenance interval, here we test more than it
       const operation_result result3 = force_settle(rachel_id(db), bitusd_id(db).amount(3));
       const operation_result result4 = force_settle(rachel_id(db), bitusd_id(db).amount(434));
@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
       BOOST_CHECK( !db.find(call_paul_id));
       BOOST_CHECK( !db.find(call_michael_id));
 
-      // settle order will not execute after HF due to too small
+      // settle order will not execute due to too small
       GRAPHENE_REQUIRE_THROW( force_settle(rachel_id(db), bitusd_id(db).amount(4)), fc::exception );
 
       generate_block();
@@ -746,7 +746,6 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
 }
 
 /**
- * Test case to reproduce https://github.com/bitshares/bitshares-core/issues/1883.
  * When there is only one fill_order object in the ticker rolling buffer, it should only be rolled out once.
  */
 BOOST_AUTO_TEST_CASE( global_settle_ticker_test )

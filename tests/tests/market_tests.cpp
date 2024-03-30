@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(short_positions_called)
 } FC_LOG_AND_RETHROW() }
 
 /***
- * Multiple limit order filling issue
+ * Multiple limit order filling
  */
 BOOST_AUTO_TEST_CASE(multiple_limit_order_filling)
 { try {
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(big_limit_order_test)
 } FC_LOG_AND_RETHROW() }
 
 /***
- * BSIP38 "target_collateral_ratio" test: matching a taker limit order with multiple maker call orders
+ * "target_collateral_ratio" test: matching a taker limit order with multiple maker call orders
  */
 BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
 { try {

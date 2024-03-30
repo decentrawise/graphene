@@ -587,7 +587,7 @@ BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
       // ** Block 3: Nathan will send 1M CORE token to alice and 10K CORE token to bob. We
       // then confirm that balances are received, and then analyze the range
       // prooofs to make sure the mantissa length does not reveal approximate
-      // balance (issue #480).
+      // balance
       std::map<std::string, share_type> to_list = {{"alice",100000000000LL},
                                                    {"bob",    1000000000LL}};
       vector<blind_confirmation> bconfs;
@@ -631,7 +631,7 @@ BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
 }
 
 /******
- * Check account history pagination (see bitshares-core/issue/1176)
+ * Check account history pagination
  */
 BOOST_FIXTURE_TEST_CASE( account_history_pagination, cli_fixture )
 {

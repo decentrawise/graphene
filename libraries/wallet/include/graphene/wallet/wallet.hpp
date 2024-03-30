@@ -802,8 +802,7 @@ class wallet_api
       string read_memo( const memo_data& memo )const;
 
 
-      /** Sign a message using an account's memo key. The signature is generated as in
-       *    https://github.com/xeroc/python-graphenelib/blob/d9634d74/graphenecommon/message.py#L64 .
+      /** Sign a message using an account's memo key
        *
        * @param signer the name or id of signing account
        * @param message text to sign
@@ -1286,8 +1285,8 @@ class wallet_api
        *
        * In order to revive a market-pegged asset after global settlement (aka
        * black swan), investors can bid collateral in order to take over part of
-       * the debt and the settlement fund, see BSIP-0018. Updating an existing
-       * bid to cover 0 debt will delete the bid.
+       * the debt and the settlement fund. Updating an existing bid to cover 0
+       * debt will delete the bid.
        *
        * @param bidder the name or id of the account making the bid
        * @param debt_amount the amount of debt of the named asset to bid for

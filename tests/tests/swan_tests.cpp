@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
 
       // situations to test:
       // 1. minus short squeeze protection would be black swan, otherwise no
-      // 2. issue 346 (price feed drops followed by force settle, drop should trigger BS)
+      // 2. price feed drops followed by force settle, drop should trigger BS
       // 3. feed price < D/C of least collateralized short < call price < highest bid
 
       auto set_price = [&](

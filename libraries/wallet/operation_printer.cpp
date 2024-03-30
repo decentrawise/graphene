@@ -159,7 +159,7 @@ std::string operation_printer::operator()(const asset_create_operation& op) cons
    if( op.bitasset_opts.valid() )
       out << "BitAsset ";
    else
-      out << "User-Issue Asset ";
+      out << "User-Issued Asset ";
    out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
    print_fee(op.fee);
    print_result();

@@ -512,24 +512,24 @@ BOOST_AUTO_TEST_CASE( asset_name_test )
 
       generate_block();
 
-      // Sam can create asset ending in number after hf_620
+      // Sam can create asset ending in number
       create_user_issued_asset( "NIKKEI225", sam_id(db), 0 );
       BOOST_CHECK(  has_asset("NIKKEI225") );
 
-      // make sure other assets can still be created after hf_620
+      // make sure other assets can still be created
       create_user_issued_asset( "ALPHA2", alice_id(db), 0 );
       create_user_issued_asset( "ALPHA2.ONE", alice_id(db), 0 );
       BOOST_CHECK(  has_asset("ALPHA2") );
       BOOST_CHECK( has_asset("ALPHA2.ONE") );
 
-      // proposal to create asset ending in number will now be created successfully as we are in > hf_620 time
+      // proposal to create asset ending in number will now be created successfully
       prop.expiration_time =  db.head_block_time() + fc::days(3);
-      signed_transaction tx_hf620;
-      tx_hf620.operations.push_back( prop );
-      db.current_fee_schedule().set_fee( tx_hf620.operations.back() );
-      set_expiration( db, tx_hf620 );
-      sign( tx_hf620, alice_private_key );
-      PUSH_TX( db, tx_hf620 );
+      signed_transaction tx_p;
+      tx_p.operations.push_back( prop );
+      db.current_fee_schedule().set_fee( tx_p.operations.back() );
+      set_expiration( db, tx_p );
+      sign( tx_p, alice_private_key );
+      PUSH_TX( db, tx_p );
 
       // assets with invalid characters should not be allowed
       unsigned char c = 0;

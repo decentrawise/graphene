@@ -1744,8 +1744,6 @@ BOOST_FIXTURE_TEST_CASE( owner_delegation_test, database_fixture )
    trx.clear();
 } FC_LOG_AND_RETHROW() }
 
-/// This test case reproduces https://github.com/bitshares/bitshares-core/issues/944
-///                       and https://github.com/bitshares/bitshares-core/issues/580
 BOOST_FIXTURE_TEST_CASE( missing_owner_auth_test, database_fixture )
 {
    try
@@ -1816,8 +1814,7 @@ BOOST_FIXTURE_TEST_CASE( missing_owner_auth_test, database_fixture )
       tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       tx.verify_authority( db.get_chain_id(), get_active, get_owner );
 
-      // signed with both alice's owner key and active key,
-      // it does not throw due to https://github.com/bitshares/bitshares-core/issues/580
+      // signed with both alice's owner key and active key, it does not throw
       sign( tx, alice_active_key );
       tx.verify_authority( db.get_chain_id(), get_active, get_owner );
       tx.verify_authority( db.get_chain_id(), get_active, get_owner );

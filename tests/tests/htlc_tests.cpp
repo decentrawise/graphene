@@ -301,7 +301,7 @@ try {
 } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE( htlc_hardfork_test )
+BOOST_AUTO_TEST_CASE( htlc_parameters_test )
 { 
    try {
       test_setup(this);
