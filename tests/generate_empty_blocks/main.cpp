@@ -104,7 +104,7 @@ int main( int argc, char** argv )
 
       for( uint32_t i = 1; i < num_blocks; ++i )
       {
-         signed_block b = db.generate_block(db.get_slot_time(slot), db.get_scheduled_witness(slot), nathan_priv_key, database::skip_nothing);
+         signed_block b = db.generate_block(db.get_slot_time(slot), db.get_scheduled_validator(slot), nathan_priv_key, database::skip_nothing);
          FC_ASSERT( db.head_block_id() == b.id() );
          fc::sha256 h = b.digest();
          uint64_t rand = h._hash[0].value();
@@ -121,11 +121,11 @@ int main( int argc, char** argv )
                break;
          }
          
-         witness_id_type prev_witness = b.witness;
-         witness_id_type cur_witness = db.get_scheduled_witness(1);
+         validator_id_type prev_validator = b.validator;
+         validator_id_type cur_validator = db.get_scheduled_validator(1);
          if( verbose )
          {
-            wdump( (prev_witness)(cur_witness) );
+            wdump( (prev_validator)(cur_validator) );
          }
          else if( (i%10000) == 0 )
          {
@@ -133,7 +133,7 @@ int main( int argc, char** argv )
          }
          if( slot == 1 )  // can possibly get consecutive production if block missed
          {
-            FC_ASSERT( cur_witness != prev_witness );
+            FC_ASSERT( cur_validator != prev_validator );
          }
       }
       std::cerr << "\n";

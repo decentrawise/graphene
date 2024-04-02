@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
    BOOST_CHECK_LT(council_after_maint_with_stake.active.num_auths(), INITIAL_COUNCIL_COUNT);
 
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    const auto &delegates_after_maint_and_init = db.get_global_properties().active_delegates;
@@ -54,111 +54,111 @@ BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
    BOOST_CHECK_EQUAL(council_after_maint_and_init.active.num_auths(), INITIAL_COUNCIL_COUNT);
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(put_my_witnesses)
+BOOST_AUTO_TEST_CASE(put_my_validators)
 {
    try
    {
-      ACTORS( (witness0)
-              (witness1)
-              (witness2)
-              (witness3)
-              (witness4)
-              (witness5)
-              (witness6)
-              (witness7)
-              (witness8)
-              (witness9)
-              (witness10)
-              (witness11)
-              (witness12)
-              (witness13) );
+      ACTORS( (validator0)
+              (validator1)
+              (validator2)
+              (validator3)
+              (validator4)
+              (validator5)
+              (validator6)
+              (validator7)
+              (validator8)
+              (validator9)
+              (validator10)
+              (validator11)
+              (validator12)
+              (validator13) );
 
       // Upgrade all accounts to LTM
-      upgrade_to_lifetime_member(witness0_id);
-      upgrade_to_lifetime_member(witness1_id);
-      upgrade_to_lifetime_member(witness2_id);
-      upgrade_to_lifetime_member(witness3_id);
-      upgrade_to_lifetime_member(witness4_id);
-      upgrade_to_lifetime_member(witness5_id);
-      upgrade_to_lifetime_member(witness6_id);
-      upgrade_to_lifetime_member(witness7_id);
-      upgrade_to_lifetime_member(witness8_id);
-      upgrade_to_lifetime_member(witness9_id);
-      upgrade_to_lifetime_member(witness10_id);
-      upgrade_to_lifetime_member(witness11_id);
-      upgrade_to_lifetime_member(witness12_id);
-      upgrade_to_lifetime_member(witness13_id);
+      upgrade_to_lifetime_member(validator0_id);
+      upgrade_to_lifetime_member(validator1_id);
+      upgrade_to_lifetime_member(validator2_id);
+      upgrade_to_lifetime_member(validator3_id);
+      upgrade_to_lifetime_member(validator4_id);
+      upgrade_to_lifetime_member(validator5_id);
+      upgrade_to_lifetime_member(validator6_id);
+      upgrade_to_lifetime_member(validator7_id);
+      upgrade_to_lifetime_member(validator8_id);
+      upgrade_to_lifetime_member(validator9_id);
+      upgrade_to_lifetime_member(validator10_id);
+      upgrade_to_lifetime_member(validator11_id);
+      upgrade_to_lifetime_member(validator12_id);
+      upgrade_to_lifetime_member(validator13_id);
 
-      // Create all the witnesses
-      const witness_id_type witness0_witness_id = create_witness(witness0_id, witness0_private_key).get_id();
-      const witness_id_type witness1_witness_id = create_witness(witness1_id, witness1_private_key).get_id();
-      const witness_id_type witness2_witness_id = create_witness(witness2_id, witness2_private_key).get_id();
-      const witness_id_type witness3_witness_id = create_witness(witness3_id, witness3_private_key).get_id();
-      const witness_id_type witness4_witness_id = create_witness(witness4_id, witness4_private_key).get_id();
-      const witness_id_type witness5_witness_id = create_witness(witness5_id, witness5_private_key).get_id();
-      const witness_id_type witness6_witness_id = create_witness(witness6_id, witness6_private_key).get_id();
-      const witness_id_type witness7_witness_id = create_witness(witness7_id, witness7_private_key).get_id();
-      const witness_id_type witness8_witness_id = create_witness(witness8_id, witness8_private_key).get_id();
-      const witness_id_type witness9_witness_id = create_witness(witness9_id, witness9_private_key).get_id();
-      const witness_id_type witness10_witness_id = create_witness(witness10_id, witness10_private_key).get_id();
-      const witness_id_type witness11_witness_id = create_witness(witness11_id, witness11_private_key).get_id();
-      const witness_id_type witness12_witness_id = create_witness(witness12_id, witness12_private_key).get_id();
-      const witness_id_type witness13_witness_id = create_witness(witness13_id, witness13_private_key).get_id();
+      // Create all the validators
+      const validator_id_type validator0_validator_id = create_validator(validator0_id, validator0_private_key).get_id();
+      const validator_id_type validator1_validator_id = create_validator(validator1_id, validator1_private_key).get_id();
+      const validator_id_type validator2_validator_id = create_validator(validator2_id, validator2_private_key).get_id();
+      const validator_id_type validator3_validator_id = create_validator(validator3_id, validator3_private_key).get_id();
+      const validator_id_type validator4_validator_id = create_validator(validator4_id, validator4_private_key).get_id();
+      const validator_id_type validator5_validator_id = create_validator(validator5_id, validator5_private_key).get_id();
+      const validator_id_type validator6_validator_id = create_validator(validator6_id, validator6_private_key).get_id();
+      const validator_id_type validator7_validator_id = create_validator(validator7_id, validator7_private_key).get_id();
+      const validator_id_type validator8_validator_id = create_validator(validator8_id, validator8_private_key).get_id();
+      const validator_id_type validator9_validator_id = create_validator(validator9_id, validator9_private_key).get_id();
+      const validator_id_type validator10_validator_id = create_validator(validator10_id, validator10_private_key).get_id();
+      const validator_id_type validator11_validator_id = create_validator(validator11_id, validator11_private_key).get_id();
+      const validator_id_type validator12_validator_id = create_validator(validator12_id, validator12_private_key).get_id();
+      const validator_id_type validator13_validator_id = create_validator(validator13_id, validator13_private_key).get_id();
 
-      // Create a vector with private key of all witnesses, will be used to activate 9 witnesses at a time
+      // Create a vector with private key of all validators, will be used to activate 9 validators at a time
       const vector <fc::ecc::private_key> private_keys = {
-            witness0_private_key,
-            witness1_private_key,
-            witness2_private_key,
-            witness3_private_key,
-            witness4_private_key,
-            witness5_private_key,
-            witness6_private_key,
-            witness7_private_key,
-            witness8_private_key,
-            witness9_private_key,
-            witness10_private_key,
-            witness11_private_key,
-            witness12_private_key,
-            witness13_private_key
+            validator0_private_key,
+            validator1_private_key,
+            validator2_private_key,
+            validator3_private_key,
+            validator4_private_key,
+            validator5_private_key,
+            validator6_private_key,
+            validator7_private_key,
+            validator8_private_key,
+            validator9_private_key,
+            validator10_private_key,
+            validator11_private_key,
+            validator12_private_key,
+            validator13_private_key
 
       };
 
-      // create a map with account id and witness id
-      const flat_map <account_id_type, witness_id_type> witness_map = {
-            {witness0_id, witness0_witness_id},
-            {witness1_id, witness1_witness_id},
-            {witness2_id, witness2_witness_id},
-            {witness3_id, witness3_witness_id},
-            {witness4_id, witness4_witness_id},
-            {witness5_id, witness5_witness_id},
-            {witness6_id, witness6_witness_id},
-            {witness7_id, witness7_witness_id},
-            {witness8_id, witness8_witness_id},
-            {witness9_id, witness9_witness_id},
-            {witness10_id, witness10_witness_id},
-            {witness11_id, witness11_witness_id},
-            {witness12_id, witness12_witness_id},
-            {witness13_id, witness13_witness_id}
+      // create a map with account id and validator id
+      const flat_map <account_id_type, validator_id_type> validator_map = {
+            {validator0_id, validator0_validator_id},
+            {validator1_id, validator1_validator_id},
+            {validator2_id, validator2_validator_id},
+            {validator3_id, validator3_validator_id},
+            {validator4_id, validator4_validator_id},
+            {validator5_id, validator5_validator_id},
+            {validator6_id, validator6_validator_id},
+            {validator7_id, validator7_validator_id},
+            {validator8_id, validator8_validator_id},
+            {validator9_id, validator9_validator_id},
+            {validator10_id, validator10_validator_id},
+            {validator11_id, validator11_validator_id},
+            {validator12_id, validator12_validator_id},
+            {validator13_id, validator13_validator_id}
       };
 
-      // Check current default witnesses, default chain is configured with 9 witnesses
-      auto witnesses = db.get_global_properties().active_witnesses;
-      BOOST_CHECK_EQUAL(witnesses.size(), INITIAL_WITNESS_COUNT);
-      BOOST_CHECK_EQUAL(witnesses.begin()[0].instance.value, 1u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[1].instance.value, 2u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[2].instance.value, 3u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[3].instance.value, 4u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[4].instance.value, 5u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[5].instance.value, 6u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[6].instance.value, 7u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[7].instance.value, 8u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[8].instance.value, 9u);
+      // Check current default validators, default chain is configured with 9 validators
+      auto validators = db.get_global_properties().block_producers;
+      BOOST_CHECK_EQUAL(validators.size(), INITIAL_VALIDATOR_COUNT);
+      BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 1u);
+      BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 2u);
+      BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 3u);
+      BOOST_CHECK_EQUAL(validators.begin()[3].instance.value, 4u);
+      BOOST_CHECK_EQUAL(validators.begin()[4].instance.value, 5u);
+      BOOST_CHECK_EQUAL(validators.begin()[5].instance.value, 6u);
+      BOOST_CHECK_EQUAL(validators.begin()[6].instance.value, 7u);
+      BOOST_CHECK_EQUAL(validators.begin()[7].instance.value, 8u);
+      BOOST_CHECK_EQUAL(validators.begin()[8].instance.value, 9u);
 
-      // Activate all witnesses
-      // Each witness is voted with incremental stake so last witness created will be the ones with more votes
+      // Activate all validators
+      // Each validator is voted with incremental stake so last validator created will be the ones with more votes
       int c = 0;
-      for (auto l : witness_map) {
+      for (auto l : validator_map) {
          int stake = 100 + c + 10;
          transfer(council_account, l.first, asset(stake));
          {
@@ -176,52 +176,52 @@ BOOST_AUTO_TEST_CASE(put_my_witnesses)
          ++c;
       }
 
-      // Trigger the new witnesses
+      // Trigger the new validators
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
-      // Check my witnesses are now in control of the system
-      witnesses = db.get_global_properties().active_witnesses;
-      BOOST_CHECK_EQUAL(witnesses.size(), INITIAL_WITNESS_COUNT);
-      BOOST_CHECK_EQUAL(witnesses.begin()[0].instance.value, 16u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[1].instance.value, 17u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[2].instance.value, 18u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[3].instance.value, 19u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[4].instance.value, 20u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[5].instance.value, 21u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[6].instance.value, 22u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[7].instance.value, 23u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[8].instance.value, 24u);
+      // Check my validators are now in control of the system
+      validators = db.get_global_properties().block_producers;
+      BOOST_CHECK_EQUAL(validators.size(), INITIAL_VALIDATOR_COUNT);
+      BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 16u);
+      BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 17u);
+      BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 18u);
+      BOOST_CHECK_EQUAL(validators.begin()[3].instance.value, 19u);
+      BOOST_CHECK_EQUAL(validators.begin()[4].instance.value, 20u);
+      BOOST_CHECK_EQUAL(validators.begin()[5].instance.value, 21u);
+      BOOST_CHECK_EQUAL(validators.begin()[6].instance.value, 22u);
+      BOOST_CHECK_EQUAL(validators.begin()[7].instance.value, 23u);
+      BOOST_CHECK_EQUAL(validators.begin()[8].instance.value, 24u);
 
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(track_votes_witnesses_enabled)
+BOOST_AUTO_TEST_CASE(track_votes_validators_enabled)
 {
    try
    {
       graphene::app::database_api db_api1(db);
 
-      INVOKE(put_my_witnesses);
+      INVOKE(put_my_validators);
 
-      const account_id_type witness1_id= get_account("witness1").get_id();
-      auto witness1_object = db_api1.get_witness_by_account(witness1_id(db).name);
-      BOOST_CHECK_EQUAL(witness1_object->total_votes, 111u);
+      const account_id_type validator1_id= get_account("validator1").get_id();
+      auto validator1_object = db_api1.get_validator_by_account(validator1_id(db).name);
+      BOOST_CHECK_EQUAL(validator1_object->total_votes, 111u);
 
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(track_votes_witnesses_disabled)
+BOOST_AUTO_TEST_CASE(track_votes_validators_disabled)
 {
    try
    {
       graphene::app::database_api db_api1(db);
 
-      INVOKE(put_my_witnesses);
+      INVOKE(put_my_validators);
 
-      const account_id_type witness1_id= get_account("witness1").get_id();
-      auto witness1_object = db_api1.get_witness_by_account(witness1_id(db).name);
-      BOOST_CHECK_EQUAL(witness1_object->total_votes, 0u);
+      const account_id_type validator1_id= get_account("validator1").get_id();
+      auto validator1_object = db_api1.get_validator_by_account(validator1_id(db).name);
+      BOOST_CHECK_EQUAL(validator1_object->total_votes, 0u);
 
    } FC_LOG_AND_RETHROW()
 }
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(put_my_delegates)
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
-      // Check my witnesses are now in control of the system
+      // Check my validators are now in control of the system
       delegates = db.get_global_properties().active_delegates;
       std::sort(delegates.begin(), delegates.end());
 
@@ -434,8 +434,8 @@ BOOST_AUTO_TEST_CASE(last_voting_date)
 
       transfer(council_account, alice_id, asset(100));
 
-      // we are going to vote for this witness
-      auto witness1 = witness_id_type(1)(db);
+      // we are going to vote for this validator
+      auto validator1 = validator_id_type(1)(db);
 
       auto stats_obj = db.get_account_stats_by_owner(alice_id);
       BOOST_CHECK_EQUAL(stats_obj.last_vote_time.sec_since_epoch(), 0u);
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(last_voting_date)
       graphene::chain::account_update_operation op;
       op.account = alice_id;
       op.new_options = alice.options;
-      op.new_options->votes.insert(witness1.vote_id);
+      op.new_options->votes.insert(validator1.vote_id);
       trx.operations.push_back(op);
       sign(trx, alice_private_key);
       PUSH_TX( db, trx, ~0 );
@@ -469,8 +469,8 @@ BOOST_AUTO_TEST_CASE(last_voting_date_proxy)
 
       generate_block();
 
-      // witness to vote for
-      auto witness1 = witness_id_type(1)(db);
+      // validator to vote for
+      auto validator1 = validator_id_type(1)(db);
 
       // round1: alice changes proxy, this is voting activity
       {
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(last_voting_date_proxy)
          graphene::chain::account_update_operation op;
          op.account = bob_id;
          op.new_options = bob_id(db).options;
-         op.new_options->votes.insert(witness1.vote_id);
+         op.new_options->votes.insert(validator1.vote_id);
          trx.operations.push_back(op);
          sign(trx, bob_private_key);
          set_expiration( db, trx );
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(last_voting_date_proxy)
          graphene::chain::account_update_operation op;
          op.account = proxy_id;
          op.new_options = proxy_id(db).options;
-         op.new_options->votes.insert(witness1.vote_id);
+         op.new_options->votes.insert(validator1.vote_id);
          trx.operations.push_back(op);
          sign(trx, proxy_private_key);
          PUSH_TX(db, trx, ~0);

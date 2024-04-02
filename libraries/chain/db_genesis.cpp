@@ -11,8 +11,8 @@
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
-#include <graphene/chain/witness_object.hpp>
-#include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/validator_object.hpp>
+#include <graphene/chain/validator_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
 #include <fc/crypto/digest.hpp>
@@ -26,10 +26,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
               "Genesis timestamp must be divisible by GRAPHENE_DEFAULT_BLOCK_INTERVAL." );
-   FC_ASSERT(genesis_state.initial_witness_candidates.size() > 0,
-             "Cannot start a chain with zero witnesses.");
-   FC_ASSERT(genesis_state.initial_active_witnesses <= genesis_state.initial_witness_candidates.size(),
-             "initial_active_witnesses is larger than the number of candidate witnesses.");
+   FC_ASSERT(genesis_state.initial_validator_candidates.size() > 0,
+             "Cannot start a chain with zero validators.");
+   FC_ASSERT(genesis_state.initial_block_producers <= genesis_state.initial_validator_candidates.size(),
+             "initial_block_producers is larger than the number of candidate validators.");
 
    _undo_db.disable();
    struct auth_inhibitor {
@@ -71,14 +71,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
    FC_ASSERT(council_account.get_id() == GRAPHENE_COUNCIL_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
-       a.name = "witness-account";
+       a.name = "validator-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
                          s.owner = a.id;
                          s.name = a.name;
                       }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = GRAPHENE_WITNESS_ACCOUNT;
+       a.registrar = GRAPHENE_VALIDATOR_ACCOUNT;
        a.referrer = a.registrar;
        a.lifetime_referrer = a.registrar;
        a.membership_expiration_date = time_point_sec::maximum();
@@ -86,7 +86,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.creation_block_num = 0;
        a.creation_time = _current_block_time;
-   }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
+   }).get_id() == GRAPHENE_VALIDATOR_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "relaxed-council-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
@@ -245,11 +245,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                                  [&genesis_state](dynamic_global_property_object& p) {
       p.time = genesis_state.initial_timestamp;
       p.dynamic_flags = 0;
-      p.witness_budget = 0;
+      p.validator_budget = 0;
       p.recent_slots_filled = std::numeric_limits<fc::uint128_t>::max();
    });
 
-   FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );
+   FC_ASSERT( (genesis_state.immutable_parameters.min_validator_count & 1) == 1, "min_validator_count must be odd" );
    FC_ASSERT( (genesis_state.immutable_parameters.min_delegate_count & 1) == 1,
               "min_delegate_count must be odd" );
 
@@ -380,7 +380,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          string issuer_name = asst.issuer_name;
          a.issuer = get_account_id(issuer_name);
          a.options.max_supply = asst.max_supply;
-         a.options.flags = witness_fed_asset;
+         a.options.flags = validator_fed_asset;
          a.options.issuer_permissions = ( asst.is_bitasset ? ASSET_ISSUER_PERMISSION_MASK
                                                            : UIA_ASSET_ISSUER_PERMISSION_MASK );
          a.dynamic_asset_data_id = dynamic_data_id;
@@ -470,20 +470,20 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       } );
    }
 
-   // Create special witness account and remove it, reserve the id
-   const witness_object& wit = create<witness_object>([](const witness_object&) {
+   // Create special validator account and remove it, reserve the id
+   const validator_object& wit = create<validator_object>([](const validator_object&) {
       // Nothing to do
    });
-   FC_ASSERT( wit.id == GRAPHENE_NULL_WITNESS );
+   FC_ASSERT( wit.id == GRAPHENE_NULL_VALIDATOR );
    remove(wit);
 
-   // Create initial witnesses
-   std::for_each( genesis_state.initial_witness_candidates.begin(),
-                  genesis_state.initial_witness_candidates.end(),
-                  [this,&get_account_id,&genesis_eval_state](const auto& witness) {
-      witness_create_operation op;
-      op.witness_account = get_account_id(witness.owner_name);
-      op.block_signing_key = witness.block_signing_key;
+   // Create initial validators
+   std::for_each( genesis_state.initial_validator_candidates.begin(),
+                  genesis_state.initial_validator_candidates.end(),
+                  [this,&get_account_id,&genesis_eval_state](const auto& validator) {
+      validator_create_operation op;
+      op.validator_account = get_account_id(validator.owner_name);
+      op.block_signing_key = validator.block_signing_key;
       this->apply_operation(genesis_eval_state, op);
    });
 
@@ -512,11 +512,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        this->apply_operation(genesis_eval_state, std::move(op));
    });
 
-   // Set active witnesses
+   // Set block producers
    modify(get_global_properties(), [&genesis_state](global_property_object& p) {
-      for( uint32_t i = 1; i <= genesis_state.initial_active_witnesses; ++i )
+      for( uint32_t i = 1; i <= genesis_state.initial_block_producers; ++i )
       {
-         p.active_witnesses.insert(witness_id_type(i));
+         p.block_producers.insert(validator_id_type(i));
       }
    });
 
@@ -525,11 +525,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.parameters.get_mutable_fees() = genesis_state.initial_parameters.get_current_fees();
    });
 
-   // Create witness scheduler
-   _p_witness_schedule_obj = & create<witness_schedule_object>([this]( witness_schedule_object& wso )
+   // Create validator scheduler
+   _p_validator_schedule_obj = & create<validator_schedule_object>([this]( validator_schedule_object& wso )
    {
-      for( const witness_id_type& wid : get_global_properties().active_witnesses )
-         wso.current_shuffled_witnesses.push_back( wid );
+      for( const validator_id_type& wid : get_global_properties().block_producers )
+         wso.current_shuffled_validators.push_back( wid );
    });
 
    // Create FBA counters

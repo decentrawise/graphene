@@ -14,7 +14,7 @@
 #include <graphene/protocol/transfer.hpp>
 #include <graphene/protocol/vesting.hpp>
 #include <graphene/protocol/withdraw_permission.hpp>
-#include <graphene/protocol/witness.hpp>
+#include <graphene/protocol/validator.hpp>
 #include <graphene/protocol/worker.hpp>
 #include <graphene/protocol/htlc.hpp>
 
@@ -46,8 +46,8 @@ namespace graphene { namespace protocol {
       /* 17 */ asset_settle_operation,
       /* 18 */ asset_global_settle_operation,
       /* 19 */ asset_publish_feed_operation,
-      /* 20 */ witness_create_operation,
-      /* 21 */ witness_update_operation,
+      /* 20 */ validator_create_operation,
+      /* 21 */ validator_update_operation,
       /* 22 */ proposal_create_operation,
       /* 23 */ proposal_update_operation,
       /* 24 */ proposal_delete_operation,

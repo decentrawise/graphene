@@ -24,7 +24,7 @@ libraries/wallet/doxygen
 
 programs/cli_wallet/cli_wallet
 programs/js_operation_serializer/js_operation_serializer
-programs/witness_node/witness_node
+programs/graphened/graphened
 
 tests/app_test
 tests/chain_bench
@@ -35,11 +35,11 @@ tests/performance_test
 doxygen
 
 wallet.json
-witness_node_data_dir
+graphened_data_dir
 
 *.wallet
 
-programs/witness_node/object_database/*
+programs/graphened/object_database/*
 
 object_database/*
 

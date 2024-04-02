@@ -197,8 +197,8 @@ void asset_options::validate()const
    FC_ASSERT( !(issuer_permissions & ~ASSET_ISSUER_PERMISSION_MASK) );
    // The global_settle flag may never be set (this is a permission only)
    FC_ASSERT( !(flags & global_settle) );
-   // the witness_fed and delegate_fed flags cannot be set simultaneously
-   FC_ASSERT( (flags & (witness_fed_asset | delegate_fed_asset)) != (witness_fed_asset | delegate_fed_asset) );
+   // the validator_fed and delegate_fed flags cannot be set simultaneously
+   FC_ASSERT( (flags & (validator_fed_asset | delegate_fed_asset)) != (validator_fed_asset | delegate_fed_asset) );
    core_exchange_rate.validate();
    FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
               core_exchange_rate.quote.asset_id.instance.value == 0 );

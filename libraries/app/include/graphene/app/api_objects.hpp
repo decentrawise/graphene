@@ -147,9 +147,9 @@ namespace graphene { namespace app {
    struct maybe_signed_block_header : block_header
    {
       maybe_signed_block_header() = default;
-      explicit maybe_signed_block_header( const signed_block_header& bh, bool with_witness_signature = true );
+      explicit maybe_signed_block_header( const signed_block_header& bh, bool with_validator_signature = true );
 
-      optional<signature_type> witness_signature;
+      optional<signature_type> validator_signature;
    };
 
 } }
@@ -195,4 +195,4 @@ FC_REFLECT_DERIVED( graphene::app::extended_asset_object, (graphene::chain::asse
                     (total_in_collateral)(total_backing_collateral) )
 
 FC_REFLECT_DERIVED( graphene::app::maybe_signed_block_header, (graphene::protocol::block_header),
-                    (witness_signature) )
+                    (validator_signature) )

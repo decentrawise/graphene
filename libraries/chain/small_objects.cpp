@@ -14,8 +14,8 @@
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/witness_object.hpp>
-#include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/validator_object.hpp>
+#include <graphene/chain/validator_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
 #include <fc/io/raw.hpp>
@@ -30,10 +30,10 @@ FC_REFLECT_DERIVED_NO_TYPENAME(
    (time_since_last_budget)
    (from_initial_reserve)
    (from_accumulated_fees)
-   (from_unused_witness_budget)
-   (requested_witness_budget)
+   (from_unused_validator_budget)
+   (requested_validator_budget)
    (total_budget)
-   (witness_budget)
+   (validator_budget)
    (worker_budget)
    (leftover_worker_funds)
    (supply_delta)
@@ -51,7 +51,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::buyback_object, (graphene::db::
 
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::immutable_chain_parameters, BOOST_PP_SEQ_NIL,
    (min_delegate_count)
-   (min_witness_count)
+   (min_validator_count)
    (num_special_accounts)
    (num_special_assets)
 )
@@ -74,10 +74,10 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::dynamic_global_property_object,
                     (head_block_number)
                     (head_block_id)
                     (time)
-                    (current_witness)
+                    (current_validator)
                     (next_maintenance_time)
                     (last_budget_time)
-                    (witness_budget)
+                    (validator_budget)
                     (accounts_registered_this_interval)
                     (recently_missed_count)
                     (current_aslot)
@@ -91,7 +91,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::global_property_object, (graphe
                     (pending_parameters)
                     (next_available_vote_id)
                     (active_delegates)
-                    (active_witnesses)
+                    (block_producers)
                   )
 
 FC_REFLECT( graphene::chain::htlc_object::transfer_info,
@@ -129,8 +129,8 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::withdraw_permission_object, (gr
                     (claimed_this_period)
                  )
 
-FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::witness_object, (graphene::db::object),
-                    (witness_account)
+FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::validator_object, (graphene::db::object),
+                    (validator_account)
                     (last_aslot)
                     (signing_key)
                     (pay_vb)
@@ -142,9 +142,9 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::witness_object, (graphene::db::
                   )
 
 FC_REFLECT_DERIVED_NO_TYPENAME(
-   graphene::chain::witness_schedule_object,
+   graphene::chain::validator_schedule_object,
    (graphene::db::object),
-   (current_shuffled_witnesses)
+   (current_shuffled_validators)
 )
 
 
@@ -181,6 +181,6 @@ GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::account_history_obje
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::special_authority_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::transaction_history_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::withdraw_permission_object )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::witness_object )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::witness_schedule_object )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::validator_object )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::validator_schedule_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::worker_object )

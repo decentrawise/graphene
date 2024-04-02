@@ -28,8 +28,8 @@ namespace graphene { namespace chain {
    class proposal_object;
    class operation_history_object;
    class chain_property_object;
-   class witness_schedule_object;
-   class witness_object;
+   class validator_schedule_object;
+   class validator_object;
    class force_settlement_object;
    class limit_order_object;
    class collateral_bid_object;
@@ -53,8 +53,8 @@ namespace graphene { namespace chain {
          enum validation_steps
          {
             skip_nothing                = 0,
-            skip_witness_signature      = 1 << 0,  ///< used while reindexing
-            skip_transaction_signatures = 1 << 1,  ///< used by non-witness nodes
+            skip_validator_signature      = 1 << 0,  ///< used while reindexing
+            skip_transaction_signatures = 1 << 1,  ///< used by non-validator nodes
             skip_transaction_dupe_check = 1 << 2,  ///< used while reindexing
             skip_block_size_check       = 1 << 4,  ///< used when applying locally generated transactions
             skip_tapos_check            = 1 << 5,  ///< used while reindexing -- note this skips expiration check too
@@ -62,7 +62,7 @@ namespace graphene { namespace chain {
             skip_merkle_check           = 1 << 7,  ///< used while reindexing
             skip_assert_evaluation      = 1 << 8,  ///< used while reindexing
             skip_undo_history_check     = 1 << 9,  ///< used while reindexing
-            skip_witness_schedule_check = 1 << 10 ///< used while reindexing
+            skip_validator_schedule_check = 1 << 10 ///< used while reindexing
          };
 
          /**
@@ -101,23 +101,23 @@ namespace graphene { namespace chain {
          void wipe(const fc::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
 
-         //////////////////// db_witness_schedule.cpp ////////////////////
+         //////////////////// db_validator_schedule.cpp ////////////////////
 
          /**
-          * @brief Get the witness scheduled for block production in a slot.
+          * @brief Get the validator scheduled for block production in a slot.
           *
           * slot_num always corresponds to a time in the future.
           *
-          * If slot_num == 1, returns the next scheduled witness.
-          * If slot_num == 2, returns the next scheduled witness after
+          * If slot_num == 1, returns the next scheduled validator.
+          * If slot_num == 2, returns the next scheduled validator after
           * 1 block gap.
           *
           * Use the get_slot_time() and get_slot_at_time() functions
           * to convert between slot_num and timestamp.
           *
-          * Passing slot_num == 0 returns GRAPHENE_NULL_WITNESS
+          * Passing slot_num == 0 returns GRAPHENE_NULL_VALIDATOR
           */
-         witness_id_type get_scheduled_witness(uint32_t slot_num)const;
+         validator_id_type get_scheduled_validator(uint32_t slot_num)const;
 
          /**
           * Get the time at which the given slot occurs.
@@ -143,12 +143,12 @@ namespace graphene { namespace chain {
           *  Calculate the percent of block production slots that were missed in the
           *  past 128 blocks, not including the current block.
           */
-         uint32_t witness_participation_rate()const;
+         uint32_t validator_participation_rate()const;
 
       private:
-         uint32_t update_witness_missed_blocks( const signed_block& b );
+         uint32_t update_validator_missed_blocks( const signed_block& b );
 
-         void update_witness_schedule();
+         void update_validator_schedule();
 
          //////////////////// db_getter.cpp ////////////////////
 
@@ -162,12 +162,12 @@ namespace graphene { namespace chain {
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
          const account_statistics_object&       get_account_stats_by_owner( account_id_type owner )const;
-         const witness_schedule_object&         get_witness_schedule_object()const;
+         const validator_schedule_object&         get_validator_schedule_object()const;
 
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
          block_id_type    head_block_id()const;
-         witness_id_type  head_block_witness()const;
+         validator_id_type  head_block_validator()const;
 
          decltype( chain_parameters::block_interval ) block_interval( )const;
 
@@ -248,8 +248,8 @@ namespace graphene { namespace chain {
 
          /// helper to handle cashback rewards
          void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
-         /// helper to handle witness pay
-         void deposit_witness_pay(const witness_object& wit, share_type amount);
+         /// helper to handle validator pay
+         void deposit_validator_pay(const validator_object& wit, share_type amount);
 
          string to_pretty_string( const asset& a )const;
 
@@ -408,14 +408,14 @@ namespace graphene { namespace chain {
 
          signed_block generate_block(
             const fc::time_point_sec when,
-            witness_id_type witness_id,
+            validator_id_type validator_id,
             const fc::ecc::private_key& block_signing_private_key,
             uint32_t skip
             );
       private:
          signed_block _generate_block(
             const fc::time_point_sec when,
-            witness_id_type witness_id,
+            validator_id_type validator_id,
             const fc::ecc::private_key& block_signing_private_key
             );
 
@@ -537,10 +537,10 @@ namespace graphene { namespace chain {
          ///Steps involved in applying a new block
          ///@{
 
-         const witness_object& validate_block_header( uint32_t skip, const signed_block& next_block )const;
-         const witness_object& _validate_block_header( const signed_block& next_block )const;
-         void verify_signing_witness( const signed_block& new_block, const fork_item& fork_entry )const;
-         void update_witnesses( fork_item& fork_entry )const;
+         const validator_object& validate_block_header( uint32_t skip, const signed_block& next_block )const;
+         const validator_object& _validate_block_header( const signed_block& next_block )const;
+         void verify_signing_validator( const signed_block& new_block, const fork_item& fork_entry )const;
+         void update_validators( fork_item& fork_entry )const;
          void create_block_summary(const signed_block& next_block);
 
          //////////////////// db_notify.cpp ////////////////////
@@ -553,7 +553,7 @@ namespace graphene { namespace chain {
          //////////////////// db_update.cpp ////////////////////
       private:
          void update_global_dynamic_data( const signed_block& b, const uint32_t missed_blocks );
-         void update_signing_witness(const witness_object& signing_witness, const signed_block& new_block);
+         void update_signing_validator(const validator_object& signing_validator, const signed_block& new_block);
          void update_last_irreversible_block();
          void clear_expired_transactions();
          void clear_expired_proposals();
@@ -574,7 +574,7 @@ namespace graphene { namespace chain {
          void process_budget();
          void pay_workers( share_type& budget );
          void perform_chain_maintenance(const signed_block& next_block);
-         void update_active_witnesses();
+         void update_block_producers();
          void update_active_delegates();
          void update_worker_votes();
          void process_bids( const asset_bitasset_data_object& bad );
@@ -616,7 +616,7 @@ namespace graphene { namespace chain {
          uint32_t                          _current_virtual_op   = 0;
 
          vector<uint64_t>                  _vote_tally_buffer;
-         vector<uint64_t>                  _witness_count_histogram_buffer;
+         vector<uint64_t>                  _validator_count_histogram_buffer;
          vector<uint64_t>                  _council_count_histogram_buffer;
          uint64_t                          _total_voting_stake;
 
@@ -624,7 +624,7 @@ namespace graphene { namespace chain {
 
          node_property_object              _node_property_object;
 
-         /// Whether to update votes of standby witnesses and delegates when performing chain maintenance.
+         /// Whether to update votes of standby validators and delegates when performing chain maintenance.
          /// Set it to true to provide accurate data to API clients, set to false to have better performance.
          bool                              _track_standby_votes = true;
 
@@ -647,11 +647,11 @@ namespace graphene { namespace chain {
          const global_property_object*          _p_global_prop_obj         = nullptr;
          const dynamic_global_property_object*  _p_dyn_global_prop_obj     = nullptr;
          const chain_property_object*           _p_chain_property_obj      = nullptr;
-         const witness_schedule_object*         _p_witness_schedule_obj    = nullptr;
+         const validator_schedule_object*         _p_validator_schedule_obj    = nullptr;
          ///@}
 
       public:
-         /// Enable or disable tracking of votes of standby witnesses and delegates
+         /// Enable or disable tracking of votes of standby validators and delegates
          inline void enable_standby_votes_tracking(bool enable)  { _track_standby_votes = enable; }
    };
 

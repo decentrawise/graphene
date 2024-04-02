@@ -29,7 +29,7 @@ namespace graphene { namespace protocol {
       uint32_t    maximum_proposal_lifetime           = GRAPHENE_DEFAULT_MAX_PROPOSAL_LIFETIME_SEC; ///< maximum lifetime in seconds for proposed transactions to be kept, before expiring
       uint8_t     maximum_asset_whitelist_authorities = GRAPHENE_DEFAULT_MAX_ASSET_WHITELIST_AUTHORITIES; ///< maximum number of accounts which an asset may list as authorities for its whitelist OR blacklist
       uint8_t     maximum_asset_feed_publishers       = GRAPHENE_DEFAULT_MAX_ASSET_FEED_PUBLISHERS; ///< the maximum number of feed publishers for a given asset
-      uint16_t    maximum_witness_count               = GRAPHENE_DEFAULT_MAX_WITNESSES; ///< maximum number of active witnesses
+      uint16_t    maximum_validator_count               = GRAPHENE_DEFAULT_MAX_VALIDATORS; ///< maximum number of block producers
       uint16_t    maximum_council_count               = GRAPHENE_DEFAULT_MAX_COUNCIL; ///< maximum number of active delegates
       uint16_t    maximum_authority_membership        = GRAPHENE_DEFAULT_MAX_AUTHORITY_MEMBERSHIP; ///< largest number of keys/accounts an authority can have
       uint16_t    reserve_percent_of_fee              = GRAPHENE_DEFAULT_BURN_PERCENT_OF_FEE; ///< the percentage of the network's allocation of a fee that is taken out of circulation
@@ -39,8 +39,8 @@ namespace graphene { namespace protocol {
       share_type  cashback_vesting_threshold          = GRAPHENE_DEFAULT_CASHBACK_VESTING_THRESHOLD; ///< the maximum cashback that can be received without vesting
       bool        count_non_member_votes              = true; ///< set to false to restrict voting privileges to member accounts
       bool        allow_non_member_whitelists         = false; ///< true if non-member accounts may set whitelists and blacklists; false otherwise
-      share_type  witness_pay_per_block               = GRAPHENE_DEFAULT_WITNESS_PAY_PER_BLOCK; ///< CORE to be allocated to witnesses (per block)
-      uint32_t    witness_pay_vesting_seconds         = GRAPHENE_DEFAULT_WITNESS_PAY_VESTING_SECONDS; ///< vesting_seconds parameter for witness VBO's
+      share_type  validator_pay_per_block               = GRAPHENE_DEFAULT_VALIDATOR_PAY_PER_BLOCK; ///< CORE to be allocated to validators (per block)
+      uint32_t    validator_pay_vesting_seconds         = GRAPHENE_DEFAULT_VALIDATOR_PAY_VESTING_SECONDS; ///< vesting_seconds parameter for validator VBO's
       share_type  worker_budget_per_day               = GRAPHENE_DEFAULT_WORKER_BUDGET_PER_DAY; ///< CORE to be allocated to workers (per day)
       uint16_t    max_predicate_opcode                = GRAPHENE_DEFAULT_MAX_ASSERT_OPCODE; ///< predicate_opcode must be less than this number
       share_type  fee_liquidation_threshold           = GRAPHENE_DEFAULT_FEE_LIQUIDATION_THRESHOLD; ///< value in CORE at which accumulated fees in blockchain-issued market assets should be liquidated
@@ -90,7 +90,7 @@ FC_REFLECT( graphene::protocol::chain_parameters,
             (maximum_proposal_lifetime)
             (maximum_asset_whitelist_authorities)
             (maximum_asset_feed_publishers)
-            (maximum_witness_count)
+            (maximum_validator_count)
             (maximum_council_count)
             (maximum_authority_membership)
             (reserve_percent_of_fee)
@@ -100,7 +100,7 @@ FC_REFLECT( graphene::protocol::chain_parameters,
             (cashback_vesting_threshold)
             (count_non_member_votes)
             (allow_non_member_whitelists)
-            (witness_pay_per_block)
+            (validator_pay_per_block)
             (worker_budget_per_day)
             (max_predicate_opcode)
             (fee_liquidation_threshold)

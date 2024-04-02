@@ -89,13 +89,13 @@ manually build your preferred version and use it with Graphene by specifying it 
 
 **Run Node Software:**
 
-Stay on `graphene/build` directory before you run the below `witness_node` command
+Stay on `graphene/build` directory before you run the below `graphened` command
 
-    ./programs/witness_node/witness_node
+    ./programs/graphened/graphened
 
-Under `build` directory the node run will automatically create the directory `witness_node_data_dir` along with config files underneath then start synchronizing the blockchain.
+Under `build` directory the node run will automatically create the directory `graphened_data_dir` along with config files underneath then start synchronizing the blockchain.
 It may take usually several hours to fully synchronize the blockchain data.
-The blockchain data will be stored under the directory `witness_node_data_dir`.
+The blockchain data will be stored under the directory `graphened_data_dir`.
 
 **Stop Node Software:**
 
@@ -108,15 +108,15 @@ In order to run a full node with all the account histories which usually unneces
 
 To use the command-line wallet or other wallets / clients with the node, the node need to be started with RPC connection enabled, which can be done by starting the node with the `--rpc-endpoint` parameter, E.G.
 
-    ./programs/witness_node/witness_node --rpc-endpoint=127.0.0.1:8090
+    ./programs/graphened/graphened --rpc-endpoint=127.0.0.1:8090
 
-or configure it in the config file by editing `witness_node_data_dir/config.ini` as follows:
+or configure it in the config file by editing `graphened_data_dir/config.ini` as follows:
 
     rpc-endpoint = 127.0.0.1:8090
 
 You can run the program with `--help` parameter to see more info:
 
-    ./programs/witness_node/witness_node --help
+    ./programs/graphened/graphened --help
 
 
 ### Using Command-Line Wallet
@@ -204,10 +204,10 @@ Using Built-In APIs
 
 ### Node API
 
-The `witness_node` software provides several different API sets, known as *node API*.
+The `graphened` software provides several different API sets, known as *node API*.
 
 Each API set has its own ID and a name.
-When running `witness_node` with RPC connection enabled, initially two API sets are available:
+When running `graphened` with RPC connection enabled, initially two API sets are available:
 * API set with ID `0` has name *"database"*, it provides read-only access to the database,
 * API set with ID `1` has name *"login"*, it is used to login and gain access to additional, restrictable API sets.
 
@@ -216,12 +216,12 @@ Here is an example using `wscat` package from `npm` for websockets:
     $ npm install -g wscat
     $ wscat -c ws://127.0.0.1:8090
     > {"id":1, "method":"call", "params":[0,"get_accounts",[["1.2.0"]]]}
-    < {"id":1,"result":[{"id":"1.2.0","annotations":[],"membership_expiration_date":"1969-12-31T23:59:59","registrar":"1.2.0","referrer":"1.2.0","lifetime_referrer":"1.2.0","network_fee_percentage":2000,"lifetime_referrer_fee_percentage":8000,"referrer_rewards_percentage":0,"name":"council-account","owner":{"weight_threshold":1,"account_auths":[],"key_auths":[],"address_auths":[]},"active":{"weight_threshold":6,"account_auths":[["1.2.5",1],["1.2.6",1],["1.2.7",1],["1.2.8",1],["1.2.9",1],["1.2.10",1],["1.2.11",1],["1.2.12",1],["1.2.13",1],["1.2.14",1]],"key_auths":[],"address_auths":[]},"options":{"memo_key":"GPH1111111111111111111111111111111114T1Anm","voting_account":"1.2.0","num_witness":0,"num_council":0,"votes":[],"extensions":[]},"statistics":"2.7.0","whitelisting_accounts":[],"blacklisting_accounts":[]}]}
+    < {"id":1,"result":[{"id":"1.2.0","annotations":[],"membership_expiration_date":"1969-12-31T23:59:59","registrar":"1.2.0","referrer":"1.2.0","lifetime_referrer":"1.2.0","network_fee_percentage":2000,"lifetime_referrer_fee_percentage":8000,"referrer_rewards_percentage":0,"name":"council-account","owner":{"weight_threshold":1,"account_auths":[],"key_auths":[],"address_auths":[]},"active":{"weight_threshold":6,"account_auths":[["1.2.5",1],["1.2.6",1],["1.2.7",1],["1.2.8",1],["1.2.9",1],["1.2.10",1],["1.2.11",1],["1.2.12",1],["1.2.13",1],["1.2.14",1]],"key_auths":[],"address_auths":[]},"options":{"memo_key":"GPH1111111111111111111111111111111114T1Anm","voting_account":"1.2.0","num_validator":0,"num_council":0,"votes":[],"extensions":[]},"statistics":"2.7.0","whitelisting_accounts":[],"blacklisting_accounts":[]}]}
 
 We can do the same thing using an HTTP client such as `curl` for APIs which do not require login or other session state:
 
     $ curl --data '{"jsonrpc": "2.0", "method": "call", "params": [0, "get_accounts", [["1.2.0"]]], "id": 1}' http://127.0.0.1:8090/
-    {"id":1,"result":[{"id":"1.2.0","annotations":[],"membership_expiration_date":"1969-12-31T23:59:59","registrar":"1.2.0","referrer":"1.2.0","lifetime_referrer":"1.2.0","network_fee_percentage":2000,"lifetime_referrer_fee_percentage":8000,"referrer_rewards_percentage":0,"name":"council-account","owner":{"weight_threshold":1,"account_auths":[],"key_auths":[],"address_auths":[]},"active":{"weight_threshold":6,"account_auths":[["1.2.5",1],["1.2.6",1],["1.2.7",1],["1.2.8",1],["1.2.9",1],["1.2.10",1],["1.2.11",1],["1.2.12",1],["1.2.13",1],["1.2.14",1]],"key_auths":[],"address_auths":[]},"options":{"memo_key":"GPH1111111111111111111111111111111114T1Anm","voting_account":"1.2.0","num_witness":0,"num_council":0,"votes":[],"extensions":[]},"statistics":"2.7.0","whitelisting_accounts":[],"blacklisting_accounts":[]}]}
+    {"id":1,"result":[{"id":"1.2.0","annotations":[],"membership_expiration_date":"1969-12-31T23:59:59","registrar":"1.2.0","referrer":"1.2.0","lifetime_referrer":"1.2.0","network_fee_percentage":2000,"lifetime_referrer_fee_percentage":8000,"referrer_rewards_percentage":0,"name":"council-account","owner":{"weight_threshold":1,"account_auths":[],"key_auths":[],"address_auths":[]},"active":{"weight_threshold":6,"account_auths":[["1.2.5",1],["1.2.6",1],["1.2.7",1],["1.2.8",1],["1.2.9",1],["1.2.10",1],["1.2.11",1],["1.2.12",1],["1.2.13",1],["1.2.14",1]],"key_auths":[],"address_auths":[]},"options":{"memo_key":"GPH1111111111111111111111111111111114T1Anm","voting_account":"1.2.0","num_validator":0,"num_council":0,"votes":[],"extensions":[]},"statistics":"2.7.0","whitelisting_accounts":[],"blacklisting_accounts":[]}]}
 
 When using an HTTP client, the API set ID can be replaced by the API set name, E.G.
 
@@ -288,7 +288,7 @@ necessary to use the node:
 Note: the `login` API set is always accessible.
 
 Passwords are stored in `base64` as salted `sha256` hashes.  A simple Python script,
-[`saltpass.py`](https://github.com/decentrawise/graphene/blob/main/programs/witness_node/saltpass.py)
+[`saltpass.py`](https://github.com/decentrawise/graphene/blob/main/programs/graphened/saltpass.py)
 is available to obtain hash and salt values from a password.
 A single asterisk `"*"` may be specified as username or password hash to accept any value.
 
@@ -372,9 +372,9 @@ FAQ
     to pass the username/password to the `cli_wallet` on the command line.
 
     It's set up this way so that the default configuration is secure even if the RPC port is
-    publicly accessible.  It's fine if your `witness_node` allows the general public to query
+    publicly accessible.  It's fine if your `graphened` allows the general public to query
     the database or broadcast transactions (in fact, this is how the hosted web UI works).  It's
-    less fine if your `witness_node` allows the general public to control which p2p nodes it's
+    less fine if your `graphened` allows the general public to control which p2p nodes it's
     connecting to.  Therefore the API to add p2p connections needs to be set up with proper access
     controls.
 

@@ -3,7 +3,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <boost/range/algorithm.hpp>
 
 namespace graphene { namespace chain {
@@ -186,7 +186,7 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
    account_id_type acct_id = acct.get_id();
 
    // Note: missing 'PROXY_TO_SELF' here
-   bool is_reserved_account = ( acct_id == GRAPHENE_COUNCIL_ACCOUNT || acct_id == GRAPHENE_WITNESS_ACCOUNT ||
+   bool is_reserved_account = ( acct_id == GRAPHENE_COUNCIL_ACCOUNT || acct_id == GRAPHENE_VALIDATOR_ACCOUNT ||
                                 acct_id == GRAPHENE_RELAXED_COUNCIL_ACCOUNT );
    is_reserved_account = ( is_reserved_account || acct_id == GRAPHENE_NULL_ACCOUNT ||
                            acct_id == GRAPHENE_TEMP_ACCOUNT );
@@ -222,7 +222,7 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
    return;
 }
 
-void database::deposit_witness_pay(const witness_object& wit, share_type amount)
+void database::deposit_validator_pay(const validator_object& wit, share_type amount)
 {
    if( amount == 0 )
       return;
@@ -230,14 +230,14 @@ void database::deposit_witness_pay(const witness_object& wit, share_type amount)
    optional< vesting_balance_id_type > new_vbid = deposit_lazy_vesting(
       wit.pay_vb,
       amount,
-      get_global_properties().parameters.witness_pay_vesting_seconds,
-      vesting_balance_type::witness,
-      wit.witness_account,
+      get_global_properties().parameters.validator_pay_vesting_seconds,
+      vesting_balance_type::validator,
+      wit.validator_account,
       true );
 
    if( new_vbid.valid() )
    {
-      modify( wit, [&]( witness_object& _wit )
+      modify( wit, [&]( validator_object& _wit )
       {
          _wit.pay_vb = *new_vbid;
       } );

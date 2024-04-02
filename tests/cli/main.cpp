@@ -5,7 +5,7 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-// #include <graphene/witness/witness.hpp>
+// #include <graphene/validator/validator.hpp>
 #include <graphene/api_helper_indexes/api_helper_indexes.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/custom_operations/custom_operations_plugin.hpp>
@@ -69,7 +69,7 @@ std::shared_ptr<graphene::app::application> start_application(fc::temp_directory
 
    app1->register_plugin<graphene::account_history::account_history_plugin>(true);
    app1->register_plugin< graphene::market_history::market_history_plugin >(true);
-   // app1->register_plugin< graphene::witness_plugin::witness_plugin >(true);
+   // app1->register_plugin< graphene::validator_plugin::validator_plugin >(true);
    app1->register_plugin< graphene::grouped_orders::grouped_orders_plugin>(true);
    app1->register_plugin<graphene::api_helper_indexes::api_helper_indexes>(true);
    app1->register_plugin<graphene::custom_operations::custom_operations_plugin>(true);
@@ -106,7 +106,7 @@ bool generate_block(std::shared_ptr<graphene::app::application> app, graphene::c
       fc::ecc::private_key council_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
       auto db = app->chain_database();
       returned_block = db->generate_block( db->get_slot_time(1),
-                                         db->get_scheduled_witness(1),
+                                         db->get_scheduled_validator(1),
                                          council_key,
                                          database::skip_nothing );
       return true;
@@ -134,7 +134,7 @@ bool generate_maintenance_block(std::shared_ptr<graphene::app::application> app)
       auto maint_time = db->get_dynamic_global_properties().next_maintenance_time;
       auto slots_to_miss = db->get_slot_at_time(maint_time);
       db->generate_block(db->get_slot_time(slots_to_miss),
-            db->get_scheduled_witness(slots_to_miss),
+            db->get_scheduled_validator(slots_to_miss),
             council_key,
             skip);
       return true;
@@ -343,22 +343,22 @@ BOOST_FIXTURE_TEST_CASE( create_new_account, cli_fixture )
 
 ///////////////////////
 // Start a server and connect using the same calls as the CLI
-// Vote for two witnesses, and make sure they both stay there
+// Vote for two validators, and make sure they both stay there
 // after a maintenance block
 ///////////////////////
-BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_witnesses, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_validators, cli_fixture )
 {
    try
    {
-      BOOST_TEST_MESSAGE("Cli Vote Test for 2 Witnesses");
+      BOOST_TEST_MESSAGE("Cli Vote Test for 2 validators");
 
       INVOKE(create_new_account);
 
       // get the details for init1
-      witness_object init1_obj = con.wallet_api_ptr->get_witness("init1");
+      validator_object init1_obj = con.wallet_api_ptr->get_validator("init1");
       int init1_start_votes = init1_obj.total_votes;
-      // Vote for a witness
-      signed_transaction vote_witness1_tx = con.wallet_api_ptr->vote_for_witness("jmjatlanta", "init1", true, true);
+      // Vote for a validator
+      signed_transaction vote_validator1_tx = con.wallet_api_ptr->vote_for_validator("jmjatlanta", "init1", true, true);
 
       // generate a block to get things started
       BOOST_CHECK(generate_block(app1));
@@ -366,21 +366,21 @@ BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_witnesses, cli_fixture )
       BOOST_CHECK(generate_maintenance_block(app1));
 
       // Verify that the vote is there
-      init1_obj = con.wallet_api_ptr->get_witness("init1");
-      witness_object init2_obj = con.wallet_api_ptr->get_witness("init2");
+      init1_obj = con.wallet_api_ptr->get_validator("init1");
+      validator_object init2_obj = con.wallet_api_ptr->get_validator("init2");
       int init1_middle_votes = init1_obj.total_votes;
       BOOST_CHECK(init1_middle_votes > init1_start_votes);
 
-      // Vote for a 2nd witness
+      // Vote for a 2nd validator
       int init2_start_votes = init2_obj.total_votes;
-      signed_transaction vote_witness2_tx = con.wallet_api_ptr->vote_for_witness("jmjatlanta", "init2", true, true);
+      signed_transaction vote_validator2_tx = con.wallet_api_ptr->vote_for_validator("jmjatlanta", "init2", true, true);
 
       // send another block to trigger maintenance interval
       BOOST_CHECK(generate_maintenance_block(app1));
 
       // Verify that both the first vote and the 2nd are there
-      init2_obj = con.wallet_api_ptr->get_witness("init2");
-      init1_obj = con.wallet_api_ptr->get_witness("init1");
+      init2_obj = con.wallet_api_ptr->get_validator("init2");
+      init1_obj = con.wallet_api_ptr->get_validator("init1");
 
       int init2_middle_votes = init2_obj.total_votes;
       BOOST_CHECK(init2_middle_votes > init2_start_votes);

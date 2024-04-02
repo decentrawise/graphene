@@ -58,11 +58,11 @@ namespace detail {
       dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(nathan_key)));
       graphene::chain::genesis_state_type initial_state;
       initial_state.initial_parameters.get_mutable_fees() = fee_schedule::get_default();
-      initial_state.initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
+      initial_state.initial_block_producers = GRAPHENE_DEFAULT_MIN_VALIDATOR_COUNT;
       initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *
             initial_state.initial_parameters.block_interval);
-      for( uint64_t i = 0; i < initial_state.initial_active_witnesses; ++i )
+      for( uint64_t i = 0; i < initial_state.initial_block_producers; ++i )
       {
          auto name = "init"+fc::to_string(i);
          initial_state.initial_accounts.emplace_back(name,
@@ -70,7 +70,7 @@ namespace detail {
                                                      nathan_key.get_public_key(),
                                                      true);
          initial_state.initial_council_candidates.push_back({name});
-         initial_state.initial_witness_candidates.push_back({name, nathan_key.get_public_key()});
+         initial_state.initial_validator_candidates.push_back({name, nathan_key.get_public_key()});
       }
 
       initial_state.initial_accounts.emplace_back("nathan", nathan_key.get_public_key());
@@ -376,9 +376,9 @@ void application_impl::set_api_limit() {
       _app_options.api_limit_lookup_accounts =
             _options->at("api-limit-lookup-accounts").as<uint32_t>();
    }
-   if(_options->count("api-limit-lookup-witness-accounts") > 0) {
-      _app_options.api_limit_lookup_witness_accounts =
-            _options->at("api-limit-lookup-witness-accounts").as<uint32_t>();
+   if(_options->count("api-limit-lookup-validator-accounts") > 0) {
+      _app_options.api_limit_lookup_validator_accounts =
+            _options->at("api-limit-lookup-validator-accounts").as<uint32_t>();
    }
    if(_options->count("api-limit-lookup-delegate-accounts") > 0) {
       _app_options.api_limit_lookup_delegate_accounts =
@@ -449,10 +449,10 @@ graphene::chain::genesis_state_type application_impl::initialize_genesis_state()
          if( _options->count("dbg-init-key") > 0 )
          {
             std::string init_key = _options->at( "dbg-init-key" ).as<string>();
-            FC_ASSERT( genesis.initial_witness_candidates.size() >= genesis.initial_active_witnesses );
-            genesis.override_witness_signing_keys( init_key );
+            FC_ASSERT( genesis.initial_validator_candidates.size() >= genesis.initial_block_producers );
+            genesis.override_validator_signing_keys( init_key );
             modified_genesis = true;
-            ilog("Set init witness key to ${init_key}", ("init_key", init_key));
+            ilog("Set init validator key to ${init_key}", ("init_key", init_key));
          }
          if( modified_genesis )
          {
@@ -517,13 +517,13 @@ void application_impl::open_chain_database() const
             skip = graphene::chain::database::skip_transaction_signatures;
       }
       else // no revalidate, skip most checks
-         skip = graphene::chain::database::skip_witness_signature |
+         skip = graphene::chain::database::skip_validator_signature |
                 graphene::chain::database::skip_block_size_check |
                 graphene::chain::database::skip_merkle_check |
                 graphene::chain::database::skip_transaction_signatures |
                 graphene::chain::database::skip_transaction_dupe_check |
                 graphene::chain::database::skip_tapos_check |
-                graphene::chain::database::skip_witness_schedule_check;
+                graphene::chain::database::skip_validator_schedule_check;
 
       auto genesis_loader = [this](){
          return initialize_genesis_state();
@@ -610,8 +610,8 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
    auto latency = fc::time_point::now() - blk_msg.block.timestamp;
    if (!sync_mode || blk_msg.block.block_num() % 10000 == 0)
    {
-      const auto& witness = blk_msg.block.witness(*_chain_db);
-      const auto& witness_account = witness.witness_account(*_chain_db);
+      const auto& validator = blk_msg.block.validator(*_chain_db);
+      const auto& validator_account = validator.validator_account(*_chain_db);
       auto last_irr = _chain_db->get_dynamic_global_properties().last_irreversible_block_num;
       ilog("Got block: #${n} ${bid} time: ${t} transaction(s): ${x} "
            "latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})",
@@ -620,7 +620,7 @@ bool application_impl::handle_block(const graphene::net::block_message& blk_msg,
            ("bid", blk_msg.block.id())
            ("x", blk_msg.block.transactions.size())
            ("l", (latency.count()/1000))
-           ("w",witness_account.name)
+           ("w",validator_account.name)
            ("i",last_irr)("d",blk_msg.block.block_num()-last_irr) );
    }
    GRAPHENE_ASSERT( latency.count()/1000 > -2500, // 2.5 seconds
@@ -1030,7 +1030,7 @@ void application_impl::shutdown()
       _websocket_server.reset();
    // TODO wait until all connections are closed and messages handled?
 
-   // plugins E.G. witness_plugin may send data to p2p network, so shutdown them first
+   // plugins E.G. validator_plugin may send data to p2p network, so shutdown them first
    ilog( "Shutting down plugins" );
    shutdown_plugins();
 
@@ -1161,7 +1161,7 @@ void application::set_program_options(boost::program_options::options_descriptio
           "usually added by a trusted reverse proxy")
          ("genesis-json", bpo::value<boost::filesystem::path>(), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(),
-          "Block signing key to use for init witnesses, overrides genesis file, for debug")
+          "Block signing key to use for init validators, overrides genesis file, for debug")
          ("api-node-info", bpo::value<string>(),
           "A string defined by the node operator, which can be retrieved via the login_api::get_info API")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
@@ -1170,7 +1170,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("enable-subscribe-to-all", bpo::value<bool>()->implicit_value(true),
           "Whether allow API clients to subscribe to universal object creation and removal events")
          ("enable-standby-votes-tracking", bpo::value<bool>()->implicit_value(true),
-          "Whether to enable tracking of votes of standby witnesses and delegates. "
+          "Whether to enable tracking of votes of standby validators and delegates. "
           "Set it to true to provide accurate data to API clients, set to false for slightly better performance.")
          ("api-limit-get-account-history-operations",
           bpo::value<uint32_t>()->default_value(default_opts.api_limit_get_account_history_operations),
@@ -1232,9 +1232,9 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("api-limit-lookup-accounts",
           bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_accounts),
           "For database_api_impl::lookup_accounts to set max limit value")
-         ("api-limit-lookup-witness-accounts",
-          bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_witness_accounts),
-          "For database_api_impl::lookup_witness_accounts to set max limit value")
+         ("api-limit-lookup-validator-accounts",
+          bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_validator_accounts),
+          "For database_api_impl::lookup_validator_accounts to set max limit value")
          ("api-limit-lookup-delegate-accounts",
           bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_delegate_accounts),
           "For database_api_impl::lookup_delegate_accounts to set max limit value")

@@ -65,9 +65,9 @@ def main():
     for asset in genesis["initial_assets"]:
         issuer_name = asset["issuer_name"]
         asset["issuer_name"] = name_map.get(issuer_name, issuer_name)
-    for witness in genesis["initial_witness_candidates"]:
-        owner_name = witness["owner_name"]
-        witness["owner_name"] = name_map.get(owner_name, owner_name)
+    for validator in genesis["initial_validator_candidates"]:
+        owner_name = validator["owner_name"]
+        validator["owner_name"] = name_map.get(owner_name, owner_name)
     for council in genesis["initial_council_candidates"]:
         owner_name = member["owner_name"]
         member["owner_name"] = name_map.get(owner_name, owner_name)

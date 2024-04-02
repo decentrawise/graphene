@@ -470,13 +470,13 @@ static bool update_bitasset_object_options(
 
    // feeds must be reset if the backing asset is changed
    bool backing_asset_changed = false;
-   bool is_witness_or_delegate_fed = false;
+   bool is_validator_or_delegate_fed = false;
    if( op.new_options.short_backing_asset != bdo.options.short_backing_asset )
    {
       backing_asset_changed = true;
       should_update_feeds = true;
-      if( asset_to_update.options.flags & ( witness_fed_asset | delegate_fed_asset ) )
-         is_witness_or_delegate_fed = true;
+      if( asset_to_update.options.flags & ( validator_fed_asset | delegate_fed_asset ) )
+         is_validator_or_delegate_fed = true;
    }
 
    bdo.options = op.new_options;
@@ -484,13 +484,13 @@ static bool update_bitasset_object_options(
    // are we modifying the underlying? If so, reset the feeds
    if( backing_asset_changed )
    {
-      if( is_witness_or_delegate_fed )
+      if( is_validator_or_delegate_fed )
       {
          bdo.feeds.clear();
       }
       else
       {
-         // for non-witness-feeding and non-delegate-feeding assets, modify all feeds
+         // for non-validator-feeding and non-delegate-feeding assets, modify all feeds
          // published by producers to nothing, since we can't simply remove them.
          for( auto& current_feed : bdo.feeds )
          {
@@ -545,7 +545,7 @@ void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_updat
 
    FC_ASSERT(a.is_market_issued(), "Cannot update feed producers on a non-BitAsset.");
    FC_ASSERT(!(a.options.flags & delegate_fed_asset), "Cannot set feed producers on a delegate-fed asset.");
-   FC_ASSERT(!(a.options.flags & witness_fed_asset), "Cannot set feed producers on a witness-fed asset.");
+   FC_ASSERT(!(a.options.flags & validator_fed_asset), "Cannot set feed producers on a validator-fed asset.");
 
    FC_ASSERT( a.issuer == o.issuer, "Only asset issuer can update feed producers of an asset" );
 
@@ -722,10 +722,10 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    }
 
    //Verify that the publisher is authoritative to publish a feed
-   if( base.options.flags & witness_fed_asset )
+   if( base.options.flags & validator_fed_asset )
    {
-      FC_ASSERT( d.get(GRAPHENE_WITNESS_ACCOUNT).active.account_auths.count(o.publisher),
-                 "Only active witnesses are allowed to publish price feeds for this asset" );
+      FC_ASSERT( d.get(GRAPHENE_VALIDATOR_ACCOUNT).active.account_auths.count(o.publisher),
+                 "Only block producers are allowed to publish price feeds for this asset" );
    }
    else if( base.options.flags & delegate_fed_asset )
    {

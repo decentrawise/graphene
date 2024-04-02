@@ -20,7 +20,7 @@ if( GRAPHENE_DISABLE_UNITY_BUILD )
         db_market.cpp
         db_notify.cpp
         db_update.cpp
-        db_witness_schedule.cpp
+        db_validator_schedule.cpp
       )
    message( STATUS "Graphene database unity build disabled" )
 else( GRAPHENE_DISABLE_UNITY_BUILD )
@@ -44,7 +44,7 @@ add_library( graphene_chain
              balance_evaluator.cpp
              account_evaluator.cpp
              assert_evaluator.cpp
-             witness_evaluator.cpp
+             validator_evaluator.cpp
              delegate_evaluator.cpp
              asset_evaluator.cpp
              transfer_evaluator.cpp

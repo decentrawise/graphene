@@ -106,9 +106,9 @@ market_ticker::market_ticker(const fc::time_point_sec& now,
    quote_volume = "0";
 }
 
-maybe_signed_block_header::maybe_signed_block_header( const signed_block_header& bh, bool with_witness_signature )
+maybe_signed_block_header::maybe_signed_block_header( const signed_block_header& bh, bool with_validator_signature )
 : block_header( bh ), // Slice intentionally
-  witness_signature( with_witness_signature ? bh.witness_signature : optional<signature_type>() )
+  validator_signature( with_validator_signature ? bh.validator_signature : optional<signature_type>() )
 { // Nothing else to do
 }
 

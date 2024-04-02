@@ -1,7 +1,7 @@
-#include <graphene/witness/witness.hpp>
+#include <graphene/validator/validator.hpp>
 
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
 
@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-using namespace graphene::witness_plugin;
+using namespace graphene::validator_plugin;
 using std::string;
 using std::vector;
 
@@ -36,19 +36,19 @@ void new_chain_banner( const graphene::chain::database& db )
    }
 }
 
-void witness_plugin::plugin_set_program_options(
+void validator_plugin::plugin_set_program_options(
    boost::program_options::options_description& command_line_options,
    boost::program_options::options_description& config_file_options)
 {
    auto default_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("nathan")));
-   string witness_id_example = fc::json::to_string(chain::witness_id_type(5));
+   string validator_id_example = fc::json::to_string(chain::validator_id_type(5));
    command_line_options.add_options()
          ("enable-stale-production", bpo::bool_switch()->notifier([this](bool e){_production_enabled = e;}),
                "Enable block production, even if the chain is stale.")
          ("required-participation", bpo::value<uint32_t>()->default_value(33),
-               "Percent of witnesses (0-100) that must be participating in order to produce blocks")
-         ("witness-id,w", bpo::value<vector<string>>()->composing()->multitoken(),
-               ("ID of witness controlled by this node (e.g. " + witness_id_example +
+               "Percent of validators (0-100) that must be participating in order to produce blocks")
+         ("validator-id,w", bpo::value<vector<string>>()->composing()->multitoken(),
+               ("ID of validator controlled by this node (e.g. " + validator_id_example +
                ", quotes are required, may specify multiple times)").c_str())
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
           DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()),
@@ -62,12 +62,12 @@ void witness_plugin::plugin_set_program_options(
    config_file_options.add(command_line_options);
 }
 
-std::string witness_plugin::plugin_name()const
+std::string validator_plugin::plugin_name()const
 {
-   return "witness";
+   return "validator";
 }
 
-void witness_plugin::add_private_key(const std::string& key_id_to_wif_pair_string)
+void validator_plugin::add_private_key(const std::string& key_id_to_wif_pair_string)
 {
    auto key_id_to_wif_pair = graphene::app::dejsonify<std::pair<chain::public_key_type, std::string>>
          (key_id_to_wif_pair_string, 5);
@@ -93,11 +93,11 @@ void witness_plugin::add_private_key(const std::string& key_id_to_wif_pair_strin
    }
 }
 
-void witness_plugin::plugin_initialize(const boost::program_options::variables_map& options)
+void validator_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 { try {
-   ilog("witness plugin:  plugin_initialize() begin");
+   ilog("validator plugin:  plugin_initialize() begin");
    _options = &options;
-   LOAD_VALUE_SET(options, "witness-id", _witnesses, chain::witness_id_type);
+   LOAD_VALUE_SET(options, "validator-id", _validators, chain::validator_id_type);
 
    if( options.count("private-key") > 0 )
    {
@@ -135,22 +135,22 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
    {
        auto required_participation = options["required-participation"].as<uint32_t>();
        FC_ASSERT(required_participation <= 100);
-       _required_witness_participation = options["required-participation"].as<uint32_t>()*GRAPHENE_1_PERCENT;
+       _required_validator_participation = options["required-participation"].as<uint32_t>()*GRAPHENE_1_PERCENT;
        if(required_participation < 10)
-           wlog("witness plugin: Warning - Low required participation of ${rp}% found", ("rp", required_participation));
+           wlog("validator plugin: Warning - Low required participation of ${rp}% found", ("rp", required_participation));
        else if(required_participation > 90)
-           wlog("witness plugin: Warning - High required participation of ${rp}% found", ("rp", required_participation));
+           wlog("validator plugin: Warning - High required participation of ${rp}% found", ("rp", required_participation));
    }
-   ilog("witness plugin:  plugin_initialize() end");
+   ilog("validator plugin:  plugin_initialize() end");
 } FC_LOG_AND_RETHROW() }
 
-void witness_plugin::plugin_startup()
+void validator_plugin::plugin_startup()
 { try {
-   ilog("witness plugin:  plugin_startup() begin");
+   ilog("validator plugin:  plugin_startup() begin");
    chain::database& d = database();
-   if( !_witnesses.empty() )
+   if( !_validators.empty() )
    {
-      ilog("Launching block production for ${n} witnesses.", ("n", _witnesses.size()));
+      ilog("Launching block production for ${n} validators.", ("n", _validators.size()));
       app().set_block_production(true);
       if( _production_enabled )
       {
@@ -158,21 +158,21 @@ void witness_plugin::plugin_startup()
             new_chain_banner(d);
          _production_skip_flags |= graphene::chain::database::skip_undo_history_check;
       }
-      refresh_witness_key_cache();
+      refresh_validator_key_cache();
       d.applied_block.connect( [this]( const chain::signed_block& b )
       {
-         refresh_witness_key_cache();
+         refresh_validator_key_cache();
       });
       schedule_production_loop();
    }
    else
    {
-      ilog("No witness configured.");
+      ilog("No validator configured.");
    }
-   ilog("witness plugin:  plugin_startup() end");
+   ilog("validator plugin:  plugin_startup() end");
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
-void witness_plugin::stop_block_production()
+void validator_plugin::stop_block_production()
 {
    _shutting_down = true;
    
@@ -186,20 +186,20 @@ void witness_plugin::stop_block_production()
    }
 }
 
-void witness_plugin::refresh_witness_key_cache()
+void validator_plugin::refresh_validator_key_cache()
 {
    const auto& db = database();
-   for( const chain::witness_id_type& wit_id : _witnesses )
+   for( const chain::validator_id_type& wit_id : _validators )
    {
-      const chain::witness_object* wit_obj = db.find( wit_id );
+      const chain::validator_object* wit_obj = db.find( wit_id );
       if( wit_obj )
-         _witness_key_cache[wit_id] = wit_obj->signing_key;
+         _validator_key_cache[wit_id] = wit_obj->signing_key;
       else
-         _witness_key_cache[wit_id] = fc::optional<chain::public_key_type>();
+         _validator_key_cache[wit_id] = fc::optional<chain::public_key_type>();
    }
 }
 
-void witness_plugin::schedule_production_loop()
+void validator_plugin::schedule_production_loop()
 {
    if (_shutting_down) return;
 
@@ -216,7 +216,7 @@ void witness_plugin::schedule_production_loop()
                                          next_wakeup, "Witness Block Production");
 }
 
-block_production_condition::block_production_condition_enum witness_plugin::block_production_loop()
+block_production_condition::block_production_condition_enum validator_plugin::block_production_loop()
 {
    block_production_condition::block_production_condition_enum result;
    fc::limited_mutable_variant_object capture( GRAPHENE_MAX_NESTED_OBJECTS );
@@ -260,7 +260,7 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
          ilog("Not producing block because I don't have the private key for ${scheduled_key}", (capture) );
          break;
       case block_production_condition::low_participation:
-         elog("Not producing block because node appears to be on a minority fork with only ${pct}% witness participation",
+         elog("Not producing block because node appears to be on a minority fork with only ${pct}% validator participation",
                (capture) );
          break;
       case block_production_condition::lag:
@@ -284,7 +284,7 @@ block_production_condition::block_production_condition_enum witness_plugin::bloc
    return result;
 }
 
-block_production_condition::block_production_condition_enum witness_plugin::maybe_produce_block(
+block_production_condition::block_production_condition_enum validator_plugin::maybe_produce_block(
       fc::limited_mutable_variant_object& capture )
 {
    chain::database& db = database();
@@ -318,16 +318,16 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
    //
    assert( now > db.head_block_time() );
 
-   graphene::chain::witness_id_type scheduled_witness = db.get_scheduled_witness( slot );
-   // we must control the witness scheduled to produce the next block.
-   if( _witnesses.find( scheduled_witness ) == _witnesses.end() )
+   graphene::chain::validator_id_type scheduled_validator = db.get_scheduled_validator( slot );
+   // we must control the validator scheduled to produce the next block.
+   if( _validators.find( scheduled_validator ) == _validators.end() )
    {
-      capture("scheduled_witness", scheduled_witness);
+      capture("scheduled_validator", scheduled_validator);
       return block_production_condition::not_my_turn;
    }
 
    fc::time_point_sec scheduled_time = db.get_slot_time( slot );
-   graphene::chain::public_key_type scheduled_key = *_witness_key_cache[scheduled_witness]; // should be valid
+   graphene::chain::public_key_type scheduled_key = *_validator_key_cache[scheduled_validator]; // should be valid
    auto private_key_itr = _private_keys.find( scheduled_key );
 
    if( private_key_itr == _private_keys.end() )
@@ -336,8 +336,8 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
       return block_production_condition::no_private_key;
    }
 
-   uint32_t prate = db.witness_participation_rate();
-   if( prate < _required_witness_participation )
+   uint32_t prate = db.validator_participation_rate();
+   if( prate < _required_validator_participation )
    {
       capture("pct", uint32_t(100*uint64_t(prate) / GRAPHENE_1_PERCENT));
       return block_production_condition::low_participation;
@@ -354,7 +354,7 @@ block_production_condition::block_production_condition_enum witness_plugin::mayb
 
    auto block = db.generate_block(
       scheduled_time,
-      scheduled_witness,
+      scheduled_validator,
       private_key_itr->second,
       _production_skip_flags
       );

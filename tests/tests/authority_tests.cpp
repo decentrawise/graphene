@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE( council_authority )
    const auto& global_params = db.get_global_properties().parameters;
 
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -498,7 +498,7 @@ BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
    fc::ecc::private_key delegate_key = fc::ecc::private_key::generate();
 
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -1884,7 +1884,7 @@ BOOST_AUTO_TEST_CASE( nested_execution )
 
    std::vector<proposal_id_type> nested;
    nested.push_back( inner );
-   for( size_t i = 0; i < gpo.active_witnesses.size() * 2; i++ )
+   for( size_t i = 0; i < gpo.block_producers.size() * 2; i++ )
    {
       proposal_update_operation pup;
       pup.fee_paying_account = alice_id;

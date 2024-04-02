@@ -11,7 +11,7 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <fc/crypto/digest.hpp>
@@ -708,20 +708,20 @@ BOOST_AUTO_TEST_CASE( create_account_test )
 
       // Not allow voting for non-exist entities.
       auto save_num_council = op.options.num_council;
-      auto save_num_witness = op.options.num_witness;
+      auto save_num_validator = op.options.num_validator;
       op.options.num_council = 1;
-      op.options.num_witness = 0;
+      op.options.num_validator = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("0:1")).convert_to_container<flat_set<vote_id_type>>());
-      op.options.num_witness = 1;
+      op.options.num_validator = 1;
       op.options.num_council = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("1:19")).convert_to_container<flat_set<vote_id_type>>());
-      op.options.num_witness = 0;
+      op.options.num_validator = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("2:19")).convert_to_container<flat_set<vote_id_type>>());
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("3:99")).convert_to_container<flat_set<vote_id_type>>());
       GRAPHENE_REQUIRE_THROW( vote_id_type("2:a"), fc::exception );
       GRAPHENE_REQUIRE_THROW( vote_id_type(""), fc::exception );
       op.options.num_council = save_num_council;
-      op.options.num_witness = save_num_witness;
+      op.options.num_validator = save_num_validator;
 
       auto auth_bak = op.owner;
       op.owner.add_authority(account_id_type(9999999999), 10);
@@ -894,8 +894,8 @@ BOOST_AUTO_TEST_CASE( create_mia )
 BOOST_AUTO_TEST_CASE( update_mia )
 {
    try {
-      // Initialize witnesses by voting for each member and for desired count
-      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+      // Initialize validators by voting for each member and for desired count
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
       set_expiration(db, trx);
@@ -1483,12 +1483,12 @@ BOOST_AUTO_TEST_CASE( cancel_limit_order_test )
  }
 }
 
-BOOST_AUTO_TEST_CASE( witness_feeds )
+BOOST_AUTO_TEST_CASE( validator_feeds )
 {
    using namespace graphene::chain;
    try {
       // Initialize council by voting for each member and for desired count
-      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
       set_expiration(db, trx);
@@ -1507,13 +1507,13 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
       generate_block();
       const asset_object& bit_usd = get_asset("USDBIT");
       auto& global_props = db.get_global_properties();
-      vector<account_id_type> active_witnesses;
-      for( const witness_id_type& wit_id : global_props.active_witnesses )
-         active_witnesses.push_back( wit_id(db).witness_account );
-      BOOST_REQUIRE_EQUAL(active_witnesses.size(), INITIAL_WITNESS_COUNT);
+      vector<account_id_type> block_producers;
+      for( const validator_id_type& wit_id : global_props.block_producers )
+         block_producers.push_back( wit_id(db).validator_account );
+      BOOST_REQUIRE_EQUAL(block_producers.size(), INITIAL_VALIDATOR_COUNT);
 
       asset_publish_feed_operation op;
-      op.publisher = active_witnesses[0];
+      op.publisher = block_producers[0];
       op.asset_id = bit_usd.get_id();
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
       // Accept defaults for required collateral
@@ -1524,7 +1524,7 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
       BOOST_CHECK(bitasset.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
       BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
-      op.publisher = active_witnesses[1];
+      op.publisher = block_producers[1];
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
@@ -1532,9 +1532,9 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
       BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
-      op.publisher = active_witnesses[2];
+      op.publisher = block_producers[2];
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
-      // But this witness is an idiot.
+      // But this validator is an idiot.
       op.feed.maintenance_collateral_ratio = 1001;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
@@ -1580,7 +1580,7 @@ BOOST_AUTO_TEST_CASE( fill_order )
    //o.calculate_fee(db.current_fee_schedule());
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( witness_pay_test )
+BOOST_AUTO_TEST_CASE( validator_pay_test )
 { try {
 
    const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
@@ -1589,15 +1589,15 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    //   which will initialize last_budget_time
    generate_block();
 
-   // Make an account and upgrade it to prime, so that witnesses get some pay
+   // Make an account and upgrade it to prime, so that validators get some pay
    create_account("nathan", init_account_pub_key);
    transfer(account_id_type()(db), get_account("nathan"), asset(20000*prec));
    transfer(account_id_type()(db), get_account("init3"), asset(20*prec));
    generate_block();
 
-   auto last_witness_vbo_balance = [&]() -> share_type
+   auto last_validator_vbo_balance = [&]() -> share_type
    {
-      const witness_object& wit = db.fetch_block_by_number(db.head_block_num())->witness(db);
+      const validator_object& wit = db.fetch_block_by_number(db.head_block_num())->validator(db);
       if( !wit.pay_vb.valid() )
          return 0;
       return (*wit.pay_vb)(db).balance.amount;
@@ -1608,7 +1608,7 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    const account_object* nathan = &get_account("nathan");
    enable_fees();
    BOOST_CHECK_GT(db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee, 0u);
-   // Based on the size of the reserve fund later in the test, the witness budget will be set to this value
+   // Based on the size of the reserve fund later in the test, the validator budget will be set to this value
    const uint64_t ref_budget =
       ((uint64_t( db.current_fee_schedule().get<account_upgrade_operation>().membership_lifetime_fee )
          * GRAPHENE_CORE_ASSET_CYCLE_RATE * 30
@@ -1618,16 +1618,16 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
       ;
    // change this if ref_budget changes
    BOOST_CHECK_EQUAL( ref_budget, 594u );
-   const uint64_t witness_ppb = ref_budget * 10 / 23 + 1;
+   const uint64_t validator_ppb = ref_budget * 10 / 23 + 1;
    // change this if ref_budget changes
-   BOOST_CHECK_EQUAL( witness_ppb, 259u );
+   BOOST_CHECK_EQUAL( validator_ppb, 259u );
    // following two inequalities need to hold for maximal code coverage
-   BOOST_CHECK_LT( witness_ppb * 2, ref_budget );
-   BOOST_CHECK_GT( witness_ppb * 3, ref_budget );
+   BOOST_CHECK_LT( validator_ppb * 2, ref_budget );
+   BOOST_CHECK_GT( validator_ppb * 3, ref_budget );
 
    db.modify( db.get_global_properties(), [&]( global_property_object& _gpo )
    {
-      _gpo.parameters.witness_pay_per_block = witness_ppb;
+      _gpo.parameters.validator_pay_per_block = validator_ppb;
    } );
 
    BOOST_CHECK_EQUAL(core->dynamic_asset_data_id(db).accumulated_fees.value, 0);
@@ -1648,7 +1648,7 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    generate_block();
    nathan = &get_account("nathan");
    core = &asset_id_type()(db);
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
+   BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, 0 );
 
    auto schedule_maint = [&]()
    {
@@ -1664,7 +1664,7 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    while( db.head_block_time().sec_since_epoch() - pay_fee_time < 24 * block_interval )
    {
       generate_block();
-      BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
+      BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, 0 );
    }
    BOOST_CHECK_EQUAL( db.head_block_time().sec_since_epoch() - pay_fee_time, 24u * block_interval );
 
@@ -1673,26 +1673,26 @@ BOOST_AUTO_TEST_CASE( witness_pay_test )
    BOOST_CHECK( core->reserved(db).value == 8000*prec );
    generate_block();
    BOOST_CHECK_EQUAL( core->reserved(db).value, 999999406 );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, (int64_t)ref_budget );
-   // first witness paid from old budget (so no pay)
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
-   // second witness finally gets paid!
+   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().validator_budget.value, (int64_t)ref_budget );
+   // first validator paid from old budget (so no pay)
+   BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, 0 );
+   // second validator finally gets paid!
    generate_block();
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, (int64_t)witness_ppb );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, (int64_t)(ref_budget - witness_ppb) );
+   BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, (int64_t)validator_ppb );
+   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().validator_budget.value, (int64_t)(ref_budget - validator_ppb) );
 
    generate_block();
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, (int64_t)witness_ppb );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, (int64_t)(ref_budget - 2 * witness_ppb) );
+   BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, (int64_t)validator_ppb );
+   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().validator_budget.value, (int64_t)(ref_budget - 2 * validator_ppb) );
 
    generate_block();
-   BOOST_CHECK_LT( last_witness_vbo_balance().value, (int64_t)witness_ppb );
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, (int64_t)(ref_budget - 2 * witness_ppb) );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, 0 );
+   BOOST_CHECK_LT( last_validator_vbo_balance().value, (int64_t)validator_ppb );
+   BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, (int64_t)(ref_budget - 2 * validator_ppb) );
+   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().validator_budget.value, 0 );
 
    generate_block();
-   BOOST_CHECK_EQUAL( last_witness_vbo_balance().value, 0 );
-   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().witness_budget.value, 0 );
+   BOOST_CHECK_EQUAL( last_validator_vbo_balance().value, 0 );
+   BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().validator_budget.value, 0 );
    BOOST_CHECK_EQUAL(core->reserved(db).value, 999999406 );
 
 } FC_LOG_AND_RETHROW() }

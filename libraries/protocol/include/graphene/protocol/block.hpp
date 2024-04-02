@@ -11,7 +11,7 @@ namespace graphene { namespace protocol {
       block_id_type                 previous;
       uint32_t                      block_num()const { return num_from_id(previous) + 1; }
       fc::time_point_sec            timestamp;
-      witness_id_type               witness;
+      validator_id_type               validator;
       checksum_type                 transaction_merkle_root;
 
       // Note: when we need to add data to `extensions`, remember to review `database::_generate_block()`
@@ -30,7 +30,7 @@ namespace graphene { namespace protocol {
       void                       sign( const fc::ecc::private_key& signer );
       bool                       validate_signee( const fc::ecc::public_key& expected_signee )const;
 
-      signature_type             witness_signature;
+      signature_type             validator_signature;
 
       signed_block_header() = default;
       explicit signed_block_header( const block_header& header ) : block_header( header ) {}
@@ -51,8 +51,8 @@ namespace graphene { namespace protocol {
 
 } } // graphene::protocol
 
-FC_REFLECT( graphene::protocol::block_header, (previous)(timestamp)(witness)(transaction_merkle_root)(extensions) )
-FC_REFLECT_DERIVED( graphene::protocol::signed_block_header, (graphene::protocol::block_header), (witness_signature) )
+FC_REFLECT( graphene::protocol::block_header, (previous)(timestamp)(validator)(transaction_merkle_root)(extensions) )
+FC_REFLECT_DERIVED( graphene::protocol::signed_block_header, (graphene::protocol::block_header), (validator_signature) )
 FC_REFLECT_DERIVED( graphene::protocol::signed_block, (graphene::protocol::signed_block_header), (transactions) )
 
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::block_header)

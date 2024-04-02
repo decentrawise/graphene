@@ -17,7 +17,7 @@ GRAPHENE_DEFINE_IDS(chain, implementation_ids, impl_,
                     /* 2.9.x  */ (account_history)
                     /* 2.10.x */ (blinded_balance)
                     /* 2.11.x */ (chain_property)
-                    /* 2.12.x */ (witness_schedule)
+                    /* 2.12.x */ (validator_schedule)
                     /* 2.13.x */ (budget_record)
                     /* 2.14.x */ (special_authority)
                     /* 2.15.x */ (buyback)

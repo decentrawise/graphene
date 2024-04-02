@@ -12,7 +12,7 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/custom_operations/custom_operations_plugin.hpp>
 
