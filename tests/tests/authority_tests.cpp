@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
    try {
       INVOKE(any_two_of_three);
 
-      fc::ecc::private_key committee_key = init_account_priv_key;
+      fc::ecc::private_key council_key = init_account_priv_key;
       fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::digest("key1"));
       fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::digest("key2"));
       fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::digest("key3"));
@@ -330,13 +330,13 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       pup.active_approvals_to_add.insert(nathan.get_id());
 
       trx.operations = {pup};
-      sign( trx,   committee_key  );
+      sign( trx,   council_key  );
       //committee may not add nathan's approval.
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
       pup.active_approvals_to_add.clear();
       pup.active_approvals_to_add.insert(account_id_type());
       trx.operations = {pup};
-      sign( trx,   committee_key  );
+      sign( trx,   council_key  );
       //committee has no stake in the transaction.
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
 
@@ -400,11 +400,11 @@ BOOST_AUTO_TEST_CASE( proposal_failure )
    FC_LOG_AND_RETHROW()
 }
 
-/// Verify that committee authority cannot be invoked in a normal transaction
-BOOST_AUTO_TEST_CASE( committee_authority )
+/// Verify that council authority cannot be invoked in a normal transaction
+BOOST_AUTO_TEST_CASE( council_authority )
 { try {
    fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
-   fc::ecc::private_key committee_key = init_account_priv_key;
+   fc::ecc::private_key council_key = init_account_priv_key;
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    // Signatures are for suckers.
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       // Turn the review period WAY down, so it doesn't take long to produce blocks to that point in simulated time.
-      p.parameters.committee_proposal_review_period = fc::days(1).to_seconds();
+      p.parameters.council_proposal_review_period = fc::days(1).to_seconds();
    });
 
    BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with committee key should fail because this requires it to be part of a proposal" );
@@ -425,26 +425,26 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    top.to = nathan.id;
    top.amount = asset(100000);
    trx.operations.push_back(top);
-   sign(trx, committee_key);
+   sign(trx, council_key);
    GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), graphene::chain::invalid_council_approval );
 
    auto _sign = [&] { trx.clear_signatures(); sign( trx, nathan_key ); };
 
    proposal_create_operation pop;
    pop.proposed_ops.push_back({trx.operations.front()});
-   pop.expiration_time = db.head_block_time() + global_params.committee_proposal_review_period*2;
+   pop.expiration_time = db.head_block_time() + global_params.council_proposal_review_period*2;
    pop.fee_paying_account = nathan.id;
    trx.operations = {pop};
    _sign();
 
    // The review period isn't set yet. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_required );
-   pop.review_period_seconds = global_params.committee_proposal_review_period / 2;
+   pop.review_period_seconds = global_params.council_proposal_review_period / 2;
    trx.operations.back() = pop;
    _sign();
    // The review period is too short. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_insufficient );
-   pop.review_period_seconds = global_params.committee_proposal_review_period;
+   pop.review_period_seconds = global_params.council_proposal_review_period;
    trx.operations.back() = pop;
    _sign();
 
@@ -469,9 +469,9 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    uop.proposal = prop.id;
 
-   uop.key_approvals_to_add.emplace(committee_key.get_public_key());
+   uop.key_approvals_to_add.emplace(council_key.get_public_key());
    trx.operations.push_back(uop);
-   sign( trx, committee_key );
+   sign( trx, council_key );
    PUSH_TX(db, trx);
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 0);
    BOOST_CHECK(db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
@@ -479,9 +479,9 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    trx.clear_signatures();
    generate_blocks(*prop.review_period_time);
    uop.key_approvals_to_add.clear();
-   uop.key_approvals_to_add.insert(committee_key.get_public_key()); // was 7
+   uop.key_approvals_to_add.insert(council_key.get_public_key()); // was 7
    trx.operations.back() = uop;
-   sign( trx,  committee_key );
+   sign( trx,  council_key );
    // Should throw because the transaction is now in review.
    GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
 
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
 { try {
    generate_block();
-   fc::ecc::private_key committee_key = init_account_priv_key;
+   fc::ecc::private_key council_key = init_account_priv_key;
    fc::ecc::private_key delegate_key = fc::ecc::private_key::generate();
 
    // Initialize committee by voting for each member and for desired count
@@ -513,7 +513,7 @@ BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
    /*
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       // Turn the review period WAY down, so it doesn't take long to produce blocks to that point in simulated time.
-      p.parameters.committee_proposal_review_period = fc::days(1).to_seconds();
+      p.parameters.council_proposal_review_period = fc::days(1).to_seconds();
    });
    */
 
@@ -526,7 +526,7 @@ BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
    //A proposal is created to give nathan lots more money.
-   proposal_create_operation pop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+   proposal_create_operation pop = proposal_create_operation::council_proposal(db.get_global_properties().parameters, db.head_block_time());
    pop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    pop.expiration_time = db.head_block_time() + *pop.review_period_seconds + fc::days(1).to_seconds();
    ilog( "Creating proposal to give nathan money that expires: ${e}", ("e", pop.expiration_time ) );
@@ -548,7 +548,7 @@ BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
    uop.proposal = pid;
    uop.key_approvals_to_add.emplace(init_account_pub_key);
    trx.operations.back() = uop;
-   sign( trx, committee_key );
+   sign( trx, council_key );
    PUSH_TX( db, trx );
    BOOST_CHECK(pid(db).is_authorized_to_execute(db));
 
@@ -906,12 +906,12 @@ BOOST_FIXTURE_TEST_CASE( max_authority_membership, database_fixture )
       generate_block();
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
 
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       // Sam is the creator of accounts
       private_key_type sam_key = generate_private_key("sam");
 
@@ -997,7 +997,7 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
 {
    try
    {
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       // Sam is the creator of accounts
       private_key_type alice_key = generate_private_key("alice");
       private_key_type bob_key = generate_private_key("bob");

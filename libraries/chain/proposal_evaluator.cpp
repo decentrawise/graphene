@@ -107,12 +107,12 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
       GRAPHENE_ASSERT( o.review_period_seconds.valid(),
                        proposal_create_review_period_required,
                        "Review period not given, but at least ${min} required",
-                       ("min", global_parameters.committee_proposal_review_period) );
-      GRAPHENE_ASSERT( *o.review_period_seconds >= global_parameters.committee_proposal_review_period,
+                       ("min", global_parameters.council_proposal_review_period) );
+      GRAPHENE_ASSERT( *o.review_period_seconds >= global_parameters.council_proposal_review_period,
                        proposal_create_review_period_insufficient,
                        "Review period of ${t} specified, but at least ${min} required",
                        ("t", *o.review_period_seconds)
-                       ("min", global_parameters.committee_proposal_review_period) );
+                       ("min", global_parameters.council_proposal_review_period) );
    }
 
    for( const op_wrapper& op : o.proposed_ops )

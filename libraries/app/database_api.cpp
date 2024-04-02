@@ -1951,7 +1951,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
               ("configured_limit", configured_limit) );
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = _db.get_index_type<delegate_index>().indices().get<by_vote_id>();
+   const auto& delegate_idx = _db.get_index_type<delegate_index>().indices().get<by_vote_id>();
    const auto& worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_id>();
 
    vector<variant> result;
@@ -1962,8 +1962,8 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
       {
          case vote_id_type::committee:
          {
-            auto itr = committee_idx.find( id );
-            if( itr != committee_idx.end() )
+            auto itr = delegate_idx.find( id );
+            if( itr != delegate_idx.end() )
                result.emplace_back( variant( *itr, 2 ) ); // Depth of delegate_object is 1, add 1 to be safe
             else
                result.emplace_back( variant() );

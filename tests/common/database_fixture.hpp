@@ -182,7 +182,7 @@ struct database_fixture_base {
    genesis_state_type genesis_state;
    chain::database &db;
    signed_transaction trx;
-   public_key_type committee_key;
+   public_key_type council_key;
    account_id_type council_account;
    const fc::ecc::private_key private_key;
    const fc::ecc::private_key init_account_priv_key;
@@ -422,7 +422,7 @@ struct database_fixture_base {
    /****
     * @brief push through a proposal that sets htlc parameters and fees
     */
-   void set_htlc_committee_parameters();
+   void set_htlc_council_parameters();
    /****
     * Hash the preimage and put it in a vector
     * @param preimage the preimage

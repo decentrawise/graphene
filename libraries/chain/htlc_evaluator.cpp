@@ -7,7 +7,7 @@
 namespace graphene { 
    namespace chain {
 
-      optional<htlc_options> get_committee_htlc_options(graphene::chain::database& db)
+      optional<htlc_options> get_council_htlc_options(graphene::chain::database& db)
       {
          return db.get_global_properties().parameters.extensions.value.updatable_htlc_options;
       }
@@ -15,7 +15,7 @@ namespace graphene {
       void_result htlc_create_evaluator::do_evaluate(const htlc_create_operation& o)
       {
          graphene::chain::database& d = db();
-         optional<htlc_options> htlc_options = get_committee_htlc_options(db());
+         optional<htlc_options> htlc_options = get_council_htlc_options(db());
 
          FC_ASSERT(htlc_options, "HTLC Committee options are not set.");
 
@@ -106,7 +106,7 @@ namespace graphene {
       {
          htlc_obj = &db().get(o.htlc_id);
          FC_ASSERT(o.update_issuer == htlc_obj->transfer.from, "HTLC may only be extended by its creator.");
-         optional<htlc_options> htlc_options = get_committee_htlc_options(db());
+         optional<htlc_options> htlc_options = get_council_htlc_options(db());
          FC_ASSERT( htlc_obj->conditions.time_lock.expiration.sec_since_epoch() 
                + static_cast<uint64_t>(o.seconds_to_add) < fc::time_point_sec::maximum().sec_since_epoch(), 
                "Extension would cause an invalid date");

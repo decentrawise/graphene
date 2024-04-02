@@ -407,7 +407,7 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
          // not a committee issued asset
 
          // If we're changing to a backing_asset that is not CORE, we need to look at any
-         // asset ( "CHILD" ) that has this one as a backing asset. If CHILD is committee-owned,
+         // asset ( "CHILD" ) that has this one as a backing asset. If CHILD is council-owned,
          // the change is not allowed. If CHILD is user-owned, then this asset's backing
          // asset must be either CORE or a UIA.
          if ( new_backing_asset.get_id() != asset_id_type() ) // not backed by CORE
@@ -470,13 +470,13 @@ static bool update_bitasset_object_options(
 
    // feeds must be reset if the backing asset is changed
    bool backing_asset_changed = false;
-   bool is_witness_or_committee_fed = false;
+   bool is_witness_or_delegate_fed = false;
    if( op.new_options.short_backing_asset != bdo.options.short_backing_asset )
    {
       backing_asset_changed = true;
       should_update_feeds = true;
-      if( asset_to_update.options.flags & ( witness_fed_asset | committee_fed_asset ) )
-         is_witness_or_committee_fed = true;
+      if( asset_to_update.options.flags & ( witness_fed_asset | delegate_fed_asset ) )
+         is_witness_or_delegate_fed = true;
    }
 
    bdo.options = op.new_options;
@@ -484,13 +484,13 @@ static bool update_bitasset_object_options(
    // are we modifying the underlying? If so, reset the feeds
    if( backing_asset_changed )
    {
-      if( is_witness_or_committee_fed )
+      if( is_witness_or_delegate_fed )
       {
          bdo.feeds.clear();
       }
       else
       {
-         // for non-witness-feeding and non-committee-feeding assets, modify all feeds
+         // for non-witness-feeding and non-delegate-feeding assets, modify all feeds
          // published by producers to nothing, since we can't simply remove them.
          for( auto& current_feed : bdo.feeds )
          {
@@ -544,7 +544,7 @@ void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_updat
    const asset_object& a = o.asset_to_update(d);
 
    FC_ASSERT(a.is_market_issued(), "Cannot update feed producers on a non-BitAsset.");
-   FC_ASSERT(!(a.options.flags & committee_fed_asset), "Cannot set feed producers on a committee-fed asset.");
+   FC_ASSERT(!(a.options.flags & delegate_fed_asset), "Cannot set feed producers on a delegate-fed asset.");
    FC_ASSERT(!(a.options.flags & witness_fed_asset), "Cannot set feed producers on a witness-fed asset.");
 
    FC_ASSERT( a.issuer == o.issuer, "Only asset issuer can update feed producers of an asset" );
@@ -727,7 +727,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
       FC_ASSERT( d.get(GRAPHENE_WITNESS_ACCOUNT).active.account_auths.count(o.publisher),
                  "Only active witnesses are allowed to publish price feeds for this asset" );
    }
-   else if( base.options.flags & committee_fed_asset )
+   else if( base.options.flags & delegate_fed_asset )
    {
       FC_ASSERT( d.get(GRAPHENE_COUNCIL_ACCOUNT).active.account_auths.count(o.publisher),
                  "Only active delegates are allowed to publish price feeds for this asset" );

@@ -136,7 +136,7 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
       auto name = "init"+fc::to_string(i);
       fixture.genesis_state.initial_accounts.emplace_back( name, fixture.init_account_pub_key,
                                                            fixture.init_account_pub_key, true);
-      fixture.genesis_state.initial_committee_candidates.push_back({name});
+      fixture.genesis_state.initial_council_candidates.push_back({name});
       fixture.genesis_state.initial_witness_candidates.push_back({ name, fixture.init_account_pub_key });
    }
    fixture.genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
@@ -1534,7 +1534,7 @@ flat_map< uint64_t, graphene::chain::fee_parameters > database_fixture_base::get
    return ret_val;
 }
 
-void database_fixture_base::set_htlc_committee_parameters()
+void database_fixture_base::set_htlc_council_parameters()
 {
    // htlc fees
    // get existing fee_schedule
@@ -1557,7 +1557,7 @@ void database_fixture_base::set_htlc_committee_parameters()
       }
    }
    // htlc parameters
-   proposal_create_operation cop = proposal_create_operation::committee_proposal(
+   proposal_create_operation cop = proposal_create_operation::council_proposal(
          db.get_global_properties().parameters, db.head_block_time());
    cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;

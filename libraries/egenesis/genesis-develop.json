@@ -213,7 +213,7 @@
     "block_interval": 5,
     "maintenance_interval": 86400,
     "maintenance_skip_slots": 3,
-    "committee_proposal_review_period": 1209600,
+    "council_proposal_review_period": 1209600,
     "maximum_transaction_size": 2048,
     "maximum_block_size": 2000000,
     "maximum_time_until_expiration": 86400,
@@ -350,7 +350,7 @@
       "block_signing_key": "GPH6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
     }
   ],
-  "initial_committee_candidates": [{
+  "initial_council_candidates": [{
       "owner_name": "init0"
     },{
       "owner_name": "init1"

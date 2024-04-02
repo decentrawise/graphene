@@ -74,7 +74,7 @@ void change_asset_options(database_fixture& fixture, const fc::ecc::private_key&
    if (witness_fed)
    {
       op.new_options.flags |= witness_fed_asset;
-      op.new_options.flags &= ~committee_fed_asset;
+      op.new_options.flags &= ~delegate_fed_asset;
    }
    else
    {

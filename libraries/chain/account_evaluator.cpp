@@ -54,12 +54,12 @@ void verify_account_votes( const database& db, const account_options& options )
    }
 
    const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = db.get_index_type<delegate_index>().indices().get<by_vote_id>();
+   const auto& delegate_idx = db.get_index_type<delegate_index>().indices().get<by_vote_id>();
    const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
    for ( auto id : options.votes ) {
       switch ( id.type() ) {
          case vote_id_type::committee:
-            FC_ASSERT( committee_idx.find(id) != committee_idx.end(),
+            FC_ASSERT( delegate_idx.find(id) != delegate_idx.end(),
                         "Can not vote for ${id} which does not exist.", ("id",id) );
             break;
          case vote_id_type::witness:

@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       generate_block();
 
       set_expiration( db, trx );
-      set_htlc_committee_parameters();
+      set_htlc_council_parameters();
       generate_block();
       set_expiration( db, trx );
 

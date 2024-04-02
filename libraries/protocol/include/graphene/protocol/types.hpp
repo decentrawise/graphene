@@ -132,7 +132,7 @@ namespace graphene { namespace protocol {
     * - @ref global_settle
     * - @ref disable_confidential
     * - @ref witness_fed_asset
-    * - @ref committee_fed_asset
+    * - @ref delegate_fed_asset
     */
    enum asset_issuer_permission_flags {
       // If one of the following bits is set in asset issuer permissions,
@@ -147,7 +147,7 @@ namespace graphene { namespace protocol {
       global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
       witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
-      committee_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
+      delegate_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
    };
 
    /// The bits that can be used in asset issuer permissions for non-UIA assets
@@ -160,7 +160,7 @@ namespace graphene { namespace protocol {
       | global_settle
       | disable_confidential
       | witness_fed_asset
-      | committee_fed_asset;
+      | delegate_fed_asset;
 
    /// The bits that can be used in asset issuer permissions for UIA assets
    const static uint16_t UIA_ASSET_ISSUER_PERMISSION_MASK =
@@ -272,7 +272,7 @@ FC_REFLECT_ENUM(graphene::protocol::asset_issuer_permission_flags,
                 (global_settle)
                 (disable_confidential)
                 (witness_fed_asset)
-                (committee_fed_asset)
+                (delegate_fed_asset)
 )
 
 namespace fc { namespace raw {

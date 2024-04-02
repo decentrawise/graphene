@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE( asset_settle_cancel_operation_test )
 
    BOOST_TEST_MESSAGE( "Creating a proposal containing a asset_settle_cancel_operation" );
    {
-      proposal_create_operation pcop = proposal_create_operation::committee_proposal(
+      proposal_create_operation pcop = proposal_create_operation::council_proposal(
             db.get_global_properties().parameters, db.head_block_time());
       pcop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
       pcop.expiration_time = db.head_block_time() + *pcop.review_period_seconds + 10;
@@ -285,12 +285,12 @@ BOOST_AUTO_TEST_CASE( asset_settle_cancel_operation_test )
 
    BOOST_TEST_MESSAGE( "Creating a recursive proposal containing asset_settle_cancel_operation" );
    {
-      proposal_create_operation pcop = proposal_create_operation::committee_proposal(
+      proposal_create_operation pcop = proposal_create_operation::council_proposal(
             db.get_global_properties().parameters, db.head_block_time());
 
       pcop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
       pcop.expiration_time = db.head_block_time() + *pcop.review_period_seconds + 10;
-      proposal_create_operation inner_pcop = proposal_create_operation::committee_proposal(
+      proposal_create_operation inner_pcop = proposal_create_operation::council_proposal(
             db.get_global_properties().parameters, db.head_block_time());
 
       inner_pcop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
@@ -741,11 +741,11 @@ BOOST_AUTO_TEST_CASE( create_account_test )
       BOOST_CHECK(nathan_account.name == "nathan");
 
       BOOST_REQUIRE(nathan_account.owner.num_auths() == 1);
-      BOOST_CHECK(nathan_account.owner.key_auths.at(committee_key) == 123);
+      BOOST_CHECK(nathan_account.owner.key_auths.at(council_key) == 123);
       BOOST_REQUIRE(nathan_account.active.num_auths() == 1);
-      BOOST_CHECK(nathan_account.active.key_auths.at(committee_key) == 321);
+      BOOST_CHECK(nathan_account.active.key_auths.at(council_key) == 321);
       BOOST_CHECK(nathan_account.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT);
-      BOOST_CHECK(nathan_account.options.memo_key == committee_key);
+      BOOST_CHECK(nathan_account.options.memo_key == council_key);
 
       const account_statistics_object& statistics = nathan_account.statistics(db);
       BOOST_CHECK(statistics.id.space() == implementation_ids);
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       INVOKE(create_account_test);
 
       account_id_type council_account;
-      asset committee_balance = db.get_balance(account_id_type(), asset_id_type());
+      asset council_balance = db.get_balance(account_id_type(), asset_id_type());
 
       const account_object& nathan_account = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
       transfer_operation top;
@@ -827,8 +827,8 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       PUSH_TX( db, trx, ~0 );
 
       BOOST_CHECK_EQUAL(get_balance(account_id_type()(db), asset_id_type()(db)),
-                        (committee_balance.amount - 10000 - fee.amount).value);
-      committee_balance = db.get_balance(account_id_type(), asset_id_type());
+                        (council_balance.amount - 10000 - fee.amount).value);
+      council_balance = db.get_balance(account_id_type(), asset_id_type());
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 10000);
 
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       PUSH_TX( db, trx, ~0 );
 
       BOOST_CHECK_EQUAL(get_balance(nathan_account, asset_id_type()(db)), 8000 - fee.amount.value);
-      BOOST_CHECK_EQUAL(get_balance(account_id_type()(db), asset_id_type()(db)), committee_balance.amount.value + 2000);
+      BOOST_CHECK_EQUAL(get_balance(account_id_type()(db), asset_id_type()(db)), council_balance.amount.value + 2000);
 
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));

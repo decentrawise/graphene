@@ -103,11 +103,11 @@ std::shared_ptr<graphene::app::application> start_application(fc::temp_directory
 bool generate_block(std::shared_ptr<graphene::app::application> app, graphene::chain::signed_block& returned_block) 
 {
    try {
-      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+      fc::ecc::private_key council_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
       auto db = app->chain_database();
       returned_block = db->generate_block( db->get_slot_time(1),
                                          db->get_scheduled_witness(1),
-                                         committee_key,
+                                         council_key,
                                          database::skip_nothing );
       return true;
    } catch (exception &e) {
@@ -128,14 +128,14 @@ bool generate_block(std::shared_ptr<graphene::app::application> app)
 ///////////
 bool generate_maintenance_block(std::shared_ptr<graphene::app::application> app) {
    try {
-      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+      fc::ecc::private_key council_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
       uint32_t skip = ~0;
       auto db = app->chain_database();
       auto maint_time = db->get_dynamic_global_properties().next_maintenance_time;
       auto slots_to_miss = db->get_slot_at_time(maint_time);
       db->generate_block(db->get_slot_time(slots_to_miss),
             db->get_scheduled_witness(slots_to_miss),
-            committee_key,
+            council_key,
             skip);
       return true;
    } catch (exception& e)

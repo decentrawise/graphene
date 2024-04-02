@@ -393,7 +393,7 @@ namespace graphene { namespace wallet { namespace detail {
       proposal_create_operation prop_op;
 
       prop_op.expiration_time = expiration_time;
-      prop_op.review_period_seconds = current_params.committee_proposal_review_period;
+      prop_op.review_period_seconds = current_params.council_proposal_review_period;
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );
@@ -472,7 +472,7 @@ namespace graphene { namespace wallet { namespace detail {
       proposal_create_operation prop_op;
 
       prop_op.expiration_time = expiration_time;
-      prop_op.review_period_seconds = current_params.committee_proposal_review_period;
+      prop_op.review_period_seconds = current_params.council_proposal_review_period;
       prop_op.fee_paying_account = get_account(proposing_account).id;
 
       prop_op.proposed_ops.emplace_back( update_op );

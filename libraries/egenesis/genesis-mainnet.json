@@ -265,7 +265,7 @@
       "amount": "1000000000000000"
     }
   ],
-  "initial_committee_candidates": [
+  "initial_council_candidates": [
     { "owner_name": "init0" },
     { "owner_name": "init1" },
     { "owner_name": "init2" },
@@ -285,7 +285,7 @@
     "block_interval": 3,
     "cashback_vesting_period_seconds": 7776000,
     "cashback_vesting_threshold": 10000000,
-    "committee_proposal_review_period": 3600,
+    "council_proposal_review_period": 3600,
     "count_non_member_votes": true,
     "current_fees": {
       "parameters": [

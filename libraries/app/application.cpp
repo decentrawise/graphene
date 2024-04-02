@@ -69,7 +69,7 @@ namespace detail {
                                                      nathan_key.get_public_key(),
                                                      nathan_key.get_public_key(),
                                                      true);
-         initial_state.initial_committee_candidates.push_back({name});
+         initial_state.initial_council_candidates.push_back({name});
          initial_state.initial_witness_candidates.push_back({name, nathan_key.get_public_key()});
       }
 

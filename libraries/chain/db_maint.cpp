@@ -763,9 +763,9 @@ void database::process_bitassets()
    {
       o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
 
-      // clear expired feeds if smartcoin (witness_fed or committee_fed) && check overflow
+      // clear expired feeds if smartcoin (witness_fed or delegate_fed) && check overflow
       if( o.options.feed_lifetime_sec < head_epoch_seconds
-            && ( 0 != ( o.asset_id(*this).options.flags & ( witness_fed_asset | committee_fed_asset ) ) ) )
+            && ( 0 != ( o.asset_id(*this).options.flags & ( witness_fed_asset | delegate_fed_asset ) ) ) )
       {
          fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
          auto itr = o.feeds.rbegin();

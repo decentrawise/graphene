@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE( three_node_network )
 
       // Block test
       BOOST_TEST_MESSAGE( "Generating block on db2" );
-      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+      fc::ecc::private_key council_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
 
       // the other node will reject the block if its timestamp is in the future, so we wait
       wait_for( broadcast_wait_time, [db2] () {
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE( three_node_network )
       auto block_1 = db2->generate_block(
          db2->get_slot_time(1),
          db2->get_scheduled_witness(1),
-         committee_key,
+         council_key,
          database::skip_nothing);
 
       BOOST_CHECK_EQUAL( db1->head_block_num(), 0u );

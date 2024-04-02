@@ -39,7 +39,7 @@ genesis_state_type make_genesis() {
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key(),
                                                   true);
-      genesis_state.initial_committee_candidates.push_back({name});
+      genesis_state.initial_council_candidates.push_back({name});
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
@@ -968,12 +968,12 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
    set_expiration(db, trx);
 
    db.modify(db.get_global_properties(), [](global_property_object& p) {
-      p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+      p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
    });
 
    BOOST_TEST_MESSAGE( "Creating a proposal to change the block_interval to 1 second" );
    {
-      proposal_create_operation cop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+      proposal_create_operation cop = proposal_create_operation::council_proposal(db.get_global_properties().parameters, db.head_block_time());
       cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
       cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
       delegate_update_global_parameters_operation uop;
@@ -1043,7 +1043,7 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       const asset_object& core = asset_id_type()(db);
 
       // Sam is the creator of accounts
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       private_key_type sam_key = generate_private_key("sam");
       account_object sam_account_object = create_account("sam", sam_key);
 
@@ -1051,7 +1051,7 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       generate_block( skip_flags );
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
@@ -1477,7 +1477,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
         ;
 
       // Sam is the creator of accounts
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       private_key_type sam_key = generate_private_key("sam");
 
       //
@@ -1503,7 +1503,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       generate_block( skip_flags );
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;

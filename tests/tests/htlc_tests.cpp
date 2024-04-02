@@ -42,7 +42,7 @@ void generate_random_preimage(uint16_t key_size, std::vector<char>& vec)
 void test_setup(database_fixture* db_fixture)
 {
    set_expiration(db_fixture->db, db_fixture->trx);
-   db_fixture->set_htlc_committee_parameters();
+   db_fixture->set_htlc_council_parameters();
    set_expiration(db_fixture->db, db_fixture->trx);
 }
 
@@ -250,7 +250,7 @@ try {
    vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    set_expiration(db, trx);
-   set_htlc_committee_parameters();
+   set_htlc_council_parameters();
    generate_block();
    set_expiration(db, trx);
 
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
       vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration(db, trx);
-      set_htlc_committee_parameters();
+      set_htlc_council_parameters();
       generate_block();
       set_expiration(db, trx);
 
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
                new_fee_schedule->parameters.insert( (*itr).second);
             }
          }
-         proposal_create_operation cop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+         proposal_create_operation cop = proposal_create_operation::council_proposal(db.get_global_properties().parameters, db.head_block_time());
          cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
          cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
          delegate_update_global_parameters_operation uop;
@@ -586,7 +586,7 @@ try {
 
    set_expiration( db, trx );
 
-   set_htlc_committee_parameters();
+   set_htlc_council_parameters();
 
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(256);

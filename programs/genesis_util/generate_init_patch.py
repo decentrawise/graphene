@@ -54,7 +54,7 @@ def main():
        "initial_active_witnesses" : opts.num,
        "initial_worker_candidates" : [],
        "initial_witness_candidates" : wit_wits,
-       "initial_committee_candidates" : committee,
+       "initial_council_candidates" : committee,
         }
     }
 

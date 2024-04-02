@@ -5,12 +5,12 @@
 
 namespace graphene { namespace protocol {
 
-proposal_create_operation proposal_create_operation::committee_proposal(const chain_parameters& global_params, fc::time_point_sec head_block_time )
+proposal_create_operation proposal_create_operation::council_proposal(const chain_parameters& global_params, fc::time_point_sec head_block_time )
 {
    // TODO move this method to unit tests as it is not useful
    proposal_create_operation op;
    op.expiration_time = head_block_time + global_params.maximum_proposal_lifetime;
-   op.review_period_seconds = global_params.committee_proposal_review_period;
+   op.review_period_seconds = global_params.council_proposal_review_period;
    return op;
 }
 
