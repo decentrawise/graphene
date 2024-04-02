@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( asset_holders )
    BOOST_CHECK_EQUAL(holders.size(), 4u);
 
    // by now we can guarantee the order
-   BOOST_CHECK(holders[0].name == "committee-account");
+   BOOST_CHECK(holders[0].name == "council-account");
    BOOST_CHECK(holders[1].name == "bob");
    BOOST_CHECK(holders[2].name == "alice");
    BOOST_CHECK(holders[3].name == "dan");

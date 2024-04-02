@@ -217,7 +217,7 @@ namespace graphene { namespace protocol {
     * @param get_owner  callback function to retrieve owner authorities of a given account
     * @param max_recursion maximum level of recursion when verifying, since an account
     *            can have another account in active authorities and/or owner authorities
-    * @param allow_committee whether to allow the special "committee account" to authorize the operations
+    * @param allow_committee whether to allow the special "council account" to authorize the operations
     * @param active_approvals accounts that approved the operations with their active authories
     * @param owner_approvals accounts that approved the operations with their owner authories
     */

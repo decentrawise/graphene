@@ -183,7 +183,7 @@ struct database_fixture_base {
    chain::database &db;
    signed_transaction trx;
    public_key_type committee_key;
-   account_id_type committee_account;
+   account_id_type council_account;
    const fc::ecc::private_key private_key;
    const fc::ecc::private_key init_account_priv_key;
    const public_key_type init_account_pub_key;

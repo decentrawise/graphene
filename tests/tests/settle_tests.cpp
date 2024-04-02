@@ -29,11 +29,11 @@ BOOST_AUTO_TEST_CASE( settle_rounding_test )
       asset_id_type core_id = core.get_id();
 
       // fund accounts
-      transfer(committee_account, michael_id, asset( 100000000 ) );
-      transfer(committee_account, paul_id, asset(10000000));
-      transfer(committee_account, alice_id, asset(10000000));
-      transfer(committee_account, bob_id, asset(10000000));
-      transfer(committee_account, jim_id, asset(10000000));
+      transfer(council_account, michael_id, asset( 100000000 ) );
+      transfer(council_account, paul_id, asset(10000000));
+      transfer(council_account, alice_id, asset(10000000));
+      transfer(council_account, bob_id, asset(10000000));
+      transfer(council_account, jim_id, asset(10000000));
 
       // add a feed to asset
       update_feed_producers( bitusd, {paul.get_id()} );
@@ -636,9 +636,9 @@ BOOST_AUTO_TEST_CASE( global_settle_rounding_test )
       asset_id_type core_id = core.get_id();
 
       // fund accounts
-      transfer(committee_account, michael_id, asset( 100000000 ) );
-      transfer(committee_account, paul_id,    asset(  10000000 ) );
-      transfer(committee_account, alice_id,   asset(  10000000 ) );
+      transfer(council_account, michael_id, asset( 100000000 ) );
+      transfer(council_account, paul_id,    asset(  10000000 ) );
+      transfer(council_account, alice_id,   asset(  10000000 ) );
 
       // allow global settle in bitusd
       asset_update_operation op;
@@ -767,8 +767,8 @@ BOOST_AUTO_TEST_CASE( global_settle_ticker_test )
       const auto& core  = asset_id_type()(db);
 
       int64_t init_balance(1000000);
-      transfer(committee_account, judge_id, asset(init_balance));
-      transfer(committee_account, alice_id, asset(init_balance));
+      transfer(council_account, judge_id, asset(init_balance));
+      transfer(council_account, alice_id, asset(init_balance));
 
       BOOST_TEST_MESSAGE( "Open position with equal collateral" );
       borrow( alice, pmark.amount(1000), asset(1000) );

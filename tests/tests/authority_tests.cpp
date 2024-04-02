@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE( recursive_accounts )
       BOOST_CHECK_EQUAL(get_balance(child, core), static_cast<int64_t>(old_balance - 2000));
       trx.clear();
 
-      BOOST_TEST_MESSAGE( "Update grandparent account authority to be committee account" );
+      BOOST_TEST_MESSAGE( "Update grandparent account authority to be council account" );
       {
          account_update_operation op;
          op.account = grandparent.id;
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    top.amount = asset(100000);
    trx.operations.push_back(top);
    sign(trx, committee_key);
-   GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), graphene::chain::invalid_committee_approval );
+   GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), graphene::chain::invalid_council_approval );
 
    auto _sign = [&] { trx.clear_signatures(); sign( trx, nathan_key ); };
 
@@ -541,8 +541,8 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    proposal_id_type pid = prop.get_id();
    BOOST_CHECK(!pid(db).is_authorized_to_execute(db));
 
-   ilog( "commitee member approves proposal" );
-   //committee key approves of the proposal.
+   ilog( "delegate approves proposal" );
+   //council key approves of the proposal.
    proposal_update_operation uop;
    uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    uop.proposal = pid;
@@ -917,11 +917,11 @@ BOOST_FIXTURE_TEST_CASE( max_authority_membership, database_fixture )
 
       account_object sam_account_object = create_account( "sam", sam_key );
       upgrade_to_lifetime_member(sam_account_object);
-      account_object committee_account_object = committee_account(db);
+      account_object council_account_object = council_account(db);
 
       const asset_object& core = asset_id_type()(db);
 
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      transfer(council_account_object, sam_account_object, core.amount(100000));
 
       // have Sam create some keys
 
@@ -1003,7 +1003,7 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
       private_key_type bob_key = generate_private_key("bob");
       private_key_type charlie_key = generate_private_key("charlie");
 
-      account_object committee_account_object = committee_account(db);
+      account_object council_account_object = council_account(db);
       account_object alice_account_object = create_account( "alice", alice_key );
       account_object bob_account_object = create_account( "bob", bob_key );
       account_object charlie_account_object = create_account( "charlie", charlie_key );
@@ -1016,7 +1016,7 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
       // send from Sam -> Alice, signed by Sam
 
       const asset_object& core = asset_id_type()(db);
-      transfer(committee_account_object, alice_account_object, core.amount(100000));
+      transfer(council_account_object, alice_account_object, core.amount(100000));
 
       transfer_operation xfer_op;
       xfer_op.from = alice_account_object.id;

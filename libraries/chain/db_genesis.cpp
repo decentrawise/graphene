@@ -53,14 +53,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    create<account_balance_object>([](account_balance_object& b) {
       b.balance = GRAPHENE_MAX_SHARE_SUPPLY;
    });
-   const account_object& committee_account =
+   const account_object& council_account =
       create<account_object>( [this](account_object& n) {
          n.membership_expiration_date = time_point_sec::maximum();
          n.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
          n.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
          n.owner.weight_threshold = 1;
          n.active.weight_threshold = 1;
-         n.name = "committee-account";
+         n.name = "council-account";
          n.statistics = create<account_statistics_object>( [&n](account_statistics_object& s){
                            s.owner = n.id;
                            s.name = n.name;
@@ -69,7 +69,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          n.creation_block_num = 0;
          n.creation_time = _current_block_time;
       });
-   FC_ASSERT(committee_account.get_id() == GRAPHENE_COMMITTEE_ACCOUNT);
+   FC_ASSERT(council_account.get_id() == GRAPHENE_COUNCIL_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "witness-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
@@ -88,14 +88,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.creation_time = _current_block_time;
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
-       a.name = "relaxed-committee-account";
+       a.name = "relaxed-council-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
                          s.owner = a.id;
                          s.name = a.name;
                       }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = GRAPHENE_RELAXED_COMMITTEE_ACCOUNT;
+       a.registrar = GRAPHENE_RELAXED_COUNCIL_ACCOUNT;
        a.referrer = a.registrar;
        a.lifetime_referrer = a.registrar;
        a.membership_expiration_date = time_point_sec::maximum();
@@ -103,7 +103,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.creation_block_num = 0;
        a.creation_time = _current_block_time;
-   }).get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT);
+   }).get_id() == GRAPHENE_RELAXED_COUNCIL_ACCOUNT);
    // The same data set is assigned to more than one account
    auto init_account_data_as_null = [this](account_object& a) {
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
@@ -424,7 +424,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    if( total_supplies[ asset_id_type(0) ] > 0 )
    {
-       adjust_balance(GRAPHENE_COMMITTEE_ACCOUNT, -get_balance(GRAPHENE_COMMITTEE_ACCOUNT,{}));
+       adjust_balance(GRAPHENE_COUNCIL_ACCOUNT, -get_balance(GRAPHENE_COUNCIL_ACCOUNT,{}));
    }
    else
    {

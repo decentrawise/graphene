@@ -53,7 +53,7 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
    test_setup(this);
 
@@ -158,9 +158,9 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
-   transfer( committee_account, bob_id, graphene::chain::asset(init_balance) );
-   transfer( committee_account, joker_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, bob_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, joker_id, graphene::chain::asset(init_balance) );
 
    test_setup(this);
    
@@ -258,7 +258,7 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION );
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(256);
@@ -582,7 +582,7 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
    set_expiration( db, trx );
 

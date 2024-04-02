@@ -12,7 +12,7 @@ def dump_json(obj, out, pretty):
     return
 
 def main():
-    parser = argparse.ArgumentParser(description="Change initial_assets owned by the witness-account to the committee-account")
+    parser = argparse.ArgumentParser(description="Change initial_assets owned by the witness-account to the council-account")
     parser.add_argument("-o", "--output", metavar="OUT", default="-", help="output filename (default: stdout)")
     parser.add_argument("-i", "--input", metavar="IN", default="-", help="input filename (default: stdin)")
     parser.add_argument("-p", "--pretty", action="store_true", default=False, help="pretty print output")
@@ -26,7 +26,7 @@ def main():
 
     for asset in genesis["initial_assets"]:
         if asset["issuer_name"] == "witness-account":
-            asset["issuer_name"] = "committee-account"
+            asset["issuer_name"] = "council-account"
 
     if opts.output == "-":
         dump_json( genesis, sys.stdout, opts.pretty )

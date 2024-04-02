@@ -186,8 +186,8 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
    account_id_type acct_id = acct.get_id();
 
    // Note: missing 'PROXY_TO_SELF' here
-   bool is_reserved_account = ( acct_id == GRAPHENE_COMMITTEE_ACCOUNT || acct_id == GRAPHENE_WITNESS_ACCOUNT ||
-                                acct_id == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT );
+   bool is_reserved_account = ( acct_id == GRAPHENE_COUNCIL_ACCOUNT || acct_id == GRAPHENE_WITNESS_ACCOUNT ||
+                                acct_id == GRAPHENE_RELAXED_COUNCIL_ACCOUNT );
    is_reserved_account = ( is_reserved_account || acct_id == GRAPHENE_NULL_ACCOUNT ||
                            acct_id == GRAPHENE_TEMP_ACCOUNT );
    if( is_reserved_account )

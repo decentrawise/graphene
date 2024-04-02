@@ -11,7 +11,7 @@ namespace graphene { namespace chain {
     *  @ingroup object
     *
     *  A committee_member is responsible for setting blockchain parameters and has
-    *  dynamic multi-sig control over the committee account.  The current set of
+    *  dynamic multi-sig control over the council account.  The current set of
     *  active committee_members has control.
     *
     *  committee_members were separated into a separate object to make iterating over

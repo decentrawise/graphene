@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( nonzero_fee_test )
       auto _core = [&]( int64_t x ) -> asset
       {  return asset( x*prec );    };
 
-      transfer( committee_account, alice_id, _core(1000000) );
+      transfer( council_account, alice_id, _core(1000000) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();
@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
       auto _core = [&]( int64_t x ) -> asset
       {  return asset( x*core_prec );    };
 
-      transfer( committee_account, alice_id, _core(1000000) );
-      transfer( committee_account,   bob_id, _core(1000000) );
-      transfer( committee_account,  izzy_id, _core(1000000) );
-      transfer( committee_account,  jill_id, _core(1000000) );
+      transfer( council_account, alice_id, _core(1000000) );
+      transfer( council_account,   bob_id, _core(1000000) );
+      transfer( council_account,  izzy_id, _core(1000000) );
+      transfer( council_account,  jill_id, _core(1000000) );
 
       asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id,   GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
       asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, 2*GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(asset_claim_pool_test)
         issue_uia( alice, aliceusd.amount( 20000000 ) );
         issue_uia( alice, alicecoin.amount( 10000000 ) );
 
-        transfer( committee_account, alice_id, _core(1000) );
-        transfer( committee_account, bob_id, _core(1000) );
+        transfer( council_account, alice_id, _core(1000) );
+        transfer( council_account, bob_id, _core(1000) );
 
         enable_fees();
 
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE( fee_refund_original_asset )
       issue_uia( alice_id, asset( alice_b0, usd_id ) );
       issue_uia( bob_id, asset( bob_b0, usd_id ) );
 
-      fund_fee_pool( committee_account( db ), usd_obj, pool_0 );
+      fund_fee_pool( council_account( db ), usd_obj, pool_0 );
 
       int64_t order_create_fee = 547;
       int64_t order_cancel_fee;
@@ -1541,7 +1541,7 @@ BOOST_AUTO_TEST_CASE( create_asset_fee_rounding )
    {
       ACTORS((alice));
 
-      transfer( committee_account, alice_id, asset( 1000000 * asset::scaled_precision( asset_id_type()(db).precision ) ) );
+      transfer( council_account, alice_id, asset( 1000000 * asset::scaled_precision( asset_id_type()(db).precision ) ) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE( issue_433_test )
 
       auto& core = asset_id_type()(db);
 
-      transfer( committee_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
+      transfer( council_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
 
       const auto& myusd = create_user_issued_asset( "MYUSD", alice, 0 );
       issue_uia( alice, myusd.amount( 2000000000 ) );
@@ -1635,7 +1635,7 @@ BOOST_AUTO_TEST_CASE( issue_433_indirect_test )
 
       auto& core = asset_id_type()(db);
 
-      transfer( committee_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
+      transfer( council_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
 
       const auto& myusd = create_user_issued_asset( "MYUSD", alice, 0 );
       issue_uia( alice, myusd.amount( 2000000000 ) );

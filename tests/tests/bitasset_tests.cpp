@@ -418,8 +418,8 @@ BOOST_AUTO_TEST_CASE( lifetime_update_median_feeds )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
 
    const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
    asset_id_type usd_id = bitusd.get_id();
@@ -513,10 +513,10 @@ assets_bitasset_eval create_assets_bitasset_eval(database_fixture *fixture)
 {
    assets_bitasset_eval asset_objs;
    BOOST_TEST_MESSAGE( "Create USDBIT" );
-   asset_objs.bit_usd = fixture->create_bitasset( "USDBIT", GRAPHENE_COMMITTEE_ACCOUNT ).get_id();
+   asset_objs.bit_usd = fixture->create_bitasset( "USDBIT", GRAPHENE_COUNCIL_ACCOUNT ).get_id();
 
    BOOST_TEST_MESSAGE( "Create USDBACKED" );
-   asset_objs.bit_usdbacked = fixture->create_bitasset( "USDBACKED", GRAPHENE_COMMITTEE_ACCOUNT,
+   asset_objs.bit_usdbacked = fixture->create_bitasset( "USDBACKED", GRAPHENE_COUNCIL_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_usd ).get_id();
 
    BOOST_TEST_MESSAGE( "Create USDBACKEDII" );
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
    // CHILDCOMMITTEE is a committee asset backed by PARENT which is backed by CORE
    // Cannot change PARENT's backing asset from CORE to something else because that will make CHILDCOMMITTEE
    // be backed by an asset that is not itself backed by CORE
-   create_bitasset( "CHILDCOMMITTEE", GRAPHENE_COMMITTEE_ACCOUNT, 100, charge_market_fee, 2,
+   create_bitasset( "CHILDCOMMITTEE", GRAPHENE_COUNCIL_ACCOUNT, 100, charge_market_fee, 2,
          asset_objs.bit_parent );
    // it should again not work
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "A blockchain-controlled market asset would be invalidated" );
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE( bitasset_feeds_test )
 
       int64_t init_balance( 1000000 );
 
-      transfer( committee_account, borrower_id, asset(init_balance) );
+      transfer( council_account, borrower_id, asset(init_balance) );
 
       const auto& bitusd = create_bitasset( "USDBIT", feedproducer_id );
       asset_id_type usd_id = bitusd.get_id();

@@ -294,17 +294,17 @@ void database::update_active_committee_members()
    // Update committee authorities
    if( !committee_members.empty() )
    {
-      const account_object& committee_account = get(GRAPHENE_COMMITTEE_ACCOUNT);
-      modify( committee_account, [this,&committee_members](account_object& a)
+      const account_object& council_account = get(GRAPHENE_COUNCIL_ACCOUNT);
+      modify( council_account, [this,&committee_members](account_object& a)
       {
          vote_counter vc;
          for( const committee_member_object& cm : committee_members )
             vc.add( cm.committee_member_account, _vote_tally_buffer[cm.vote_id] );
          vc.finish( a.active );
       });
-      modify( get(GRAPHENE_RELAXED_COMMITTEE_ACCOUNT), [&committee_account](account_object& a)
+      modify( get(GRAPHENE_RELAXED_COUNCIL_ACCOUNT), [&council_account](account_object& a)
       {
-         a.active = committee_account.active;
+         a.active = council_account.active;
       });
    }
    modify( get_global_properties(), [&committee_members](global_property_object& gp)

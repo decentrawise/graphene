@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE( witness_create )
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && !nathan_itr->second.valid() );
 
    // Give nathan some voting stake
-   transfer(committee_account, nathan_id, asset(10000000));
+   transfer(council_account, nathan_id, asset(10000000));
    generate_block(skip);
 
    // nathan should be a witness now
@@ -1011,9 +1011,9 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
    feed.maximum_short_squeeze_ratio = 150 * GRAPHENE_COLLATERAL_RATIO_DENOM / 100;
    publish_feed( bit_usd_id(db), nathan, feed );
 
-   transfer(committee_account, ben_id, asset(10000));
-   transfer(committee_account, valentine_id, asset(10000));
-   transfer(committee_account, dan_id, asset(10000));
+   transfer(council_account, ben_id, asset(10000));
+   transfer(council_account, valentine_id, asset(10000));
+   transfer(council_account, dan_id, asset(10000));
    borrow(ben, asset(1000, bit_usd_id), asset(1000));
    BOOST_CHECK_EQUAL(get_balance(ben_id, bit_usd_id), 1000);
    BOOST_CHECK_EQUAL(get_balance(ben_id, asset_id_type()), 9000);
@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE( worker_pay_test )
    INVOKE(worker_create_test);
    GET_ACTOR(nathan);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
-   transfer(committee_account, nathan_id, asset(100000));
+   transfer(council_account, nathan_id, asset(100000));
 
    {
       account_update_operation op;
@@ -1237,7 +1237,7 @@ BOOST_AUTO_TEST_CASE( refund_worker_test )
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
    BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
-   transfer(committee_account, nathan_id, asset(100000));
+   transfer(council_account, nathan_id, asset(100000));
 
    {
       account_update_operation op;
@@ -1309,7 +1309,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
    BOOST_CHECK(worker.work_end_date == db.head_block_time() + 10 + fc::days(2));
    BOOST_CHECK(worker.vote_id.type() == vote_id_type::worker);
 
-   transfer(committee_account, nathan_id, asset(100000));
+   transfer(council_account, nathan_id, asset(100000));
 
    {
       account_update_operation op;

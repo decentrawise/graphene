@@ -253,8 +253,8 @@ namespace graphene { namespace protocol {
          operation_get_required_authorities( op, required_active, required_owner, other );
 
       if( !allow_committe )
-         GRAPHENE_ASSERT( required_active.find(GRAPHENE_COMMITTEE_ACCOUNT) == required_active.end(),
-                        invalid_committee_approval, "Committee account may only propose transactions" );
+         GRAPHENE_ASSERT( required_active.find(GRAPHENE_COUNCIL_ACCOUNT) == required_active.end(),
+                        invalid_council_approval, "Council account may only propose transactions" );
 
       sign_state s( sigs, get_active, get_owner, max_recursion_depth );
       for( auto& id : active_aprovals )

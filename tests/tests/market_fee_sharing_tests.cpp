@@ -217,10 +217,10 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       auto alice = register_account("alice", alicereferrer);
       auto bob = register_account("bob", bobreferrer);
 
-      transfer( committee_account, alice.get_id(), core_asset(1000000) );
-      transfer( committee_account, bob.get_id(),   core_asset(1000000) );
-      transfer( committee_account, izzy_id,        core_asset(1000000) );
-      transfer( committee_account, jill_id,        core_asset(1000000) );
+      transfer( council_account, alice.get_id(), core_asset(1000000) );
+      transfer( council_account, bob.get_id(),   core_asset(1000000) );
+      transfer( council_account, izzy_id,        core_asset(1000000) );
+      transfer( council_account, jill_id,        core_asset(1000000) );
 
       constexpr auto izzycoin_reward_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_reward_percent = 20*GRAPHENE_1_PERCENT;
@@ -323,9 +323,9 @@ BOOST_AUTO_TEST_CASE(asset_claim_reward_test)
       // prepare users' balance
       issue_uia( alice, jillcoin.amount( 20000000 ) );
 
-      transfer( committee_account, alice.get_id(), core_asset(1000) );
-      transfer( committee_account, bob.get_id(),   core_asset(1000) );
-      transfer( committee_account, izzy.get_id(),  core_asset(1000) );
+      transfer( council_account, alice.get_id(), core_asset(1000) );
+      transfer( council_account, bob.get_id(),   core_asset(1000) );
+      transfer( council_account, izzy.get_id(),  core_asset(1000) );
 
       // update_asset: set referrer percent
       update_asset(jill_id, jill_private_key, jillcoin.get_id(), jillcoin_reward_percent);
@@ -383,10 +383,10 @@ BOOST_AUTO_TEST_CASE(create_actors)
       // prepare users' balance
       issue_uia( alice, jillcoin.amount( 20000000 ) );
 
-      transfer( committee_account, alice.get_id(), core_asset(1000) );
-      transfer( committee_account, bob.get_id(),   core_asset(1000) );
-      transfer( committee_account, izzyregistrar.get_id(),  core_asset(1000) );
-      transfer( committee_account, izzyreferrer.get_id(),  core_asset(1000) );
+      transfer( council_account, alice.get_id(), core_asset(1000) );
+      transfer( council_account, bob.get_id(),   core_asset(1000) );
+      transfer( council_account, izzyregistrar.get_id(),  core_asset(1000) );
+      transfer( council_account, izzyreferrer.get_id(),  core_asset(1000) );
    }
    FC_LOG_AND_RETHROW()
 }

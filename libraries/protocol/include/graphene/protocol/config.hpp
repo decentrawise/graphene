@@ -99,11 +99,11 @@
  */
 ///@{
 /// Represents the current committee members, two-week review period
-#define GRAPHENE_COMMITTEE_ACCOUNT (graphene::protocol::account_id_type(0))
+#define GRAPHENE_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(0))
 /// Represents the current witnesses
 #define GRAPHENE_WITNESS_ACCOUNT (graphene::protocol::account_id_type(1))
 /// Represents the current committee members
-#define GRAPHENE_RELAXED_COMMITTEE_ACCOUNT (graphene::protocol::account_id_type(2))
+#define GRAPHENE_RELAXED_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(2))
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
 #define GRAPHENE_NULL_ACCOUNT (graphene::protocol::account_id_type(3))
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)

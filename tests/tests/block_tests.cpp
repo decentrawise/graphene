@@ -1057,9 +1057,9 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       transaction tx;
       processed_transaction ptx;
 
-      account_object committee_account_object = committee_account(db);
-      // transfer from committee account to Sam account
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      account_object council_account_object = council_account(db);
+      // transfer from council account to Sam account
+      transfer(council_account_object, sam_account_object, core.amount(100000));
 
       generate_block(skip_flags);
 
@@ -1509,9 +1509,9 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       transaction tx;
       processed_transaction ptx;
 
-      account_object committee_account_object = committee_account(db);
-      // transfer from committee account to Sam account
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      account_object council_account_object = council_account(db);
+      // transfer from council account to Sam account
+      transfer(council_account_object, sam_account_object, core.amount(100000));
 
       const int num_keys = 5;
       vector< private_key_type > numbered_private_keys;
@@ -1749,7 +1749,7 @@ BOOST_FIXTURE_TEST_CASE( tapos_rollover, database_fixture )
       ACTORS((alice)(bob));
 
       BOOST_TEST_MESSAGE( "Give Alice some money" );
-      transfer(committee_account, alice_id, asset(10000));
+      transfer(council_account, alice_id, asset(10000));
       generate_block();
 
       BOOST_TEST_MESSAGE( "Generate up to block 0xFF00" );
@@ -1819,7 +1819,7 @@ BOOST_FIXTURE_TEST_CASE( temp_account_balance, database_fixture )
    generate_block();
    generate_block();
 
-   top.to = GRAPHENE_COMMITTEE_ACCOUNT;
+   top.to = GRAPHENE_COUNCIL_ACCOUNT;
    trx.operations.push_back( top );
    set_expiration( db, trx );
    trx.clear_signatures();
@@ -1844,7 +1844,7 @@ BOOST_FIXTURE_TEST_CASE( block_size_test, database_fixture )
 
       const fc::ecc::private_key& key = generate_private_key("null_key");
       BOOST_TEST_MESSAGE( "Give Alice some money" );
-      transfer(committee_account, alice_id, asset(10000000));
+      transfer(council_account, alice_id, asset(10000000));
       generate_block();
 
       const size_t default_block_header_size = fc::raw::pack_size( signed_block_header() );

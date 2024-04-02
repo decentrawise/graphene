@@ -23,8 +23,8 @@ FC_IMPLEMENT_DERIVED_EXCEPTION( tx_irrelevant_sig,          transaction_exceptio
                                 "irrelevant signature included" )
 FC_IMPLEMENT_DERIVED_EXCEPTION( tx_duplicate_sig,           transaction_exception, 4010005,
                                 "duplicate signature included" )
-FC_IMPLEMENT_DERIVED_EXCEPTION( invalid_committee_approval, transaction_exception, 4010006,
-                                "committee account cannot directly approve transaction" )
+FC_IMPLEMENT_DERIVED_EXCEPTION( invalid_council_approval,   transaction_exception, 4010006,
+                                "council account cannot directly approve transaction" )
 FC_IMPLEMENT_DERIVED_EXCEPTION( insufficient_fee,           transaction_exception, 4010007, "insufficient fee" )
 
 } } // graphene::protocol

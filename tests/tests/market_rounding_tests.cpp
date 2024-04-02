@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_would_be_zero )
       const account_object& core_seller = create_account( "seller1" );
       const account_object& core_buyer = create_account("buyer1");
 
-      transfer( committee_account(db), core_seller, asset( 100000000 ) );
+      transfer( council_account(db), core_seller, asset( 100000000 ) );
 
       issue_uia( core_buyer, asset( 10000000, test_id ) );
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test1 )
       const asset_object& core = get_asset( GRAPHENE_SYMBOL );
       const asset_id_type core_id = core.get_id();
 
-      transfer( committee_account(db), seller, asset( 100000000 ) );
+      transfer( council_account(db), seller, asset( 100000000 ) );
 
       issue_uia( buyer, asset( 10000000, test_id ) );
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test2 )
       const asset_object& core = get_asset( GRAPHENE_SYMBOL );
       const asset_id_type core_id = core.get_id();
 
-      transfer( committee_account(db), seller, asset( 100000000 ) );
+      transfer( council_account(db), seller, asset( 100000000 ) );
 
       issue_uia( buyer, asset( 10000000, test_id ) );
 
@@ -200,11 +200,11 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test1 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;
@@ -273,11 +273,11 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test2 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;
@@ -344,11 +344,11 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test3 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;
@@ -418,11 +418,11 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test1 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;
@@ -489,11 +489,11 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test2 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;
@@ -559,11 +559,11 @@ BOOST_AUTO_TEST_CASE( call_limit_rounding_test1 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;
@@ -635,11 +635,11 @@ BOOST_AUTO_TEST_CASE( call_limit_rounding_test2 )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
-   transfer(committee_account, borrower2_id, asset(init_balance));
-   transfer(committee_account, borrower3_id, asset(init_balance));
-   transfer(committee_account, borrower4_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
+   transfer(council_account, borrower2_id, asset(init_balance));
+   transfer(council_account, borrower3_id, asset(init_balance));
+   transfer(council_account, borrower4_id, asset(init_balance));
    update_feed_producers( bitusd, {feedproducer.get_id()} );
 
    price_feed current_feed;

@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( one_hundred_k_benchmark )
 
    const fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
    const fc::ecc::public_key  nathan_pub = nathan_key.get_public_key();;
-   const auto& committee_account = account_id_type()(db);
+   const auto& council_account = account_id_type()(db);
 
    const uint64_t cycles = 200000;
    uint64_t total_time = 0;
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( one_hundred_k_benchmark )
    {
       account_create_operation aco;
       aco.name = "a1";
-      aco.registrar = committee_account.id;
+      aco.registrar = council_account.id;
       aco.owner = authority( 1, public_key_type(nathan_pub), 1 );
       aco.active = authority( 1, public_key_type(nathan_pub), 1 );
       aco.options.memo_key = nathan_pub;
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( one_hundred_k_benchmark )
    {
       accounts[cycles] = accounts[0];
       transfer_operation to1;
-      to1.from = committee_account.id;
+      to1.from = council_account.id;
       to1.amount = asset( 1000000 );
       to1.fee = asset( 10 );
       transfer_operation to2;

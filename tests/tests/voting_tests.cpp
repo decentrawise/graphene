@@ -14,12 +14,12 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE(voting_tests, database_fixture)
 
-BOOST_FIXTURE_TEST_CASE( committee_account_initialization_test, database_fixture )
+BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
 { try {
    // Check current default committee
    // By default chain is configured with INITIAL_COMMITTEE_MEMBER_COUNT=9 members
    const auto &committee_members = db.get_global_properties().active_committee_members;
-   const auto &committee = committee_account(db);
+   const auto &committee = council_account(db);
 
    BOOST_CHECK_EQUAL(committee_members.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
    BOOST_CHECK_EQUAL(committee.active.num_auths(), 0);
@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE( committee_account_initialization_test, database_fixture
 
    // Check that committee not changed, votes absent
    const auto &committee_members_after_maint = db.get_global_properties().active_committee_members;
-   const auto &committee_after_maint = committee_account(db);
+   const auto &committee_after_maint = council_account(db);
    BOOST_CHECK_EQUAL(committee_members_after_maint.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
    BOOST_CHECK_EQUAL(committee_after_maint.active.num_auths(), 0);
 
@@ -41,7 +41,7 @@ BOOST_FIXTURE_TEST_CASE( committee_account_initialization_test, database_fixture
    fund(alice);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-   const auto &committee_after_maint_with_stake = committee_account(db);
+   const auto &committee_after_maint_with_stake = council_account(db);
    BOOST_CHECK_LT(committee_after_maint_with_stake.active.num_auths(), INITIAL_COMMITTEE_MEMBER_COUNT);
 
    // Initialize committee by voting for each member and for desired count
@@ -49,7 +49,7 @@ BOOST_FIXTURE_TEST_CASE( committee_account_initialization_test, database_fixture
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
    const auto &committee_members_after_maint_and_init = db.get_global_properties().active_committee_members;
-   const auto &committee_after_maint_and_init = committee_account(db);
+   const auto &committee_after_maint_and_init = council_account(db);
    BOOST_CHECK_EQUAL(committee_members_after_maint_and_init.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
    BOOST_CHECK_EQUAL(committee_after_maint_and_init.active.num_auths(), INITIAL_COMMITTEE_MEMBER_COUNT);
 } FC_LOG_AND_RETHROW() }
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(put_my_witnesses)
       int c = 0;
       for (auto l : witness_map) {
          int stake = 100 + c + 10;
-         transfer(committee_account, l.first, asset(stake));
+         transfer(council_account, l.first, asset(stake));
          {
             set_expiration(db, trx);
             account_update_operation op;
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(put_my_committee_members)
       int c = 0;
       for (auto committee : committee_map) {
          int stake = 100 + c + 10;
-         transfer(committee_account, committee.first, asset(stake));
+         transfer(council_account, committee.first, asset(stake));
          {
             set_expiration(db, trx);
             account_update_operation op;
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(last_voting_date)
    {
       ACTORS((alice));
 
-      transfer(committee_account, alice_id, asset(100));
+      transfer(council_account, alice_id, asset(100));
 
       // we are going to vote for this witness
       auto witness1 = witness_id_type(1)(db);
@@ -463,9 +463,9 @@ BOOST_AUTO_TEST_CASE(last_voting_date_proxy)
    {
       ACTORS((alice)(proxy)(bob));
 
-      transfer(committee_account, alice_id, asset(100));
-      transfer(committee_account, bob_id, asset(200));
-      transfer(committee_account, proxy_id, asset(300));
+      transfer(council_account, alice_id, asset(100));
+      transfer(council_account, bob_id, asset(200));
+      transfer(council_account, proxy_id, asset(300));
 
       generate_block();
 

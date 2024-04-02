@@ -53,10 +53,10 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
          const asset_object& backing_backing = backing_bitasset_data.options.short_backing_asset(d);
          FC_ASSERT( !backing_backing.is_market_issued(),
                     "May not create a bitasset backed by a bitasset backed by a bitasset." );
-         FC_ASSERT( op.issuer != GRAPHENE_COMMITTEE_ACCOUNT || backing_backing.get_id() == asset_id_type(),
+         FC_ASSERT( op.issuer != GRAPHENE_COUNCIL_ACCOUNT || backing_backing.get_id() == asset_id_type(),
                     "May not create a blockchain-controlled market asset which is not backed by CORE.");
       } else
-         FC_ASSERT( op.issuer != GRAPHENE_COMMITTEE_ACCOUNT || backing.get_id() == asset_id_type(),
+         FC_ASSERT( op.issuer != GRAPHENE_COUNCIL_ACCOUNT || backing.get_id() == asset_id_type(),
                     "May not create a blockchain-controlled market asset which is not backed by CORE.");
       FC_ASSERT( op.bitasset_opts->feed_lifetime_sec > chain_parameters.block_interval &&
                  op.bitasset_opts->force_settlement_delay_sec > chain_parameters.block_interval );
@@ -204,7 +204,7 @@ void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_op
 static void validate_new_issuer( const database& d, const asset_object& a, account_id_type new_issuer )
 { try {
    FC_ASSERT(d.find(new_issuer), "New issuer account does not exist");
-   if( a.is_market_issued() && new_issuer == GRAPHENE_COMMITTEE_ACCOUNT )
+   if( a.is_market_issued() && new_issuer == GRAPHENE_COUNCIL_ACCOUNT )
    {
       const asset_object& backing = a.bitasset_data(d).options.short_backing_asset(d);
       if( backing.is_market_issued() )
@@ -346,7 +346,7 @@ void check_children_of_bitasset(database& d, const asset_update_bitasset_operati
             FC_ASSERT( child.get_id() != op.new_options.short_backing_asset,
                   "A BitAsset would be invalidated by changing this backing asset ('A' backed by 'B' backed by 'A')." );
 
-            FC_ASSERT( child.issuer != GRAPHENE_COMMITTEE_ACCOUNT,
+            FC_ASSERT( child.issuer != GRAPHENE_COUNCIL_ACCOUNT,
                   "A blockchain-controlled market asset would be invalidated by changing this backing asset." );
 
             FC_ASSERT( !new_backing_asset.is_market_issued(),
@@ -385,7 +385,7 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
                      "The precision of the asset and backing asset must be equal." );
       }
 
-      if( asset_obj.issuer == GRAPHENE_COMMITTEE_ACCOUNT )
+      if( asset_obj.issuer == GRAPHENE_COUNCIL_ACCOUNT )
       {
          if( new_backing_asset.is_market_issued() )
          {
@@ -729,7 +729,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    }
    else if( base.options.flags & committee_fed_asset )
    {
-      FC_ASSERT( d.get(GRAPHENE_COMMITTEE_ACCOUNT).active.account_auths.count(o.publisher),
+      FC_ASSERT( d.get(GRAPHENE_COUNCIL_ACCOUNT).active.account_auths.count(o.publisher),
                  "Only active committee members are allowed to publish price feeds for this asset" );
    }
    else

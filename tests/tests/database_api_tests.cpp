@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       // prepare data for get_htlc
       {
          int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
-         transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+         transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
          uint16_t preimage_size = 256;
          std::vector<char> pre_image(256);
@@ -1066,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(10000000);
-   transfer(committee_account, seller_id, asset(init_balance));
+   transfer(council_account, seller_id, asset(init_balance));
    BOOST_CHECK_EQUAL( 10000000, get_balance(seller, core) );
 
    /// Create 250 versatile orders
@@ -1428,7 +1428,7 @@ BOOST_AUTO_TEST_CASE( get_call_orders_by_account ) {
       const auto &core = asset_id_type()(db);
 
       int64_t init_balance(1000000);
-      transfer(committee_account, caller_id, asset(init_balance));
+      transfer(council_account, caller_id, asset(init_balance));
 
       update_feed_producers(usd, {feedproducer.get_id()});
       update_feed_producers(cny, {feedproducer.get_id()});
@@ -1472,8 +1472,8 @@ BOOST_AUTO_TEST_CASE( get_settle_orders_by_account ) {
       asset_id_type usd_id = usd.get_id();
 
       int64_t init_balance(1000000);
-      transfer(committee_account, settler_id, asset(init_balance));
-      transfer(committee_account, caller_id, asset(init_balance));
+      transfer(council_account, settler_id, asset(init_balance));
+      transfer(council_account, caller_id, asset(init_balance));
 
       update_feed_producers(usd, {feedproducer.get_id()});
 

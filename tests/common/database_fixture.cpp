@@ -143,7 +143,7 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
 
    genesis_state_type::initial_asset_type init_mpa1;
    init_mpa1.symbol = "INITMPA";
-   init_mpa1.issuer_name = "committee-account";
+   init_mpa1.issuer_name = "council-account";
    init_mpa1.description = "Initial MPA";
    init_mpa1.precision = 4;
    init_mpa1.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
