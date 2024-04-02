@@ -34,8 +34,8 @@ struct swan_fixture : database_fixture {
         _borrower2 = borrower2_id;
         _feedproducer = feedproducer_id;
 
-        transfer(committee_account, borrower_id, asset(init_balance));
-        transfer(committee_account, borrower2_id, asset(init_balance));
+        transfer(council_account, borrower_id, asset(init_balance));
+        transfer(council_account, borrower2_id, asset(init_balance));
     }
 
     void standard_asset() {
@@ -155,9 +155,9 @@ BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
          {
             int64_t bal = get_balance( *actor, core );
             if( bal < init_balance )
-               transfer( committee_account, actor->get_id(), asset(init_balance - bal) );
+               transfer( council_account, actor->get_id(), asset(init_balance - bal) );
             else if( bal > init_balance )
-               transfer( actor->get_id(), committee_account, asset(bal - init_balance) );
+               transfer( actor->get_id(), council_account, asset(bal - init_balance) );
          }
       };
 

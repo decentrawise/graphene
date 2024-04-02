@@ -5,7 +5,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/hardfork.hpp>
@@ -29,7 +29,7 @@ genesis_state_type make_genesis() {
 
    auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    genesis_state.initial_active_witnesses = 10;
-   genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
+   genesis_state.immutable_parameters.min_delegate_count = INITIAL_COUNCIL_COUNT;
    genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
 
    for( unsigned int i = 0; i < genesis_state.initial_active_witnesses; ++i )
@@ -39,7 +39,7 @@ genesis_state_type make_genesis() {
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key(),
                                                   true);
-      genesis_state.initial_committee_candidates.push_back({name});
+      genesis_state.initial_council_candidates.push_back({name});
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
@@ -832,12 +832,12 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       auto initial_properties = db.get_global_properties();
       const account_object& nathan = create_account("nathan");
       upgrade_to_lifetime_member(nathan);
-      const committee_member_object nathans_committee_member = create_committee_member(nathan);
+      const delegate_object nathans_delegate = create_delegate(nathan);
       {
          account_update_operation op;
          op.account = nathan.id;
          op.new_options = nathan.options;
-         op.new_options->votes.insert(nathans_committee_member.vote_id);
+         op.new_options->votes.insert(nathans_delegate.vote_id);
          trx.operations.push_back(op);
          PUSH_TX( db, trx, ~0 );
          trx.operations.clear();
@@ -850,15 +850,15 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         db.head_block_time().sec_since_epoch() + db.get_global_properties().parameters.block_interval);
       BOOST_CHECK(db.get_global_properties().active_witnesses == initial_properties.active_witnesses);
-      BOOST_CHECK(db.get_global_properties().active_committee_members == initial_properties.active_committee_members);
+      BOOST_CHECK(db.get_global_properties().active_delegates == initial_properties.active_delegates);
 
       generate_block();
 
       auto new_properties = db.get_global_properties();
-      BOOST_CHECK(new_properties.active_committee_members != initial_properties.active_committee_members);
-      BOOST_CHECK(std::find(new_properties.active_committee_members.begin(),
-                            new_properties.active_committee_members.end(), nathans_committee_member.id) !=
-                  new_properties.active_committee_members.end());
+      BOOST_CHECK(new_properties.active_delegates != initial_properties.active_delegates);
+      BOOST_CHECK(std::find(new_properties.active_delegates.begin(),
+                            new_properties.active_delegates.end(), nathans_delegate.id) !=
+                  new_properties.active_delegates.end());
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         maintenence_time.sec_since_epoch() + new_properties.parameters.maintenance_interval);
       maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
@@ -879,9 +879,9 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    auto* test = &create_bitasset("MIATEST");
    auto* core = &asset_id_type()(db);
    auto* nathan = &create_account("nathan");
-   auto* committee = &account_id_type()(db);
+   auto* council = &account_id_type()(db);
 
-   transfer(*committee, *nathan, core->amount(50000));
+   transfer(*council, *nathan, core->amount(50000));
 
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
 
@@ -908,7 +908,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    test = &get_asset("MIATEST");
    core = &asset_id_type()(db);
    nathan = &get_account("nathan");
-   committee = &account_id_type()(db);
+   council = &account_id_type()(db);
 
    BOOST_CHECK(db.find_object(id) == nullptr);
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
@@ -961,28 +961,28 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
-   // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   // Initialize council by voting for each member and for desired count
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
 
    db.modify(db.get_global_properties(), [](global_property_object& p) {
-      p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+      p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
    });
 
    BOOST_TEST_MESSAGE( "Creating a proposal to change the block_interval to 1 second" );
    {
-      proposal_create_operation cop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+      proposal_create_operation cop = proposal_create_operation::council_proposal(db.get_global_properties().parameters, db.head_block_time());
       cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
       cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-      committee_member_update_global_parameters_operation uop;
+      delegate_update_global_parameters_operation uop;
       uop.new_parameters.block_interval = 1;
       cop.proposed_ops.emplace_back(uop);
       trx.operations.push_back(cop);
       PUSH_TX(db, trx);
    }
-   BOOST_TEST_MESSAGE( "Updating proposal by signing with the committee_member private key" );
+   BOOST_TEST_MESSAGE( "Updating proposal by signing with the delegate private key" );
    {
       proposal_update_operation uop;
       uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
@@ -1043,7 +1043,7 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       const asset_object& core = asset_id_type()(db);
 
       // Sam is the creator of accounts
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       private_key_type sam_key = generate_private_key("sam");
       account_object sam_account_object = create_account("sam", sam_key);
 
@@ -1051,15 +1051,15 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
       generate_block( skip_flags );
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
       processed_transaction ptx;
 
-      account_object committee_account_object = committee_account(db);
-      // transfer from committee account to Sam account
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      account_object council_account_object = council_account(db);
+      // transfer from council account to Sam account
+      transfer(council_account_object, sam_account_object, core.amount(100000));
 
       generate_block(skip_flags);
 
@@ -1477,7 +1477,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
         ;
 
       // Sam is the creator of accounts
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       private_key_type sam_key = generate_private_key("sam");
 
       //
@@ -1503,15 +1503,15 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       generate_block( skip_flags );
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
       processed_transaction ptx;
 
-      account_object committee_account_object = committee_account(db);
-      // transfer from committee account to Sam account
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      account_object council_account_object = council_account(db);
+      // transfer from council account to Sam account
+      transfer(council_account_object, sam_account_object, core.amount(100000));
 
       const int num_keys = 5;
       vector< private_key_type > numbered_private_keys;
@@ -1749,7 +1749,7 @@ BOOST_FIXTURE_TEST_CASE( tapos_rollover, database_fixture )
       ACTORS((alice)(bob));
 
       BOOST_TEST_MESSAGE( "Give Alice some money" );
-      transfer(committee_account, alice_id, asset(10000));
+      transfer(council_account, alice_id, asset(10000));
       generate_block();
 
       BOOST_TEST_MESSAGE( "Generate up to block 0xFF00" );
@@ -1819,7 +1819,7 @@ BOOST_FIXTURE_TEST_CASE( temp_account_balance, database_fixture )
    generate_block();
    generate_block();
 
-   top.to = GRAPHENE_COMMITTEE_ACCOUNT;
+   top.to = GRAPHENE_COUNCIL_ACCOUNT;
    trx.operations.push_back( top );
    set_expiration( db, trx );
    trx.clear_signatures();
@@ -1844,7 +1844,7 @@ BOOST_FIXTURE_TEST_CASE( block_size_test, database_fixture )
 
       const fc::ecc::private_key& key = generate_private_key("null_key");
       BOOST_TEST_MESSAGE( "Give Alice some money" );
-      transfer(committee_account, alice_id, asset(10000000));
+      transfer(council_account, alice_id, asset(10000000));
       generate_block();
 
       const size_t default_block_header_size = fc::raw::pack_size( signed_block_header() );

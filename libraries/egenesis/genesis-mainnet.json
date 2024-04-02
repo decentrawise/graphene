@@ -1,6 +1,6 @@
 {
   "immutable_parameters": {
-    "min_committee_member_count": 11,
+    "min_delegate_count": 11,
     "min_witness_count": 11,
     "num_special_accounts": 0,
     "num_special_assets": 0
@@ -92,7 +92,7 @@
       "collateral_records": [],
       "description": "Litre of European on-highway gasoline",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "GAS"
@@ -102,7 +102,7 @@
       "collateral_records": [],
       "description": "Litre of European on-highway diesel fuel",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "DIESEL"
@@ -112,7 +112,7 @@
       "collateral_records": [],
       "description": "Barrel of crude oil",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "OIL"
@@ -122,7 +122,7 @@
       "collateral_records": [],
       "description": "Ounce of .999 fine silver",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "SILVER"
@@ -132,7 +132,7 @@
       "collateral_records": [],
       "description": "Ounce of .999 fine gold",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 6,
       "symbol": "GOLD"
@@ -142,7 +142,7 @@
       "collateral_records": [],
       "description": "Bitcoin",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 8,
       "symbol": "BTC"
@@ -152,7 +152,7 @@
       "collateral_records": [],
       "description": "Ethereum",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 18,
       "symbol": "ETH"
@@ -162,7 +162,7 @@
       "collateral_records": [],
       "description": "Tether USD",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 6,
       "symbol": "USDT"
@@ -172,7 +172,7 @@
       "collateral_records": [],
       "description": "Circle USD",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 6,
       "symbol": "USDC"
@@ -182,7 +182,7 @@
       "collateral_records": [],
       "description": "European Union euro",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "EUR"
@@ -192,7 +192,7 @@
       "collateral_records": [],
       "description": "Swiss franc",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "CHF"
@@ -202,7 +202,7 @@
       "collateral_records": [],
       "description": "Pound sterling",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "GBP"
@@ -212,7 +212,7 @@
       "collateral_records": [],
       "description": "United States dollar",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "USD"
@@ -222,7 +222,7 @@
       "collateral_records": [],
       "description": "Canadian dollar",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "CAD"
@@ -232,7 +232,7 @@
       "collateral_records": [],
       "description": "Australian dollar",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "AUD"
@@ -242,7 +242,7 @@
       "collateral_records": [],
       "description": "Chinese yuan",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 4,
       "symbol": "CNY"
@@ -252,7 +252,7 @@
       "collateral_records": [],
       "description": "Japanese yen",
       "is_bitasset": true,
-      "issuer_name": "committee-account",
+      "issuer_name": "council-account",
       "max_supply": "1000000000000000",
       "precision": 2,
       "symbol": "JPY"
@@ -265,7 +265,7 @@
       "amount": "1000000000000000"
     }
   ],
-  "initial_committee_candidates": [
+  "initial_council_candidates": [
     { "owner_name": "init0" },
     { "owner_name": "init1" },
     { "owner_name": "init2" },
@@ -285,7 +285,7 @@
     "block_interval": 3,
     "cashback_vesting_period_seconds": 7776000,
     "cashback_vesting_threshold": 10000000,
-    "committee_proposal_review_period": 3600,
+    "council_proposal_review_period": 3600,
     "count_non_member_votes": true,
     "current_fees": {
       "parameters": [
@@ -364,7 +364,7 @@
     "maximum_asset_whitelist_authorities": 10,
     "maximum_authority_membership": 10,
     "maximum_block_size": 2097152,
-    "maximum_committee_count": 1001,
+    "maximum_council_count": 1001,
     "maximum_proposal_lifetime": 2419200,
     "maximum_time_until_expiration": 86400,
     "maximum_transaction_size": 98304,

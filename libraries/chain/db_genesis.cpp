@@ -6,7 +6,7 @@
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
@@ -53,14 +53,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    create<account_balance_object>([](account_balance_object& b) {
       b.balance = GRAPHENE_MAX_SHARE_SUPPLY;
    });
-   const account_object& committee_account =
+   const account_object& council_account =
       create<account_object>( [this](account_object& n) {
          n.membership_expiration_date = time_point_sec::maximum();
          n.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
          n.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
          n.owner.weight_threshold = 1;
          n.active.weight_threshold = 1;
-         n.name = "committee-account";
+         n.name = "council-account";
          n.statistics = create<account_statistics_object>( [&n](account_statistics_object& s){
                            s.owner = n.id;
                            s.name = n.name;
@@ -69,7 +69,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          n.creation_block_num = 0;
          n.creation_time = _current_block_time;
       });
-   FC_ASSERT(committee_account.get_id() == GRAPHENE_COMMITTEE_ACCOUNT);
+   FC_ASSERT(council_account.get_id() == GRAPHENE_COUNCIL_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "witness-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
@@ -88,14 +88,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.creation_time = _current_block_time;
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
-       a.name = "relaxed-committee-account";
+       a.name = "relaxed-council-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
                          s.owner = a.id;
                          s.name = a.name;
                       }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = GRAPHENE_RELAXED_COMMITTEE_ACCOUNT;
+       a.registrar = GRAPHENE_RELAXED_COUNCIL_ACCOUNT;
        a.referrer = a.registrar;
        a.lifetime_referrer = a.registrar;
        a.membership_expiration_date = time_point_sec::maximum();
@@ -103,7 +103,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.creation_block_num = 0;
        a.creation_time = _current_block_time;
-   }).get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT);
+   }).get_id() == GRAPHENE_RELAXED_COUNCIL_ACCOUNT);
    // The same data set is assigned to more than one account
    auto init_account_data_as_null = [this](account_object& a) {
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
@@ -250,8 +250,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );
-   FC_ASSERT( (genesis_state.immutable_parameters.min_committee_member_count & 1) == 1,
-              "min_committee_member_count must be odd" );
+   FC_ASSERT( (genesis_state.immutable_parameters.min_delegate_count & 1) == 1,
+              "min_delegate_count must be odd" );
 
    _p_chain_property_obj = & create<chain_property_object>([chain_id,&genesis_state](chain_property_object& p)
    {
@@ -424,7 +424,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    if( total_supplies[ asset_id_type(0) ] > 0 )
    {
-       adjust_balance(GRAPHENE_COMMITTEE_ACCOUNT, -get_balance(GRAPHENE_COMMITTEE_ACCOUNT,{}));
+       adjust_balance(GRAPHENE_COUNCIL_ACCOUNT, -get_balance(GRAPHENE_COUNCIL_ACCOUNT,{}));
    }
    else
    {
@@ -487,12 +487,12 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       this->apply_operation(genesis_eval_state, op);
    });
 
-   // Create initial committee members
-   std::for_each( genesis_state.initial_committee_candidates.begin(),
-                  genesis_state.initial_committee_candidates.end(),
+   // Create initial delegates
+   std::for_each( genesis_state.initial_council_candidates.begin(),
+                  genesis_state.initial_council_candidates.end(),
                   [this,&get_account_id,&genesis_eval_state](const auto& member) {
-      committee_member_create_operation op;
-      op.committee_member_account = get_account_id(member.owner_name);
+      delegate_create_operation op;
+      op.delegate_account = get_account_id(member.owner_name);
       this->apply_operation(genesis_eval_state, op);
    });
 

@@ -29,7 +29,7 @@
 #define GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS                   32
 
 /**
- * Don't allow the committee_members to publish a limit that would
+ * Don't allow the delegates to publish a limit that would
  * make the network unable to operate.
  */
 #define GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT 1024
@@ -52,11 +52,11 @@
 #define GRAPHENE_DEFAULT_MAX_ASSET_FEED_PUBLISHERS              10
 
 #define GRAPHENE_DEFAULT_MIN_WITNESS_COUNT                    (11)
-#define GRAPHENE_DEFAULT_MIN_COMMITTEE_MEMBER_COUNT           (11)
+#define GRAPHENE_DEFAULT_MIN_COUNCIL_COUNT           (11)
 #define GRAPHENE_DEFAULT_MAX_WITNESSES                        (1001) // SHOULD BE ODD
-#define GRAPHENE_DEFAULT_MAX_COMMITTEE                        (1001) // SHOULD BE ODD
+#define GRAPHENE_DEFAULT_MAX_COUNCIL                        (1001) // SHOULD BE ODD
 #define GRAPHENE_DEFAULT_MAX_PROPOSAL_LIFETIME_SEC            (60*60*24*7*4) // Four weeks
-#define GRAPHENE_DEFAULT_COMMITTEE_PROPOSAL_REVIEW_PERIOD_SEC (60*60*24*7*2) // Two weeks
+#define GRAPHENE_DEFAULT_COUNCIL_PROPOSAL_REVIEW_PERIOD_SEC (60*60*24*7*2) // Two weeks
 #define GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE               (20*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_LIFETIME_REFERRER_PERCENT_OF_FEE     (30*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_CASHBACK_VESTING_PERIOD_SEC          (60*60*24*365) ///< 1 year
@@ -98,12 +98,12 @@
  *  Reserved Account IDs with special meaning
  */
 ///@{
-/// Represents the current committee members, two-week review period
-#define GRAPHENE_COMMITTEE_ACCOUNT (graphene::protocol::account_id_type(0))
+/// Represents the current delegates, two-week review period
+#define GRAPHENE_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(0))
 /// Represents the current witnesses
 #define GRAPHENE_WITNESS_ACCOUNT (graphene::protocol::account_id_type(1))
-/// Represents the current committee members
-#define GRAPHENE_RELAXED_COMMITTEE_ACCOUNT (graphene::protocol::account_id_type(2))
+/// Represents the current delegates
+#define GRAPHENE_RELAXED_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(2))
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
 #define GRAPHENE_NULL_ACCOUNT (graphene::protocol::account_id_type(3))
 /// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)

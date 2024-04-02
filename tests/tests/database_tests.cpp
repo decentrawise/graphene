@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE( required_approval_index_test )
    // Create a proposal
    const auto& prop = db1.create<proposal_object>( [this,alice_id,agnetha_id]( object& o ) {
       proposal_object& prop = static_cast<proposal_object&>(o);
-      prop.proposer = committee_account;
+      prop.proposer = council_account;
       prop.required_active_approvals.insert( alice_id );
       prop.required_owner_approvals.insert( agnetha_id );
    });

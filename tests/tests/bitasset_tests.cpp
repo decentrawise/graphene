@@ -7,7 +7,7 @@
 
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -74,11 +74,11 @@ void change_asset_options(database_fixture& fixture, const fc::ecc::private_key&
    if (witness_fed)
    {
       op.new_options.flags |= witness_fed_asset;
-      op.new_options.flags &= ~committee_fed_asset;
+      op.new_options.flags &= ~delegate_fed_asset;
    }
    else
    {
-      op.new_options.flags &= ~witness_fed_asset; // we don't care about the committee flag here
+      op.new_options.flags &= ~witness_fed_asset; // we don't care about the delegate flag here
    }
    fixture.trx.operations.push_back(op);
    fixture.sign( fixture.trx, signing_key );
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
    ACTORS((nathan));
 
    // Initialize witnesses by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
 
@@ -418,8 +418,8 @@ BOOST_AUTO_TEST_CASE( lifetime_update_median_feeds )
 
    int64_t init_balance(1000000);
 
-   transfer(committee_account, buyer_id, asset(init_balance));
-   transfer(committee_account, borrower_id, asset(init_balance));
+   transfer(council_account, buyer_id, asset(init_balance));
+   transfer(council_account, borrower_id, asset(init_balance));
 
    const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
    asset_id_type usd_id = bitusd.get_id();
@@ -513,10 +513,10 @@ assets_bitasset_eval create_assets_bitasset_eval(database_fixture *fixture)
 {
    assets_bitasset_eval asset_objs;
    BOOST_TEST_MESSAGE( "Create USDBIT" );
-   asset_objs.bit_usd = fixture->create_bitasset( "USDBIT", GRAPHENE_COMMITTEE_ACCOUNT ).get_id();
+   asset_objs.bit_usd = fixture->create_bitasset( "USDBIT", GRAPHENE_COUNCIL_ACCOUNT ).get_id();
 
    BOOST_TEST_MESSAGE( "Create USDBACKED" );
-   asset_objs.bit_usdbacked = fixture->create_bitasset( "USDBACKED", GRAPHENE_COMMITTEE_ACCOUNT,
+   asset_objs.bit_usdbacked = fixture->create_bitasset( "USDBACKED", GRAPHENE_COUNCIL_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_usd ).get_id();
 
    BOOST_TEST_MESSAGE( "Create USDBACKEDII" );
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "which is not backed by CORE" );
    op.new_options.short_backing_asset = correct_asset_id;
 
-   // CHILD is a non-committee asset backed by PARENT which is backed by CORE
+   // CHILD is a non-council asset backed by PARENT which is backed by CORE
    // Cannot change PARENT's backing asset from CORE to something that is not [CORE | UIA]
    // because that will make CHILD be backed by an asset that is not itself backed by CORE or a UIA.
    BOOST_TEST_MESSAGE( "Attempting to change PARENT to be backed by a non-core and non-user-issued asset" );
@@ -634,11 +634,11 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "'A' backed by 'B' backed by 'A'" );
    op.new_options.short_backing_asset = asset_objs.user_issued;
    BOOST_CHECK( evaluator.evaluate(op).is_type<void_result>() );
-   BOOST_TEST_MESSAGE( "Creating CHILDCOMMITTEE" );
-   // CHILDCOMMITTEE is a committee asset backed by PARENT which is backed by CORE
-   // Cannot change PARENT's backing asset from CORE to something else because that will make CHILDCOMMITTEE
+   BOOST_TEST_MESSAGE( "Creating CHILDCOUNCIL" );
+   // CHILDCOUNCIL is a council asset backed by PARENT which is backed by CORE
+   // Cannot change PARENT's backing asset from CORE to something else because that will make CHILDCOUNCIL
    // be backed by an asset that is not itself backed by CORE
-   create_bitasset( "CHILDCOMMITTEE", GRAPHENE_COMMITTEE_ACCOUNT, 100, charge_market_fee, 2,
+   create_bitasset( "CHILDCOUNCIL", GRAPHENE_COUNCIL_ACCOUNT, 100, charge_market_fee, 2,
          asset_objs.bit_parent );
    // it should again not work
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "A blockchain-controlled market asset would be invalidated" );
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE( bitasset_feeds_test )
 
       int64_t init_balance( 1000000 );
 
-      transfer( committee_account, borrower_id, asset(init_balance) );
+      transfer( council_account, borrower_id, asset(init_balance) );
 
       const auto& bitusd = create_bitasset( "USDBIT", feedproducer_id );
       asset_id_type usd_id = bitusd.get_id();

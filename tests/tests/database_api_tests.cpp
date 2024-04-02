@@ -732,13 +732,13 @@ BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
 BOOST_AUTO_TEST_CASE( subscription_notification_test )
 {
    try {
-      // Initialize committee by voting for each member and for desired count
-      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      // Initialize council by voting for each member and for desired count
+      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
       set_expiration( db, trx );
-      set_htlc_committee_parameters();
+      set_htlc_council_parameters();
       generate_block();
       set_expiration( db, trx );
 
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       // prepare data for get_htlc
       {
          int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
-         transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+         transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
          uint16_t preimage_size = 256;
          std::vector<char> pre_image(256);
@@ -1042,14 +1042,14 @@ BOOST_AUTO_TEST_CASE( lookup_vote_ids )
    fund(wolverine);
    upgrade_to_lifetime_member(wolverine);
 
-   const auto& committee = create_committee_member( connie );
+   const auto& delegate = create_delegate( connie );
    const auto& witness = create_witness( whitney );
    const auto& worker = create_worker( wolverine_id );
 
    graphene::app::database_api db_api(db, &(app.get_options()));
 
    std::vector<vote_id_type> votes;
-   votes.push_back( committee.vote_id );
+   votes.push_back( delegate.vote_id );
    votes.push_back( witness.vote_id );
    votes.push_back( worker.vote_id );
 
@@ -1066,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(10000000);
-   transfer(committee_account, seller_id, asset(init_balance));
+   transfer(council_account, seller_id, asset(init_balance));
    BOOST_CHECK_EQUAL( 10000000, get_balance(seller, core) );
 
    /// Create 250 versatile orders
@@ -1428,7 +1428,7 @@ BOOST_AUTO_TEST_CASE( get_call_orders_by_account ) {
       const auto &core = asset_id_type()(db);
 
       int64_t init_balance(1000000);
-      transfer(committee_account, caller_id, asset(init_balance));
+      transfer(council_account, caller_id, asset(init_balance));
 
       update_feed_producers(usd, {feedproducer.get_id()});
       update_feed_producers(cny, {feedproducer.get_id()});
@@ -1472,8 +1472,8 @@ BOOST_AUTO_TEST_CASE( get_settle_orders_by_account ) {
       asset_id_type usd_id = usd.get_id();
 
       int64_t init_balance(1000000);
-      transfer(committee_account, settler_id, asset(init_balance));
-      transfer(committee_account, caller_id, asset(init_balance));
+      transfer(council_account, settler_id, asset(init_balance));
+      transfer(council_account, caller_id, asset(init_balance));
 
       update_feed_producers(usd, {feedproducer.get_id()});
 

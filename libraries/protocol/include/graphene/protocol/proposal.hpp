@@ -61,7 +61,7 @@ namespace graphene { namespace protocol {
        extensions_type    extensions;
 
        /**
-        * Constructs a proposal_create_operation suitable for committee
+        * Constructs a proposal_create_operation suitable for council
         * proposals, with expiration time and review period set
         * appropriately.  No proposed_ops are added.  When used to
         * create a proposal to change chain parameters, this method
@@ -70,7 +70,7 @@ namespace graphene { namespace protocol {
         * in proposed_ops, and proposed_ops is untouched by this
         * function.)
         */
-       static proposal_create_operation committee_proposal(const chain_parameters& param, fc::time_point_sec head_block_time );
+       static proposal_create_operation council_proposal(const chain_parameters& param, fc::time_point_sec head_block_time );
 
        account_id_type fee_payer()const { return fee_paying_account; }
        void            validate()const;

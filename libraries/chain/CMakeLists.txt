@@ -45,7 +45,7 @@ add_library( graphene_chain
              account_evaluator.cpp
              assert_evaluator.cpp
              witness_evaluator.cpp
-             committee_member_evaluator.cpp
+             delegate_evaluator.cpp
              asset_evaluator.cpp
              transfer_evaluator.cpp
              proposal_evaluator.cpp

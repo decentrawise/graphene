@@ -874,10 +874,10 @@ signed_transaction wallet_api::whitelist_account( const string& authorizing_acco
    return my->whitelist_account(authorizing_account, account_to_list, new_listing_status, broadcast);
 }
 
-signed_transaction wallet_api::create_committee_member( const string& owner_account, const string& url,
+signed_transaction wallet_api::create_delegate( const string& owner_account, const string& url,
                                                         bool broadcast /* = false */ )const
 {
-   return my->create_committee_member(owner_account, url, broadcast);
+   return my->create_delegate(owner_account, url, broadcast);
 }
 
 map<string, witness_id_type, std::less<>> wallet_api::list_witnesses( const string& lowerbound, uint32_t limit )const
@@ -885,10 +885,10 @@ map<string, witness_id_type, std::less<>> wallet_api::list_witnesses( const stri
    return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
 }
 
-map<string,committee_member_id_type, std::less<>> wallet_api::list_committee_members(
+map<string,delegate_id_type, std::less<>> wallet_api::list_delegates(
       const string& lowerbound, uint32_t limit )const
 {
-   return my->_remote_db->lookup_committee_member_accounts(lowerbound, limit);
+   return my->_remote_db->lookup_delegate_accounts(lowerbound, limit);
 }
 
 witness_object wallet_api::get_witness( const string& owner_account )const
@@ -896,9 +896,9 @@ witness_object wallet_api::get_witness( const string& owner_account )const
    return my->get_witness(owner_account);
 }
 
-committee_member_object wallet_api::get_committee_member( const string& owner_account )const
+delegate_object wallet_api::get_delegate( const string& owner_account )const
 {
-   return my->get_committee_member(owner_account);
+   return my->get_delegate(owner_account);
 }
 
 signed_transaction wallet_api::create_witness( const string& owner_account,
@@ -953,12 +953,12 @@ signed_transaction wallet_api::withdraw_vesting(
    return my->withdraw_vesting( witness_name, amount, asset_symbol, broadcast );
 }
 
-signed_transaction wallet_api::vote_for_committee_member( const string& voting_account,
+signed_transaction wallet_api::vote_for_delegate( const string& voting_account,
                                                           const string& witness,
                                                           bool approve,
                                                           bool broadcast /* = false */ )const
 {
-   return my->vote_for_committee_member(voting_account, witness, approve, broadcast);
+   return my->vote_for_delegate(voting_account, witness, approve, broadcast);
 }
 
 signed_transaction wallet_api::vote_for_witness( const string& voting_account,
@@ -976,13 +976,13 @@ signed_transaction wallet_api::set_voting_proxy( const string& account_to_modify
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
-signed_transaction wallet_api::set_desired_witness_and_committee_member_count( const string& account_to_modify,
+signed_transaction wallet_api::set_desired_witness_and_delegate_count( const string& account_to_modify,
                                                                       uint16_t desired_number_of_witnesses,
-                                                                      uint16_t desired_number_of_committee_members,
+                                                                      uint16_t desired_number_of_delegates,
                                                                       bool broadcast /* = false */ )const
 {
-   return my->set_desired_witness_and_committee_member_count(account_to_modify, desired_number_of_witnesses,
-                                                     desired_number_of_committee_members, broadcast);
+   return my->set_desired_witness_and_delegate_count(account_to_modify, desired_number_of_witnesses,
+                                                     desired_number_of_delegates, broadcast);
 }
 
 void wallet_api::set_wallet_filename( const string& wallet_filename )const

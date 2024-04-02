@@ -256,11 +256,11 @@ public:
    signed_transaction whitelist_account(string authorizing_account, string account_to_list,
          account_whitelist_operation::account_listing new_listing_status, bool broadcast );
 
-   signed_transaction create_committee_member(string owner_account, string url, bool broadcast );
+   signed_transaction create_delegate(string owner_account, string url, bool broadcast );
 
    witness_object get_witness( string owner_account );
 
-   committee_member_object get_committee_member( string owner_account );
+   delegate_object get_delegate( string owner_account );
 
    signed_transaction create_witness(string owner_account, string url, bool broadcast );
 
@@ -292,7 +292,7 @@ public:
    signed_transaction withdraw_vesting( string witness_name, string amount, string asset_symbol,
          bool broadcast = false );
 
-   signed_transaction vote_for_committee_member(string voting_account, string committee_member,
+   signed_transaction vote_for_delegate(string voting_account, string delegate,
          bool approve, bool broadcast );
 
    signed_transaction vote_for_witness(string voting_account, string witness, bool approve,
@@ -301,8 +301,8 @@ public:
    signed_transaction set_voting_proxy(string account_to_modify, optional<string> voting_account,
          bool broadcast );
 
-   signed_transaction set_desired_witness_and_committee_member_count(string account_to_modify,
-         uint16_t desired_number_of_witnesses, uint16_t desired_number_of_committee_members,
+   signed_transaction set_desired_witness_and_delegate_count(string account_to_modify,
+         uint16_t desired_number_of_witnesses, uint16_t desired_number_of_delegates,
          bool broadcast );
 
    signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false);

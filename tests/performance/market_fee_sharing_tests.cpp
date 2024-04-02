@@ -19,7 +19,7 @@ BOOST_FIXTURE_TEST_CASE(mfs_performance_test, database_fixture)
       for (unsigned int i = 0; i < accounts; ++i)
       {
          auto account = create_account("registrar" + std::to_string(i));
-         transfer(committee_account, account.get_id(), asset(1000000));
+         transfer(council_account, account.get_id(), asset(1000000));
          upgrade_to_lifetime_member(account);
 
          registrators.push_back(std::move(account));
@@ -46,7 +46,7 @@ BOOST_FIXTURE_TEST_CASE(mfs_performance_test, database_fixture)
       {
          std::string name = "account" + std::to_string(i);
          auto account = create_account(name, registrators[i], registrators[i], GRAPHENE_1_PERCENT);
-         transfer(committee_account, account.get_id(), asset(1000000));
+         transfer(council_account, account.get_id(), asset(1000000));
          transfer(issuer, account, usd.amount(iterations * 2000));
 
          traders.push_back(std::move(account));

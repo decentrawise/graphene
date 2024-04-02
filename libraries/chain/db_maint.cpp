@@ -11,7 +11,7 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
@@ -244,32 +244,32 @@ void database::update_active_witnesses()
 
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
-void database::update_active_committee_members()
+void database::update_active_delegates()
 { try {
-   assert( !_committee_count_histogram_buffer.empty() );
-   share_type stake_target = (_total_voting_stake-_committee_count_histogram_buffer[0]) / 2;
+   assert( !_council_count_histogram_buffer.empty() );
+   share_type stake_target = (_total_voting_stake-_council_count_histogram_buffer[0]) / 2;
 
-   /// accounts that vote for 0 or 1 committee member do not get to express an opinion on
-   /// the number of committee members to have (they abstain and are non-voting accounts)
+   /// accounts that vote for 0 or 1 delegate do not get to express an opinion on
+   /// the number of delegates to have (they abstain and are non-voting accounts)
    share_type stake_tally = 0;
-   size_t committee_member_count = 0;
+   size_t delegate_count = 0;
    if( stake_target > 0 )
    {
-      while( (committee_member_count < _committee_count_histogram_buffer.size() - 1)
+      while( (delegate_count < _council_count_histogram_buffer.size() - 1)
              && (stake_tally <= stake_target.value) )
       {
-         stake_tally += _committee_count_histogram_buffer[++committee_member_count];
+         stake_tally += _council_count_histogram_buffer[++delegate_count];
       }
    }
 
    const chain_property_object& cpo = get_chain_properties();
 
-   committee_member_count = std::max( (committee_member_count * 2) + 1,
-                                      (size_t)cpo.immutable_parameters.min_committee_member_count );
-   auto committee_members = sort_votable_objects<committee_member_index>( committee_member_count );
+   delegate_count = std::max( (delegate_count * 2) + 1,
+                                      (size_t)cpo.immutable_parameters.min_delegate_count );
+   auto delegates = sort_votable_objects<delegate_index>( delegate_count );
 
-   auto update_committee_member_total_votes = [this]( const committee_member_object& cm ) {
-      modify( cm, [this]( committee_member_object& obj )
+   auto update_delegate_total_votes = [this]( const delegate_object& cm ) {
+      modify( cm, [this]( delegate_object& obj )
       {
          obj.total_votes = _vote_tally_buffer[obj.vote_id];
       });
@@ -277,42 +277,42 @@ void database::update_active_committee_members()
 
    if( _track_standby_votes )
    {
-      const auto& all_committee_members = get_index_type<committee_member_index>().indices();
-      for( const committee_member_object& cm : all_committee_members )
+      const auto& all_delegates = get_index_type<delegate_index>().indices();
+      for( const delegate_object& cm : all_delegates )
       {
-         update_committee_member_total_votes( cm );
+         update_delegate_total_votes( cm );
       }
    }
    else
    {
-      for( const committee_member_object& cm : committee_members )
+      for( const delegate_object& cm : delegates )
       {
-         update_committee_member_total_votes( cm );
+         update_delegate_total_votes( cm );
       }
    }
 
-   // Update committee authorities
-   if( !committee_members.empty() )
+   // Update council authorities
+   if( !delegates.empty() )
    {
-      const account_object& committee_account = get(GRAPHENE_COMMITTEE_ACCOUNT);
-      modify( committee_account, [this,&committee_members](account_object& a)
+      const account_object& council_account = get(GRAPHENE_COUNCIL_ACCOUNT);
+      modify( council_account, [this,&delegates](account_object& a)
       {
          vote_counter vc;
-         for( const committee_member_object& cm : committee_members )
-            vc.add( cm.committee_member_account, _vote_tally_buffer[cm.vote_id] );
+         for( const delegate_object& cm : delegates )
+            vc.add( cm.delegate_account, _vote_tally_buffer[cm.vote_id] );
          vc.finish( a.active );
       });
-      modify( get(GRAPHENE_RELAXED_COMMITTEE_ACCOUNT), [&committee_account](account_object& a)
+      modify( get(GRAPHENE_RELAXED_COUNCIL_ACCOUNT), [&council_account](account_object& a)
       {
-         a.active = committee_account.active;
+         a.active = council_account.active;
       });
    }
-   modify( get_global_properties(), [&committee_members](global_property_object& gp)
+   modify( get_global_properties(), [&delegates](global_property_object& gp)
    {
-      gp.active_committee_members.clear();
-      std::transform(committee_members.begin(), committee_members.end(),
-                     std::inserter(gp.active_committee_members, gp.active_committee_members.begin()),
-                     [](const committee_member_object& d) { return d.get_id(); });
+      gp.active_delegates.clear();
+      std::transform(delegates.begin(), delegates.end(),
+                     std::inserter(gp.active_delegates, gp.active_delegates.begin()),
+                     [](const delegate_object& d) { return d.get_id(); });
    });
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
@@ -763,9 +763,9 @@ void database::process_bitassets()
    {
       o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
 
-      // clear expired feeds if smartcoin (witness_fed or committee_fed) && check overflow
+      // clear expired feeds if smartcoin (witness_fed or delegate_fed) && check overflow
       if( o.options.feed_lifetime_sec < head_epoch_seconds
-            && ( 0 != ( o.asset_id(*this).options.flags & ( witness_fed_asset | committee_fed_asset ) ) ) )
+            && ( 0 != ( o.asset_id(*this).options.flags & ( witness_fed_asset | delegate_fed_asset ) ) ) )
       {
          fc::time_point_sec calculated = head_time - o.options.feed_lifetime_sec;
          auto itr = o.feeds.rbegin();
@@ -808,7 +808,7 @@ void database::perform_chain_maintenance(const signed_block& next_block)
       {
          d._vote_tally_buffer.resize(props.next_available_vote_id);
          d._witness_count_histogram_buffer.resize(props.parameters.maximum_witness_count / 2 + 1);
-         d._committee_count_histogram_buffer.resize(props.parameters.maximum_committee_count / 2 + 1);
+         d._council_count_histogram_buffer.resize(props.parameters.maximum_council_count / 2 + 1);
          d._total_voting_stake = 0;
       }
 
@@ -848,15 +848,15 @@ void database::perform_chain_maintenance(const signed_block& next_block)
                // parameter was lowered.
                d._witness_count_histogram_buffer[offset] += voting_stake;
             }
-            if( opinion_account.options.num_committee <= props.parameters.maximum_committee_count )
+            if( opinion_account.options.num_council <= props.parameters.maximum_council_count )
             {
-               uint16_t offset = std::min(size_t(opinion_account.options.num_committee/2),
-                                          d._committee_count_histogram_buffer.size() - 1);
-               // votes for a number greater than maximum_committee_count
-               // are turned into votes for maximum_committee_count.
+               uint16_t offset = std::min(size_t(opinion_account.options.num_council/2),
+                                          d._council_count_histogram_buffer.size() - 1);
+               // votes for a number greater than maximum_council_count
+               // are turned into votes for maximum_council_count.
                //
                // same rationale as for witnesses
-               d._committee_count_histogram_buffer[offset] += voting_stake;
+               d._council_count_histogram_buffer[offset] += voting_stake;
             }
 
             d._total_voting_stake += voting_stake;
@@ -875,12 +875,12 @@ void database::perform_chain_maintenance(const signed_block& next_block)
       vector<uint64_t>& target;
    };
    clear_canary a(_witness_count_histogram_buffer);
-   clear_canary b(_committee_count_histogram_buffer);
+   clear_canary b(_council_count_histogram_buffer);
    clear_canary c(_vote_tally_buffer);
 
    update_top_n_authorities(*this);
    update_active_witnesses();
-   update_active_committee_members();
+   update_active_delegates();
    update_worker_votes();
 
    modify(gpo, [&dgpo](global_property_object& p) {

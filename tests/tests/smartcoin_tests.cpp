@@ -114,14 +114,14 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       // Each witness is voted with incremental stake so last witness created will be the ones with more votes
 
       // by default we have 9 witnesses, we need to vote for desired witness count (11) to increase them
-      vote_for_committee_and_witnesses(9, 11);
+      vote_for_delegates_and_witnesses(9, 11);
 
       int c = 0;
       for (auto l : witness_map) {
          // voting stake have step of 100
-         // so vote_for_committee_and_witnesses() with stake=10 does not affect the expected result
+         // so vote_for_delegates_and_witnesses() with stake=10 does not affect the expected result
          int stake = 100 * (c + 1);
-         transfer(committee_account, l.first, asset(stake));
+         transfer(council_account, l.first, asset(stake));
          {
             account_update_operation op;
             op.account = l.first;
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       BOOST_CHECK_EQUAL(itr[1].first.instance.value, 17u);
 
       // Activate witness11 with voting stake, will kick the witness with less votes(witness0) out of the active list
-      transfer(committee_account, witness11_id, asset(1200));
+      transfer(council_account, witness11_id, asset(1200));
       set_expiration(db, trx);
       {
          account_update_operation op;
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 17u);
 
       // Reactivate witness0
-      transfer(committee_account, witness0_id, asset(1000));
+      transfer(council_account, witness0_id, asset(1000));
       set_expiration(db, trx);
       {
          account_update_operation op;
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(update_feed_producers)
 {
    try
    {
-      /* For MPA fed by non witnesses or non committee members but by feed producers changes should do nothing */
+      /* For MPA fed by non witnesses or non delegates but by feed producers changes should do nothing */
       ACTORS( (sam)(alice)(paul)(bob) );
 
       // Create the asset

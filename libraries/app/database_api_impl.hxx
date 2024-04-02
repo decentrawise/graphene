@@ -120,14 +120,14 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
             const string& lower_bound_name, uint32_t limit )const;
       uint64_t get_witness_count()const;
 
-      // Committee members
-      vector<optional<committee_member_object>> get_committee_members(
-            const vector<committee_member_id_type>& committee_member_ids )const;
-      fc::optional<committee_member_object> get_committee_member_by_account(
+      // Delegates
+      vector<optional<delegate_object>> get_delegates(
+            const vector<delegate_id_type>& delegate_ids )const;
+      fc::optional<delegate_object> get_delegate_by_account(
             const std::string& account_id_or_name )const;
-      map<string, committee_member_id_type, std::less<>> lookup_committee_member_accounts(
+      map<string, delegate_id_type, std::less<>> lookup_delegate_accounts(
             const string& lower_bound_name, uint32_t limit )const;
-      uint64_t get_committee_count()const;
+      uint64_t get_council_count()const;
 
       // Workers
       vector<worker_object> get_all_workers( const optional<bool>& is_expired )const;

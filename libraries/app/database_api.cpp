@@ -1771,22 +1771,22 @@ uint64_t database_api_impl::get_witness_count()const
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Committee members                                                //
+// Delegates                                                        //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<optional<committee_member_object>> database_api::get_committee_members(
-                                             const vector<committee_member_id_type>& committee_member_ids )const
+vector<optional<delegate_object>> database_api::get_delegates(
+                                             const vector<delegate_id_type>& delegate_ids )const
 {
-   return my->get_committee_members( committee_member_ids );
+   return my->get_delegates( delegate_ids );
 }
 
-vector<optional<committee_member_object>> database_api_impl::get_committee_members(
-                                             const vector<committee_member_id_type>& committee_member_ids )const
+vector<optional<delegate_object>> database_api_impl::get_delegates(
+                                             const vector<delegate_id_type>& delegate_ids )const
 {
-   vector<optional<committee_member_object>> result; result.reserve(committee_member_ids.size());
-   std::transform(committee_member_ids.begin(), committee_member_ids.end(), std::back_inserter(result),
-                  [this](committee_member_id_type id) -> optional<committee_member_object> {
+   vector<optional<delegate_object>> result; result.reserve(delegate_ids.size());
+   std::transform(delegate_ids.begin(), delegate_ids.end(), std::back_inserter(result),
+                  [this](delegate_id_type id) -> optional<delegate_object> {
       if(auto o = _db.find(id))
          return *o;
       return {};
@@ -1794,16 +1794,16 @@ vector<optional<committee_member_object>> database_api_impl::get_committee_membe
    return result;
 }
 
-fc::optional<committee_member_object> database_api::get_committee_member_by_account(
+fc::optional<delegate_object> database_api::get_delegate_by_account(
                                          const std::string& account_id_or_name )const
 {
-   return my->get_committee_member_by_account( account_id_or_name );
+   return my->get_delegate_by_account( account_id_or_name );
 }
 
-fc::optional<committee_member_object> database_api_impl::get_committee_member_by_account(
+fc::optional<delegate_object> database_api_impl::get_delegate_by_account(
                                          const std::string& account_id_or_name )const
 {
-   const auto& idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
+   const auto& idx = _db.get_index_type<delegate_index>().indices().get<by_account>();
    const account_id_type account = get_account_from_string(account_id_or_name)->get_id();
    auto itr = idx.find(account);
    if( itr != idx.end() )
@@ -1811,53 +1811,53 @@ fc::optional<committee_member_object> database_api_impl::get_committee_member_by
    return {};
 }
 
-map<string, committee_member_id_type, std::less<>> database_api::lookup_committee_member_accounts(
+map<string, delegate_id_type, std::less<>> database_api::lookup_delegate_accounts(
                                          const string& lower_bound_name, uint32_t limit )const
 {
-   return my->lookup_committee_member_accounts( lower_bound_name, limit );
+   return my->lookup_delegate_accounts( lower_bound_name, limit );
 }
 
-map<string, committee_member_id_type, std::less<>> database_api_impl::lookup_committee_member_accounts(
+map<string, delegate_id_type, std::less<>> database_api_impl::lookup_delegate_accounts(
                                          const string& lower_bound_name, uint32_t limit )const
 {
    FC_ASSERT( _app_options, "Internal error" );
-   const auto configured_limit = _app_options->api_limit_lookup_committee_member_accounts;
+   const auto configured_limit = _app_options->api_limit_lookup_delegate_accounts;
    FC_ASSERT( limit <= configured_limit,
               "limit can not be greater than ${configured_limit}",
               ("configured_limit", configured_limit) );
 
-   const auto& committee_members_by_id = _db.get_index_type<committee_member_index>().indices().get<by_id>();
+   const auto& delegates_by_id = _db.get_index_type<delegate_index>().indices().get<by_id>();
 
-   // we want to order committee_members by account name, but that name is in the account object
-   // so the committee_member_index doesn't have a quick way to access it.
+   // we want to order delegates by account name, but that name is in the account object
+   // so the delegate_index doesn't have a quick way to access it.
    // get all the names and look them all up, sort them, then figure out what
    // records to return.  This could be optimized, but we expect the
-   // number of committee_members to be few and the frequency of calls to be rare
+   // number of delegates to be few and the frequency of calls to be rare
    // TODO optimize
-   std::map<std::string, committee_member_id_type, std::less<>> committee_members_by_account_name;
-   for (const committee_member_object& committee_member : committee_members_by_id)
-      if (auto account_iter = _db.find(committee_member.committee_member_account))
+   std::map<std::string, delegate_id_type, std::less<>> delegates_by_account_name;
+   for (const delegate_object& delegate : delegates_by_id)
+      if (auto account_iter = _db.find(delegate.delegate_account))
          if (account_iter->name >= lower_bound_name) // we can ignore anything below lower_bound_name
-            committee_members_by_account_name.insert(std::make_pair(account_iter->name, committee_member.get_id()));
+            delegates_by_account_name.insert(std::make_pair(account_iter->name, delegate.get_id()));
 
-   auto end_iter = committee_members_by_account_name.begin();
-   while( end_iter != committee_members_by_account_name.end() && limit > 0 )
+   auto end_iter = delegates_by_account_name.begin();
+   while( end_iter != delegates_by_account_name.end() && limit > 0 )
    {
       ++end_iter;
       --limit;
    }
-   committee_members_by_account_name.erase(end_iter, committee_members_by_account_name.end());
-   return committee_members_by_account_name;
+   delegates_by_account_name.erase(end_iter, delegates_by_account_name.end());
+   return delegates_by_account_name;
 }
 
-uint64_t database_api::get_committee_count()const
+uint64_t database_api::get_council_count()const
 {
-    return my->get_committee_count();
+    return my->get_council_count();
 }
 
-uint64_t database_api_impl::get_committee_count()const
+uint64_t database_api_impl::get_council_count()const
 {
-    return _db.get_index_type<committee_member_index>().indices().size();
+    return _db.get_index_type<delegate_index>().indices().size();
 }
 
 
@@ -1951,7 +1951,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
               ("configured_limit", configured_limit) );
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
+   const auto& delegate_idx = _db.get_index_type<delegate_index>().indices().get<by_vote_id>();
    const auto& worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_id>();
 
    vector<variant> result;
@@ -1960,11 +1960,11 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
    {
       switch( id.type() )
       {
-         case vote_id_type::committee:
+         case vote_id_type::delegate:
          {
-            auto itr = committee_idx.find( id );
-            if( itr != committee_idx.end() )
-               result.emplace_back( variant( *itr, 2 ) ); // Depth of committee_member_object is 1, add 1 to be safe
+            auto itr = delegate_idx.find( id );
+            if( itr != delegate_idx.end() )
+               result.emplace_back( variant( *itr, 2 ) ); // Depth of delegate_object is 1, add 1 to be safe
             else
                result.emplace_back( variant() );
             break;

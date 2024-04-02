@@ -42,7 +42,7 @@ void generate_random_preimage(uint16_t key_size, std::vector<char>& vec)
 void test_setup(database_fixture* db_fixture)
 {
    set_expiration(db_fixture->db, db_fixture->trx);
-   db_fixture->set_htlc_committee_parameters();
+   db_fixture->set_htlc_council_parameters();
    set_expiration(db_fixture->db, db_fixture->trx);
 }
 
@@ -53,7 +53,7 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
    test_setup(this);
 
@@ -158,9 +158,9 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
-   transfer( committee_account, bob_id, graphene::chain::asset(init_balance) );
-   transfer( committee_account, joker_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, bob_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, joker_id, graphene::chain::asset(init_balance) );
 
    test_setup(this);
    
@@ -246,11 +246,11 @@ BOOST_AUTO_TEST_CASE( other_peoples_money )
 try {
    test_setup(this);
 
-   // Initialize committee by voting for each member and for desired count and HTLC parameters
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   // Initialize council by voting for each member and for desired count and HTLC parameters
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    set_expiration(db, trx);
-   set_htlc_committee_parameters();
+   set_htlc_council_parameters();
    generate_block();
    set_expiration(db, trx);
 
@@ -258,7 +258,7 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION );
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(256);
@@ -306,11 +306,11 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
    try {
       test_setup(this);
 
-      // Initialize committee by voting for each member and for desired count and HTLC parameters
-      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      // Initialize council by voting for each member and for desired count and HTLC parameters
+      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration(db, trx);
-      set_htlc_committee_parameters();
+      set_htlc_council_parameters();
       generate_block();
       set_expiration(db, trx);
 
@@ -335,10 +335,10 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
                new_fee_schedule->parameters.insert( (*itr).second);
             }
          }
-         proposal_create_operation cop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+         proposal_create_operation cop = proposal_create_operation::council_proposal(db.get_global_properties().parameters, db.head_block_time());
          cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
          cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-         committee_member_update_global_parameters_operation uop;
+         delegate_update_global_parameters_operation uop;
          graphene::chain::htlc_options new_params;
          new_params.max_preimage_size = 2048;
          new_params.max_timeout_secs = 60 * 60 * 24 * 28;
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
          good_proposal_id = proc_trx.operation_results[0].get<object_id_type>();
       }
 
-      BOOST_TEST_MESSAGE( "Updating proposal by signing with the committee_member private key" );
+      BOOST_TEST_MESSAGE( "Updating proposal by signing with the delegate private key" );
       {
          proposal_update_operation uop;
          uop.proposal = good_proposal_id;
@@ -582,11 +582,11 @@ try {
 
    int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
 
-   transfer( committee_account, alice_id, graphene::chain::asset(init_balance) );
+   transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
    set_expiration( db, trx );
 
-   set_htlc_committee_parameters();
+   set_htlc_council_parameters();
 
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(256);

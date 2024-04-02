@@ -27,7 +27,7 @@ def main():
 
     wit_accounts = []
     wit_wits = []
-    committee = []
+    council = []
 
     for i in range(opts.num):
         owner_str = subprocess.check_output(["programs/genesis_util/get_dev_key", opts.secret, "wit-owner-"+str(i)]).decode("utf-8")
@@ -46,7 +46,7 @@ def main():
             "owner_name" : "init"+str(i),
             "block_signing_key" : prod[0]["public_key"],
             })
-        committee.append({"owner_name" : "init"+str(i)})
+        council.append({"owner_name" : "init"+str(i)})
     result = {
        "append" : {
        "initial_accounts" : wit_accounts },
@@ -54,7 +54,7 @@ def main():
        "initial_active_witnesses" : opts.num,
        "initial_worker_candidates" : [],
        "initial_witness_candidates" : wit_wits,
-       "initial_committee_candidates" : committee,
+       "initial_council_candidates" : council,
         }
     }
 

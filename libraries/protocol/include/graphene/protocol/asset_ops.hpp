@@ -323,7 +323,7 @@ namespace graphene { namespace protocol {
     * This operation is used to specify which accounts may produce feeds for a given BitAsset.
     *
     * @pre @ref issuer MUST be an existing account, and MUST match asset_object::issuer on @ref asset_to_update
-    * @pre @ref issuer MUST NOT be the committee account
+    * @pre @ref issuer MUST NOT be the council account
     * @pre @ref asset_to_update MUST be a BitAsset, i.e. @ref asset_object::is_market_issued() returns true
     * @pre @ref fee MUST be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
     * @pre Cardinality of @ref new_feed_producers MUST NOT exceed @ref chain_parameters::maximum_asset_feed_publishers
@@ -352,7 +352,7 @@ namespace graphene { namespace protocol {
     *
     * Price feed providers use this operation to publish their price feeds for market-issued assets. A price feed is
     * used to tune the market for a particular market-issued asset. For each value in the feed, the median across all
-    * committee_member feeds for that asset is calculated and the market for the asset is configured with the median of that
+    * delegate feeds for that asset is calculated and the market for the asset is configured with the median of that
     * value.
     *
     * The feed in the operation contains three prices: a call price limit, a short price limit, and a settlement price.

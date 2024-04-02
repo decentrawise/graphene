@@ -33,7 +33,7 @@ namespace graphene { namespace protocol {
 
       enum vote_type
       {
-         committee,
+         delegate,
          witness,
          worker,
          VOTE_TYPE_COUNT
@@ -118,7 +118,7 @@ namespace fc {
 
 FC_REFLECT_TYPENAME( fc::flat_set<graphene::protocol::vote_id_type> )
 
-FC_REFLECT_ENUM( graphene::protocol::vote_id_type::vote_type, (witness)(committee)(worker)(VOTE_TYPE_COUNT) )
+FC_REFLECT_ENUM( graphene::protocol::vote_id_type::vote_type, (delegate)(witness)(worker)(VOTE_TYPE_COUNT) )
 FC_REFLECT( graphene::protocol::vote_id_type, (content) )
 
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::vote_id_type )

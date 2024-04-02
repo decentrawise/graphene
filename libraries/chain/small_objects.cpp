@@ -5,7 +5,7 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
@@ -50,7 +50,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::buyback_object, (graphene::db::
 
 
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::immutable_chain_parameters, BOOST_PP_SEQ_NIL,
-   (min_committee_member_count)
+   (min_delegate_count)
    (min_witness_count)
    (num_special_accounts)
    (num_special_assets)
@@ -61,8 +61,8 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::chain_property_object, (graphen
                     (immutable_parameters)
                   )
 
-FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::committee_member_object, (graphene::db::object),
-                    (committee_member_account)(vote_id)(total_votes)(url) )
+FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::delegate_object, (graphene::db::object),
+                    (delegate_account)(vote_id)(total_votes)(url) )
 
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::blinded_balance_object, (graphene::db::object),
                                 (commitment)(asset_id)(owner) )
@@ -90,7 +90,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::global_property_object, (graphe
                     (parameters)
                     (pending_parameters)
                     (next_available_vote_id)
-                    (active_committee_members)
+                    (active_delegates)
                     (active_witnesses)
                   )
 
@@ -170,7 +170,7 @@ GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::budget_record_object
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::buyback_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::immutable_chain_parameters )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::chain_property_object )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::committee_member_object )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::delegate_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::blinded_balance_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::fba_accumulator_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::dynamic_global_property_object )

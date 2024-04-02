@@ -217,16 +217,16 @@ namespace graphene { namespace protocol {
     * @param get_owner  callback function to retrieve owner authorities of a given account
     * @param max_recursion maximum level of recursion when verifying, since an account
     *            can have another account in active authorities and/or owner authorities
-    * @param allow_committee whether to allow the special "committee account" to authorize the operations
-    * @param active_approvals accounts that approved the operations with their active authories
-    * @param owner_approvals accounts that approved the operations with their owner authories
+    * @param allow_council whether to allow the special "council account" to authorize the operations
+    * @param active_approvals accounts that approved the operations with their active authorities
+    * @param owner_approvals accounts that approved the operations with their owner authorities
     */
    void verify_authority( const vector<operation>& ops, const flat_set<public_key_type>& sigs,
                           const std::function<const authority*(account_id_type)>& get_active,
                           const std::function<const authority*(account_id_type)>& get_owner,
                           uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH,
-                          bool allow_committe = false,
-                          const flat_set<account_id_type>& active_aprovals = flat_set<account_id_type>(),
+                          bool allow_council = false,
+                          const flat_set<account_id_type>& active_approvals = flat_set<account_id_type>(),
                           const flat_set<account_id_type>& owner_approvals = flat_set<account_id_type>());
 
    /**

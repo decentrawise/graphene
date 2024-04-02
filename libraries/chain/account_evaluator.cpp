@@ -2,7 +2,7 @@
 #include <graphene/chain/buyback.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/internal_exceptions.hpp>
@@ -42,8 +42,8 @@ void verify_account_votes( const database& db, const account_options& options )
 
    FC_ASSERT( options.num_witness <= chain_params.maximum_witness_count,
               "Voted for more witnesses than currently allowed (${c})", ("c", chain_params.maximum_witness_count) );
-   FC_ASSERT( options.num_committee <= chain_params.maximum_committee_count,
-              "Voted for more committee members than currently allowed (${c})", ("c", chain_params.maximum_committee_count) );
+   FC_ASSERT( options.num_council <= chain_params.maximum_council_count,
+              "Voted for more delegates than currently allowed (${c})", ("c", chain_params.maximum_council_count) );
 
    FC_ASSERT( db.find(options.voting_account), "Invalid proxy account specified." );
 
@@ -54,12 +54,12 @@ void verify_account_votes( const database& db, const account_options& options )
    }
 
    const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
+   const auto& delegate_idx = db.get_index_type<delegate_index>().indices().get<by_vote_id>();
    const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
    for ( auto id : options.votes ) {
       switch ( id.type() ) {
-         case vote_id_type::committee:
-            FC_ASSERT( committee_idx.find(id) != committee_idx.end(),
+         case vote_id_type::delegate:
+            FC_ASSERT( delegate_idx.find(id) != delegate_idx.end(),
                         "Can not vote for ${id} which does not exist.", ("id",id) );
             break;
          case vote_id_type::witness:

@@ -40,7 +40,7 @@ class wallet_api
       fc::ecc::private_key derive_private_key( const string& prefix_string, uint32_t sequence_number ) const;
 
       /** Returns info about head block, chain_id, maintenance, participation, current active witnesses and
-       * committee members.
+       * delegates.
        * @returns runtime info about the blockchain
        */
       variant                           info()const;
@@ -207,7 +207,7 @@ class wallet_api
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
        * or that change only once per maintenance interval (daily) such as the
-       * current list of witnesses, committee_members, block interval, etc.
+       * current list of witnesses, delegates, block interval, etc.
        * @see \c get_dynamic_global_properties() for frequently changing properties
        * @returns the global properties
        */
@@ -1163,7 +1163,7 @@ class wallet_api
        *
        * Price feed providers use this command to publish their price feeds for market-issued assets. A price feed is
        * used to tune the market for a particular market-issued asset. For each value in the feed, the median across
-       * all committee_member feeds for that asset is calculated and the market for the asset is configured with the
+       * all delegate feeds for that asset is calculated and the market for the asset is configured with the
        * median of that value.
        *
        * The feed object in this command contains three prices: a call price limit, a short price limit,
@@ -1326,17 +1326,17 @@ class wallet_api
                                             account_whitelist_operation::account_listing new_listing_status,
                                             bool broadcast = false )const;
 
-      /** Creates a committee_member object owned by the given account.
+      /** Creates a delegate object owned by the given account.
        *
-       * An account can have at most one committee_member object.
+       * An account can have at most one delegate object.
        *
-       * @param owner_account the name or id of the account which is creating the committee_member
-       * @param url a URL to include in the committee_member record in the blockchain.  Clients may
-       *            display this when showing a list of committee_members.  May be blank.
+       * @param owner_account the name or id of the account which is creating the delegate
+       * @param url a URL to include in the delegate record in the blockchain.  Clients may
+       *            display this when showing a list of delegates.  May be blank.
        * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction registering a committee_member
+       * @returns the signed transaction registering a delegate
        */
-      signed_transaction create_committee_member( const string& owner_account,
+      signed_transaction create_delegate( const string& owner_account,
                                                   const string& url,
                                                   bool broadcast = false )const;
 
@@ -1355,20 +1355,20 @@ class wallet_api
        */
       map<string, witness_id_type, std::less<>> list_witnesses( const string& lowerbound, uint32_t limit )const;
 
-      /** Lists all committee_members registered in the blockchain.
-       * This returns a list of all account names that own committee_members, and the associated committee_member id,
-       * sorted by name.  This lists committee_members whether they are currently voted in or not.
+      /** Lists all delegates registered in the blockchain.
+       * This returns a list of all account names that own delegates, and the associated delegate id,
+       * sorted by name.  This lists delegates whether they are currently voted in or not.
        *
-       * Use the \c lowerbound and limit parameters to page through the list.  To retrieve all committee_members,
+       * Use the \c lowerbound and limit parameters to page through the list.  To retrieve all delegates,
        * start by setting \c lowerbound to the empty string \c "", and then each iteration, pass
-       * the last committee_member name returned as the \c lowerbound for the next \c list_committee_members() call.
+       * the last delegate name returned as the \c lowerbound for the next \c list_delegates() call.
        *
-       * @param lowerbound the name of the first committee_member to return.  If the named committee_member does not
-       *                   exist, the list will start at the committee_member that comes after \c lowerbound
-       * @param limit the maximum number of committee_members to return (max: 1000)
-       * @returns a list of committee_members mapping committee_member names to committee_member ids
+       * @param lowerbound the name of the first delegate to return.  If the named delegate does not
+       *                   exist, the list will start at the delegate that comes after \c lowerbound
+       * @param limit the maximum number of delegates to return (max: 1000)
+       * @returns a list of delegates mapping delegate names to delegate ids
        */
-      map<string, committee_member_id_type, std::less<>> list_committee_members(
+      map<string, delegate_id_type, std::less<>> list_delegates(
             const string& lowerbound, uint32_t limit )const;
 
       /** Returns information about the given witness.
@@ -1377,11 +1377,11 @@ class wallet_api
        */
       witness_object get_witness( const string& owner_account )const;
 
-      /** Returns information about the given committee_member.
-       * @param owner_account the name or id of the committee_member account owner, or the id of the committee_member
-       * @returns the information about the committee_member stored in the block chain
+      /** Returns information about the given delegate.
+       * @param owner_account the name or id of the delegate account owner, or the id of the delegate
+       * @returns the information about the delegate stored in the block chain
        */
-      committee_member_object get_committee_member( const string& owner_account )const;
+      delegate_object get_delegate( const string& owner_account )const;
 
       /** Creates a witness object owned by the given account.
        *
@@ -1517,25 +1517,25 @@ class wallet_api
          const string& asset_symbol_or_id,
          bool broadcast = false )const;
 
-      /** Vote for a given committee_member.
+      /** Vote for a given delegate.
        *
-       * An account can publish a list of all committee_members they approve of.  This
-       * command allows you to add or remove committee_members from this list.
+       * An account can publish a list of all delegates they approve of.  This
+       * command allows you to add or remove delegates from this list.
        * Each account's vote is weighted according to the number of voting stake
        * owned by that account at the time the votes are tallied.
        *
-       * @note you cannot vote against a committee_member, you can only vote for the committee_member
-       *       or not vote for the committee_member.
+       * @note you cannot vote against a delegate, you can only vote for the delegate
+       *       or not vote for the delegate.
        *
        * @param voting_account the name or id of the account who is voting with their stake
-       * @param committee_member the name or id of the committee_member's owner account
-       * @param approve true if you wish to vote in favor of that committee_member, false to
-       *                remove your vote in favor of that committee_member
+       * @param delegate the name or id of the delegate's owner account
+       * @param approve true if you wish to vote in favor of that delegate, false to
+       *                remove your vote in favor of that delegate
        * @param broadcast true if you wish to broadcast the transaction
-       * @return the signed transaction changing your vote for the given committee_member
+       * @return the signed transaction changing your vote for the given delegate
        */
-      signed_transaction vote_for_committee_member( const string& voting_account,
-                                                    const string& committee_member,
+      signed_transaction vote_for_delegate( const string& voting_account,
+                                                    const string& delegate,
                                                     bool approve,
                                                     bool broadcast = false )const;
 
@@ -1583,13 +1583,13 @@ class wallet_api
                                            const optional<string>& voting_account,
                                            bool broadcast = false )const;
 
-      /** Set your vote for the number of witnesses and committee_members in the system.
+      /** Set your vote for the number of witnesses and delegates in the system.
        *
-       * Each account can voice their opinion on how many committee_members and how many
-       * witnesses there should be in the active committee_member/active witness list.  These
+       * Each account can voice their opinion on how many delegates and how many
+       * witnesses there should be in the active delegate/active witness list.  These
        * are independent of each other.  You must vote your approval of at least as many
-       * committee_members or witnesses as you claim there should be (you can't say that there should
-       * be 20 committee_members but only vote for 10).
+       * delegates or witnesses as you claim there should be (you can't say that there should
+       * be 20 delegates but only vote for 10).
        *
        * There are maximum values for each set in the blockchain parameters (currently
        * defaulting to 1001).
@@ -1599,14 +1599,14 @@ class wallet_api
        *
        * @param account_to_modify the name or id of the account to update
        * @param desired_number_of_witnesses desired number of active witnesses
-       * @param desired_number_of_committee_members desired number of active committee members
+       * @param desired_number_of_delegates desired number of active delegates
        *
        * @param broadcast true if you wish to broadcast the transaction
        * @return the signed transaction changing your vote proxy settings
        */
-      signed_transaction set_desired_witness_and_committee_member_count( const string& account_to_modify,
+      signed_transaction set_desired_witness_and_delegate_count( const string& account_to_modify,
                                                                 uint16_t desired_number_of_witnesses,
-                                                                uint16_t desired_number_of_committee_members,
+                                                                uint16_t desired_number_of_delegates,
                                                                 bool broadcast = false )const;
 
       /** Signs a transaction.
@@ -1863,11 +1863,11 @@ FC_API( graphene::wallet::wallet_api,
         (settle_asset)
         (bid_collateral)
         (whitelist_account)
-        (create_committee_member)
+        (create_delegate)
         (get_witness)
-        (get_committee_member)
+        (get_delegate)
         (list_witnesses)
-        (list_committee_members)
+        (list_delegates)
         (create_witness)
         (update_witness)
         (create_worker)
@@ -1877,10 +1877,10 @@ FC_API( graphene::wallet::wallet_api,
         (htlc_extend)
         (get_vesting_balances)
         (withdraw_vesting)
-        (vote_for_committee_member)
+        (vote_for_delegate)
         (vote_for_witness)
         (set_voting_proxy)
-        (set_desired_witness_and_committee_member_count)
+        (set_desired_witness_and_delegate_count)
         (get_account)
         (get_account_id)
         (get_account_name)

@@ -33,7 +33,7 @@ namespace graphene { namespace protocol {
       to.block_interval = from.block_interval;
       to.maintenance_interval = from.maintenance_interval;
       to.maintenance_skip_slots = from.maintenance_skip_slots;
-      to.committee_proposal_review_period = from.committee_proposal_review_period;
+      to.council_proposal_review_period = from.council_proposal_review_period;
       to.maximum_transaction_size = from.maximum_transaction_size;
       to.maximum_block_size = from.maximum_block_size;
       to.maximum_time_until_expiration = from.maximum_time_until_expiration;
@@ -41,7 +41,7 @@ namespace graphene { namespace protocol {
       to.maximum_asset_whitelist_authorities = from.maximum_asset_whitelist_authorities;
       to.maximum_asset_feed_publishers = from.maximum_asset_feed_publishers;
       to.maximum_witness_count = from.maximum_witness_count;
-      to.maximum_committee_count = from.maximum_committee_count;
+      to.maximum_council_count = from.maximum_council_count;
       to.maximum_authority_membership = from.maximum_authority_membership;
       to.reserve_percent_of_fee = from.reserve_percent_of_fee;
       to.network_percent_of_fee = from.network_percent_of_fee;
@@ -100,8 +100,8 @@ namespace graphene { namespace protocol {
                  "Block size limit is too low" );
       FC_ASSERT( maximum_time_until_expiration > block_interval,
                  "Maximum transaction expiration time must be greater than a block interval" );
-      FC_ASSERT( maximum_proposal_lifetime - committee_proposal_review_period > block_interval,
-                 "Committee proposal review period must be less than the maximum proposal lifetime" );
+      FC_ASSERT( maximum_proposal_lifetime - council_proposal_review_period > block_interval,
+                 "Council proposal review period must be less than the maximum proposal lifetime" );
    }
 
 }}

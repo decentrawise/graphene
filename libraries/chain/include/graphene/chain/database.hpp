@@ -575,7 +575,7 @@ namespace graphene { namespace chain {
          void pay_workers( share_type& budget );
          void perform_chain_maintenance(const signed_block& next_block);
          void update_active_witnesses();
-         void update_active_committee_members();
+         void update_active_delegates();
          void update_worker_votes();
          void process_bids( const asset_bitasset_data_object& bad );
          void process_bitassets();
@@ -617,14 +617,14 @@ namespace graphene { namespace chain {
 
          vector<uint64_t>                  _vote_tally_buffer;
          vector<uint64_t>                  _witness_count_histogram_buffer;
-         vector<uint64_t>                  _committee_count_histogram_buffer;
+         vector<uint64_t>                  _council_count_histogram_buffer;
          uint64_t                          _total_voting_stake;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          node_property_object              _node_property_object;
 
-         /// Whether to update votes of standby witnesses and committee members when performing chain maintenance.
+         /// Whether to update votes of standby witnesses and delegates when performing chain maintenance.
          /// Set it to true to provide accurate data to API clients, set to false to have better performance.
          bool                              _track_standby_votes = true;
 
@@ -651,7 +651,7 @@ namespace graphene { namespace chain {
          ///@}
 
       public:
-         /// Enable or disable tracking of votes of standby witnesses and committee members
+         /// Enable or disable tracking of votes of standby witnesses and delegates
          inline void enable_standby_votes_tracking(bool enable)  { _track_standby_votes = enable; }
    };
 

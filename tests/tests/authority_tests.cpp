@@ -5,7 +5,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE( recursive_accounts )
       BOOST_CHECK_EQUAL(get_balance(child, core), static_cast<int64_t>(old_balance - 2000));
       trx.clear();
 
-      BOOST_TEST_MESSAGE( "Update grandparent account authority to be committee account" );
+      BOOST_TEST_MESSAGE( "Update grandparent account authority to be council account" );
       {
          account_update_operation op;
          op.account = grandparent.id;
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
    try {
       INVOKE(any_two_of_three);
 
-      fc::ecc::private_key committee_key = init_account_priv_key;
+      fc::ecc::private_key council_key = init_account_priv_key;
       fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::digest("key1"));
       fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::digest("key2"));
       fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::digest("key3"));
@@ -330,14 +330,14 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       pup.active_approvals_to_add.insert(nathan.get_id());
 
       trx.operations = {pup};
-      sign( trx,   committee_key  );
-      //committee may not add nathan's approval.
+      sign( trx,   council_key  );
+      //council may not add nathan's approval.
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
       pup.active_approvals_to_add.clear();
       pup.active_approvals_to_add.insert(account_id_type());
       trx.operations = {pup};
-      sign( trx,   committee_key  );
-      //committee has no stake in the transaction.
+      sign( trx,   council_key  );
+      //council has no stake in the transaction.
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
 
       trx.clear_signatures();
@@ -400,16 +400,16 @@ BOOST_AUTO_TEST_CASE( proposal_failure )
    FC_LOG_AND_RETHROW()
 }
 
-/// Verify that committee authority cannot be invoked in a normal transaction
-BOOST_AUTO_TEST_CASE( committee_authority )
+/// Verify that council authority cannot be invoked in a normal transaction
+BOOST_AUTO_TEST_CASE( council_authority )
 { try {
    fc::ecc::private_key nathan_key = fc::ecc::private_key::generate();
-   fc::ecc::private_key committee_key = init_account_priv_key;
+   fc::ecc::private_key council_key = init_account_priv_key;
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
-   // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   // Initialize council by voting for each member and for desired count
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -417,34 +417,34 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    // Signatures are for suckers.
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       // Turn the review period WAY down, so it doesn't take long to produce blocks to that point in simulated time.
-      p.parameters.committee_proposal_review_period = fc::days(1).to_seconds();
+      p.parameters.council_proposal_review_period = fc::days(1).to_seconds();
    });
 
-   BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with committee key should fail because this requires it to be part of a proposal" );
+   BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with council key should fail because this requires it to be part of a proposal" );
    transfer_operation top;
    top.to = nathan.id;
    top.amount = asset(100000);
    trx.operations.push_back(top);
-   sign(trx, committee_key);
-   GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), graphene::chain::invalid_committee_approval );
+   sign(trx, council_key);
+   GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), graphene::chain::invalid_council_approval );
 
    auto _sign = [&] { trx.clear_signatures(); sign( trx, nathan_key ); };
 
    proposal_create_operation pop;
    pop.proposed_ops.push_back({trx.operations.front()});
-   pop.expiration_time = db.head_block_time() + global_params.committee_proposal_review_period*2;
+   pop.expiration_time = db.head_block_time() + global_params.council_proposal_review_period*2;
    pop.fee_paying_account = nathan.id;
    trx.operations = {pop};
    _sign();
 
    // The review period isn't set yet. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_required );
-   pop.review_period_seconds = global_params.committee_proposal_review_period / 2;
+   pop.review_period_seconds = global_params.council_proposal_review_period / 2;
    trx.operations.back() = pop;
    _sign();
    // The review period is too short. Make sure it throws.
    GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx ), proposal_create_review_period_insufficient );
-   pop.review_period_seconds = global_params.committee_proposal_review_period;
+   pop.review_period_seconds = global_params.council_proposal_review_period;
    trx.operations.back() = pop;
    _sign();
 
@@ -469,9 +469,9 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    uop.proposal = prop.id;
 
-   uop.key_approvals_to_add.emplace(committee_key.get_public_key());
+   uop.key_approvals_to_add.emplace(council_key.get_public_key());
    trx.operations.push_back(uop);
-   sign( trx, committee_key );
+   sign( trx, council_key );
    PUSH_TX(db, trx);
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 0);
    BOOST_CHECK(db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
@@ -479,9 +479,9 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    trx.clear_signatures();
    generate_blocks(*prop.review_period_time);
    uop.key_approvals_to_add.clear();
-   uop.key_approvals_to_add.insert(committee_key.get_public_key()); // was 7
+   uop.key_approvals_to_add.insert(council_key.get_public_key()); // was 7
    trx.operations.back() = uop;
-   sign( trx,  committee_key );
+   sign( trx,  council_key );
    // Should throw because the transaction is now in review.
    GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
 
@@ -491,14 +491,14 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    BOOST_CHECK_THROW( db.get<proposal_object>(prop.id), fc::exception );
 } FC_LOG_AND_RETHROW() }
 
-BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
+BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
 { try {
    generate_block();
-   fc::ecc::private_key committee_key = init_account_priv_key;
-   fc::ecc::private_key committee_member_key = fc::ecc::private_key::generate();
+   fc::ecc::private_key council_key = init_account_priv_key;
+   fc::ecc::private_key delegate_key = fc::ecc::private_key::generate();
 
-   // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   // Initialize council by voting for each member and for desired count
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -508,25 +508,25 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    transfer(account_id_type()(db), *nathan, asset(5000));
    generate_block();
    nathan = &get_account("nathan");
-   flat_set<vote_id_type> committee_members;
+   flat_set<vote_id_type> delegates;
 
    /*
    db.modify(db.get_global_properties(), [](global_property_object& p) {
       // Turn the review period WAY down, so it doesn't take long to produce blocks to that point in simulated time.
-      p.parameters.committee_proposal_review_period = fc::days(1).to_seconds();
+      p.parameters.council_proposal_review_period = fc::days(1).to_seconds();
    });
    */
 
    for( int i = 0; i < 15; ++i )
    {
-      const auto& account = create_account("committee-member" + fc::to_string(i+1), committee_member_key.get_public_key());
+      const auto& account = create_account("delegate" + fc::to_string(i+1), delegate_key.get_public_key());
       upgrade_to_lifetime_member(account);
-      committee_members.insert(create_committee_member(account).vote_id);
+      delegates.insert(create_delegate(account).vote_id);
    }
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
    //A proposal is created to give nathan lots more money.
-   proposal_create_operation pop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
+   proposal_create_operation pop = proposal_create_operation::council_proposal(db.get_global_properties().parameters, db.head_block_time());
    pop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    pop.expiration_time = db.head_block_time() + *pop.review_period_seconds + fc::days(1).to_seconds();
    ilog( "Creating proposal to give nathan money that expires: ${e}", ("e", pop.expiration_time ) );
@@ -541,14 +541,14 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    proposal_id_type pid = prop.get_id();
    BOOST_CHECK(!pid(db).is_authorized_to_execute(db));
 
-   ilog( "commitee member approves proposal" );
-   //committee key approves of the proposal.
+   ilog( "delegate approves proposal" );
+   //council key approves of the proposal.
    proposal_update_operation uop;
    uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    uop.proposal = pid;
    uop.key_approvals_to_add.emplace(init_account_pub_key);
    trx.operations.back() = uop;
-   sign( trx, committee_key );
+   sign( trx, council_key );
    PUSH_TX( db, trx );
    BOOST_CHECK(pid(db).is_authorized_to_execute(db));
 
@@ -572,11 +572,11 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
    {
-      //Oh noes! Nathan votes for a whole new slate of committee_members!
+      //Oh noes! Nathan votes for a whole new slate of delegates!
       account_update_operation op;
       op.account = nathan->id;
       op.new_options = nathan->options;
-      op.new_options->votes = committee_members;
+      op.new_options->votes = delegates;
       trx.operations.push_back(op);
       set_expiration( db, trx );
       PUSH_TX( db, trx, ~0 );
@@ -586,9 +586,9 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    // still no money
    BOOST_CHECK_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
-   //Time passes... the set of active committee_members gets updated.
+   //Time passes... the set of active delegates gets updated.
    generate_blocks(maintenance_time);
-   //The proposal is no longer authorized, because the active committee_members got changed.
+   //The proposal is no longer authorized, because the active delegates got changed.
    BOOST_CHECK(!pid(db).is_authorized_to_execute(db));
    // still no money
    BOOST_CHECK_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
@@ -906,22 +906,22 @@ BOOST_FIXTURE_TEST_CASE( max_authority_membership, database_fixture )
       generate_block();
 
       db.modify(db.get_global_properties(), [](global_property_object& p) {
-         p.parameters.committee_proposal_review_period = fc::hours(1).to_seconds();
+         p.parameters.council_proposal_review_period = fc::hours(1).to_seconds();
       });
 
       transaction tx;
 
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       // Sam is the creator of accounts
       private_key_type sam_key = generate_private_key("sam");
 
       account_object sam_account_object = create_account( "sam", sam_key );
       upgrade_to_lifetime_member(sam_account_object);
-      account_object committee_account_object = committee_account(db);
+      account_object council_account_object = council_account(db);
 
       const asset_object& core = asset_id_type()(db);
 
-      transfer(committee_account_object, sam_account_object, core.amount(100000));
+      transfer(council_account_object, sam_account_object, core.amount(100000));
 
       // have Sam create some keys
 
@@ -997,13 +997,13 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
 {
    try
    {
-      private_key_type committee_key = init_account_priv_key;
+      private_key_type council_key = init_account_priv_key;
       // Sam is the creator of accounts
       private_key_type alice_key = generate_private_key("alice");
       private_key_type bob_key = generate_private_key("bob");
       private_key_type charlie_key = generate_private_key("charlie");
 
-      account_object committee_account_object = committee_account(db);
+      account_object council_account_object = council_account(db);
       account_object alice_account_object = create_account( "alice", alice_key );
       account_object bob_account_object = create_account( "bob", bob_key );
       account_object charlie_account_object = create_account( "charlie", charlie_key );
@@ -1016,7 +1016,7 @@ BOOST_FIXTURE_TEST_CASE( bogus_signature, database_fixture )
       // send from Sam -> Alice, signed by Sam
 
       const asset_object& core = asset_id_type()(db);
-      transfer(committee_account_object, alice_account_object, core.amount(100000));
+      transfer(council_account_object, alice_account_object, core.amount(100000));
 
       transfer_operation xfer_op;
       xfer_op.from = alice_account_object.id;
@@ -1061,8 +1061,8 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
    ACTORS((nathan)(vikram));
    upgrade_to_lifetime_member(nathan_id);
    upgrade_to_lifetime_member(vikram_id);
-   committee_member_id_type nathan_committee_member = create_committee_member(nathan_id(db)).get_id();
-   committee_member_id_type vikram_committee_member = create_committee_member(vikram_id(db)).get_id();
+   delegate_id_type nathan_delegate = create_delegate(nathan_id(db)).get_id();
+   delegate_id_type vikram_delegate = create_delegate(vikram_id(db)).get_id();
 
    //wdump((db.get_balance(account_id_type(), asset_id_type())));
    generate_block();
@@ -1076,8 +1076,8 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
       op.new_options->voting_account = vikram_id;
-      op.new_options->votes = flat_set<vote_id_type>{nathan_committee_member(db).vote_id};
-      op.new_options->num_committee = 1;
+      op.new_options->votes = flat_set<vote_id_type>{nathan_delegate(db).vote_id};
+      op.new_options->num_council = 1;
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );
       PUSH_TX( db, trx );
@@ -1087,13 +1087,13 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
       account_update_operation op;
       op.account = vikram_id;
       op.new_options = vikram_id(db).options;
-      op.new_options->votes.insert(vikram_committee_member(db).vote_id);
-      op.new_options->num_committee = 11;
+      op.new_options->votes.insert(vikram_delegate(db).vote_id);
+      op.new_options->num_council = 11;
       trx.operations.push_back(op);
       sign( trx, vikram_private_key );
-      // Fails because num_committee is larger than the cardinality of committee members being voted for
+      // Fails because num_council is larger than the cardinality of delegates being voted for
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
-      op.new_options->num_committee = 3;
+      op.new_options->num_council = 3;
       trx.operations = {op};
       trx.clear_signatures();
       sign( trx, vikram_private_key );
@@ -1102,12 +1102,12 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
    }
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time + GRAPHENE_DEFAULT_BLOCK_INTERVAL);
-   BOOST_CHECK(std::find(db.get_global_properties().active_committee_members.begin(),
-                         db.get_global_properties().active_committee_members.end(),
-                         nathan_committee_member) == db.get_global_properties().active_committee_members.end());
-   BOOST_CHECK(std::find(db.get_global_properties().active_committee_members.begin(),
-                         db.get_global_properties().active_committee_members.end(),
-                         vikram_committee_member) != db.get_global_properties().active_committee_members.end());
+   BOOST_CHECK(std::find(db.get_global_properties().active_delegates.begin(),
+                         db.get_global_properties().active_delegates.end(),
+                         nathan_delegate) == db.get_global_properties().active_delegates.end());
+   BOOST_CHECK(std::find(db.get_global_properties().active_delegates.begin(),
+                         db.get_global_properties().active_delegates.end(),
+                         vikram_delegate) != db.get_global_properties().active_delegates.end());
 } FC_LOG_AND_RETHROW() }
 
 /*

@@ -132,7 +132,7 @@ namespace graphene { namespace protocol {
     * - @ref global_settle
     * - @ref disable_confidential
     * - @ref witness_fed_asset
-    * - @ref committee_fed_asset
+    * - @ref delegate_fed_asset
     */
    enum asset_issuer_permission_flags {
       // If one of the following bits is set in asset issuer permissions,
@@ -147,7 +147,7 @@ namespace graphene { namespace protocol {
       global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
       witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
-      committee_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
+      delegate_fed_asset  = 0x100 /**< allow the asset to be fed by the delegates */
    };
 
    /// The bits that can be used in asset issuer permissions for non-UIA assets
@@ -160,7 +160,7 @@ namespace graphene { namespace protocol {
       | global_settle
       | disable_confidential
       | witness_fed_asset
-      | committee_fed_asset;
+      | delegate_fed_asset;
 
    /// The bits that can be used in asset issuer permissions for UIA assets
    const static uint16_t UIA_ASSET_ISSUER_PERMISSION_MASK =
@@ -243,7 +243,7 @@ GRAPHENE_DEFINE_IDS(protocol, protocol_ids, /*protocol objects are not prefixed*
                     /* 1.2.x  */ (account)
                     /* 1.3.x  */ (asset)
                     /* 1.4.x  */ (force_settlement)
-                    /* 1.5.x  */ (committee_member)
+                    /* 1.5.x  */ (delegate)
                     /* 1.6.x  */ (witness)
                     /* 1.7.x  */ (limit_order)
                     /* 1.8.x  */ (call_order)
@@ -272,7 +272,7 @@ FC_REFLECT_ENUM(graphene::protocol::asset_issuer_permission_flags,
                 (global_settle)
                 (disable_confidential)
                 (witness_fed_asset)
-                (committee_fed_asset)
+                (delegate_fed_asset)
 )
 
 namespace fc { namespace raw {

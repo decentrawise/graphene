@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(track_account2) {
       generate_block();
 
       // all account_id_type() should have 4 ops {4,2,1,0}
-      vector<operation_history_object> histories = hist_api.get_account_history("committee-account", operation_history_id_type(0), 10, operation_history_id_type(0));
+      vector<operation_history_object> histories = hist_api.get_account_history("council-account", operation_history_id_type(0), 10, operation_history_id_type(0));
       BOOST_CHECK_EQUAL(histories.size(), 4u);
       BOOST_CHECK_EQUAL(histories[0].id.instance(), 4u);
       BOOST_CHECK_EQUAL(histories[1].id.instance(), 2u);
@@ -528,25 +528,25 @@ BOOST_AUTO_TEST_CASE(get_account_history_operations) {
 
       //account_id_type() did 1 asset_create op
       vector<operation_history_object> histories = hist_api.get_account_history_operations(
-            "committee-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(), 100);
+            "council-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(), 100);
       BOOST_CHECK_EQUAL(histories.size(), 1u);
       BOOST_CHECK_EQUAL(histories[0].id.instance(), 0u);
       BOOST_CHECK_EQUAL(histories[0].op.which(), asset_create_op_id);
 
       //account_id_type() did 2 account_create ops
       histories = hist_api.get_account_history_operations(
-            "committee-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 100);
+            "council-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 100);
       BOOST_CHECK_EQUAL(histories.size(), 2u);
       BOOST_CHECK_EQUAL(histories[0].op.which(), account_create_op_id);
 
       // No asset_create op larger than id1
       histories = hist_api.get_account_history_operations(
-            "committee-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(1), 100);
+            "council-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(1), 100);
       BOOST_CHECK_EQUAL(histories.size(), 0u);
 
       // Limit 1 returns 1 result
       histories = hist_api.get_account_history_operations(
-            "committee-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 1);
+            "council-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 1);
       BOOST_CHECK_EQUAL(histories.size(), 1u);
       BOOST_CHECK_EQUAL(histories[0].op.which(), account_create_op_id);
 
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(get_account_history_operations) {
       // history is set to limit transactions to 75 (see database_fixture.hpp)
       // so asking for more should only return 75 (and not throw exception)
       histories = hist_api.get_account_history_operations(
-            "committee-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 100);
+            "council-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 100);
       BOOST_CHECK_EQUAL(histories.size(), 75u);
       if (histories.size() > 0)
          BOOST_CHECK_EQUAL(histories[0].op.which(), account_create_op_id);
@@ -595,25 +595,25 @@ BOOST_AUTO_TEST_CASE(api_limit_get_account_history_operations) {
 
    //account_id_type() did 1 asset_create op
    vector<operation_history_object> histories = hist_api.get_account_history_operations(
-	"committee-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
+	"council-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
    BOOST_CHECK_EQUAL(histories.size(), 1u);
    BOOST_CHECK_EQUAL(histories[0].id.instance(), 0u);
    BOOST_CHECK_EQUAL(histories[0].op.which(), asset_create_op_id);
 
    //account_id_type() did 2 account_create ops
    histories = hist_api.get_account_history_operations(
-	"committee-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
+	"council-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
    BOOST_CHECK_EQUAL(histories.size(), 2u);
    BOOST_CHECK_EQUAL(histories[0].op.which(), account_create_op_id);
 
    // No asset_create op larger than id1
    histories = hist_api.get_account_history_operations(
-	"committee-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(1), 200);
+	"council-account", asset_create_op_id, operation_history_id_type(), operation_history_id_type(1), 200);
    BOOST_CHECK_EQUAL(histories.size(), 0u);
 
    // Limit 1 returns 1 result
    histories = hist_api.get_account_history_operations(
-	"committee-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 1);
+	"council-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 1);
    BOOST_CHECK_EQUAL(histories.size(), 1u);
    BOOST_CHECK_EQUAL(histories[0].op.which(), account_create_op_id);
 
@@ -633,8 +633,8 @@ BOOST_AUTO_TEST_CASE(api_limit_get_account_history_operations) {
 
    // history is set to limit transactions to 125 (see database_fixture.hpp)
    // so asking for more should only return 125 (and not throw exception)
-   GRAPHENE_CHECK_THROW(hist_api.get_account_history_operations("commitee-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 301), fc::exception);
-   histories = hist_api.get_account_history_operations("committee-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
+   GRAPHENE_CHECK_THROW(hist_api.get_account_history_operations("council-account", account_create_op_id, operation_history_id_type(),operation_history_id_type(), 301), fc::exception);
+   histories = hist_api.get_account_history_operations("council-account", account_create_op_id, operation_history_id_type(), operation_history_id_type(), 200);
    BOOST_REQUIRE_EQUAL( histories.size(), 125u );
    }
    catch (fc::exception &e)
