@@ -68,7 +68,7 @@ def main():
     for witness in genesis["initial_witness_candidates"]:
         owner_name = witness["owner_name"]
         witness["owner_name"] = name_map.get(owner_name, owner_name)
-    for committee in genesis["initial_council_candidates"]:
+    for council in genesis["initial_council_candidates"]:
         owner_name = member["owner_name"]
         member["owner_name"] = name_map.get(owner_name, owner_name)
     for worker in genesis["initial_worker_candidates"]:

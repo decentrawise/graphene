@@ -404,7 +404,7 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
       }
       else
       {
-         // not a committee issued asset
+         // not a council issued asset
 
          // If we're changing to a backing_asset that is not CORE, we need to look at any
          // asset ( "CHILD" ) that has this one as a backing asset. If CHILD is council-owned,

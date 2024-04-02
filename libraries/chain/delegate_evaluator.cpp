@@ -19,7 +19,7 @@ object_id_type delegate_create_evaluator::do_apply( const delegate_create_operat
 { try {
    vote_id_type vote_id;
    db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
-      vote_id = vote_id_type(vote_id_type::committee, p.next_available_vote_id++);
+      vote_id = vote_id_type(vote_id_type::delegate, p.next_available_vote_id++);
    });
 
    const auto& new_del_object = db().create<delegate_object>( [&]( delegate_object& obj ){

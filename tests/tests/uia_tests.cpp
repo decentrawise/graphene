@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
       BOOST_CHECK(!is_authorized_asset( db, nathan, advanced ));
       GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
 
-      //Remove nathan from committee's whitelist, add him to dan's. This should not authorize him to hold ADVANCED.
+      //Remove nathan from council's whitelist, add him to dan's. This should not authorize him to hold ADVANCED.
       wop.authorizing_account = izzy_id;
       wop.account_to_list = nathan.get_id();
       wop.new_listing = account_whitelist_operation::no_listing;

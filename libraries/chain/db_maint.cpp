@@ -291,7 +291,7 @@ void database::update_active_delegates()
       }
    }
 
-   // Update committee authorities
+   // Update council authorities
    if( !delegates.empty() )
    {
       const account_object& council_account = get(GRAPHENE_COUNCIL_ACCOUNT);

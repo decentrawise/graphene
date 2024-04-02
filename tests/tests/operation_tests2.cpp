@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE( witness_create )
       op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                   [](vote_id_type id) { return id.type() == vote_id_type::witness; });
       op.new_options->num_council = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
-                                                    [](vote_id_type id) { return id.type() == vote_id_type::committee; });
+                                                    [](vote_id_type id) { return id.type() == vote_id_type::delegate; });
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );
       PUSH_TX( db, trx );

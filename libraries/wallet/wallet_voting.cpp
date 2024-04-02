@@ -2,7 +2,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 
 /*
- * Methods to handle voting / workers / committee
+ * Methods to handle voting / workers / council
  */
 
 namespace graphene { namespace wallet { namespace detail {

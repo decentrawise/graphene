@@ -269,7 +269,7 @@ fc::variant es_data_adaptor::adapt( const fc::variant_object& op, uint16_t max_d
    //
    // Object arrays not listed in this map (if any) are stored as nested objects only.
    static const std::unordered_map<std::string, data_type> to_string_fields = {
-      { "parameters",               data_type::array_type }, // in committee proposals, current_fees.parameters
+      { "parameters",               data_type::array_type }, // in council proposals, current_fees.parameters
       { "op",                       data_type::static_variant_type }, // proposal_create_op.proposed_ops[*].op
       { "proposed_ops",             data_type::array_type }, // proposal_create_op.proposed_ops
       { "operations",               data_type::array_type }, // proposal_object.operations

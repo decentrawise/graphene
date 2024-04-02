@@ -853,7 +853,7 @@ BOOST_AUTO_TEST_CASE( cli_create_htlc )
 
       int server_port_number = 0;
       app1 = start_application(app_dir, server_port_number);
-      // set committee parameters
+      // set council parameters
       app1->chain_database()->modify(app1->chain_database()->get_global_properties(), [](global_property_object& p) {
          graphene::chain::htlc_options params;
          params.max_preimage_size = 1024;

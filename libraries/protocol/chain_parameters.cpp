@@ -101,7 +101,7 @@ namespace graphene { namespace protocol {
       FC_ASSERT( maximum_time_until_expiration > block_interval,
                  "Maximum transaction expiration time must be greater than a block interval" );
       FC_ASSERT( maximum_proposal_lifetime - council_proposal_review_period > block_interval,
-                 "Committee proposal review period must be less than the maximum proposal lifetime" );
+                 "Council proposal review period must be less than the maximum proposal lifetime" );
    }
 
 }}

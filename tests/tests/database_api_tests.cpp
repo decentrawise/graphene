@@ -732,7 +732,7 @@ BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
 BOOST_AUTO_TEST_CASE( subscription_notification_test )
 {
    try {
-      // Initialize committee by voting for each member and for desired count
+      // Initialize council by voting for each member and for desired count
       vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
@@ -1042,14 +1042,14 @@ BOOST_AUTO_TEST_CASE( lookup_vote_ids )
    fund(wolverine);
    upgrade_to_lifetime_member(wolverine);
 
-   const auto& committee = create_delegate( connie );
+   const auto& delegate = create_delegate( connie );
    const auto& witness = create_witness( whitney );
    const auto& worker = create_worker( wolverine_id );
 
    graphene::app::database_api db_api(db, &(app.get_options()));
 
    std::vector<vote_id_type> votes;
-   votes.push_back( committee.vote_id );
+   votes.push_back( delegate.vote_id );
    votes.push_back( witness.vote_id );
    votes.push_back( worker.vote_id );
 

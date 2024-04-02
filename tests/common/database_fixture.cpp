@@ -487,9 +487,9 @@ void database_fixture_base::vote_for_delegates_and_witnesses(uint16_t num_counci
 
 fc::ecc::private_key database_fixture_base::generate_private_key(string seed)
 {
-   static const fc::ecc::private_key committee = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
+   static const fc::ecc::private_key council = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    if( seed == "null_key" )
-      return committee;
+      return council;
    return fc::ecc::private_key::regenerate(fc::sha256::hash(seed));
 }
 

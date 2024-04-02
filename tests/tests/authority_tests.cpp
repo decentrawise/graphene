@@ -331,13 +331,13 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
 
       trx.operations = {pup};
       sign( trx,   council_key  );
-      //committee may not add nathan's approval.
+      //council may not add nathan's approval.
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
       pup.active_approvals_to_add.clear();
       pup.active_approvals_to_add.insert(account_id_type());
       trx.operations = {pup};
       sign( trx,   council_key  );
-      //committee has no stake in the transaction.
+      //council has no stake in the transaction.
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
 
       trx.clear_signatures();
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE( council_authority )
    const account_object nathan = create_account("nathan", nathan_key.get_public_key());
    const auto& global_params = db.get_global_properties().parameters;
 
-   // Initialize committee by voting for each member and for desired count
+   // Initialize council by voting for each member and for desired count
    vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE( council_authority )
       p.parameters.council_proposal_review_period = fc::days(1).to_seconds();
    });
 
-   BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with committee key should fail because this requires it to be part of a proposal" );
+   BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with council key should fail because this requires it to be part of a proposal" );
    transfer_operation top;
    top.to = nathan.id;
    top.amount = asset(100000);
@@ -497,7 +497,7 @@ BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
    fc::ecc::private_key council_key = init_account_priv_key;
    fc::ecc::private_key delegate_key = fc::ecc::private_key::generate();
 
-   // Initialize committee by voting for each member and for desired count
+   // Initialize council by voting for each member and for desired count
    vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();

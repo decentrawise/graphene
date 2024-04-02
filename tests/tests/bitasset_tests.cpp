@@ -78,7 +78,7 @@ void change_asset_options(database_fixture& fixture, const fc::ecc::private_key&
    }
    else
    {
-      op.new_options.flags &= ~witness_fed_asset; // we don't care about the committee flag here
+      op.new_options.flags &= ~witness_fed_asset; // we don't care about the delegate flag here
    }
    fixture.trx.operations.push_back(op);
    fixture.sign( fixture.trx, signing_key );
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "which is not backed by CORE" );
    op.new_options.short_backing_asset = correct_asset_id;
 
-   // CHILD is a non-committee asset backed by PARENT which is backed by CORE
+   // CHILD is a non-council asset backed by PARENT which is backed by CORE
    // Cannot change PARENT's backing asset from CORE to something that is not [CORE | UIA]
    // because that will make CHILD be backed by an asset that is not itself backed by CORE or a UIA.
    BOOST_TEST_MESSAGE( "Attempting to change PARENT to be backed by a non-core and non-user-issued asset" );
@@ -634,11 +634,11 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "'A' backed by 'B' backed by 'A'" );
    op.new_options.short_backing_asset = asset_objs.user_issued;
    BOOST_CHECK( evaluator.evaluate(op).is_type<void_result>() );
-   BOOST_TEST_MESSAGE( "Creating CHILDCOMMITTEE" );
-   // CHILDCOMMITTEE is a committee asset backed by PARENT which is backed by CORE
-   // Cannot change PARENT's backing asset from CORE to something else because that will make CHILDCOMMITTEE
+   BOOST_TEST_MESSAGE( "Creating CHILDCOUNCIL" );
+   // CHILDCOUNCIL is a council asset backed by PARENT which is backed by CORE
+   // Cannot change PARENT's backing asset from CORE to something else because that will make CHILDCOUNCIL
    // be backed by an asset that is not itself backed by CORE
-   create_bitasset( "CHILDCOMMITTEE", GRAPHENE_COUNCIL_ACCOUNT, 100, charge_market_fee, 2,
+   create_bitasset( "CHILDCOUNCIL", GRAPHENE_COUNCIL_ACCOUNT, 100, charge_market_fee, 2,
          asset_objs.bit_parent );
    // it should again not work
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "A blockchain-controlled market asset would be invalidated" );

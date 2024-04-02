@@ -13,7 +13,7 @@ struct budget_record
    share_type from_accumulated_fees = 0;
    share_type from_unused_witness_budget = 0;
 
-   // witness budget requested by the committee
+   // witness budget requested by the council
    share_type requested_witness_budget = 0;
 
    // funds that can be released from reserve at maximum rate

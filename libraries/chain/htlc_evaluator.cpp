@@ -17,7 +17,7 @@ namespace graphene {
          graphene::chain::database& d = db();
          optional<htlc_options> htlc_options = get_council_htlc_options(db());
 
-         FC_ASSERT(htlc_options, "HTLC Committee options are not set.");
+         FC_ASSERT(htlc_options, "HTLC Council options are not set.");
 
          // make sure the expiration is reasonable
          FC_ASSERT( o.claim_period_seconds <= htlc_options->max_timeout_secs, "HTLC Timeout exceeds allowed length" );

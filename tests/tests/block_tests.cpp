@@ -879,9 +879,9 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    auto* test = &create_bitasset("MIATEST");
    auto* core = &asset_id_type()(db);
    auto* nathan = &create_account("nathan");
-   auto* committee = &account_id_type()(db);
+   auto* council = &account_id_type()(db);
 
-   transfer(*committee, *nathan, core->amount(50000));
+   transfer(*council, *nathan, core->amount(50000));
 
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
 
@@ -908,7 +908,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    test = &get_asset("MIATEST");
    core = &asset_id_type()(db);
    nathan = &get_account("nathan");
-   committee = &account_id_type()(db);
+   council = &account_id_type()(db);
 
    BOOST_CHECK(db.find_object(id) == nullptr);
    BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
@@ -961,7 +961,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
-   // Initialize committee by voting for each member and for desired count
+   // Initialize council by voting for each member and for desired count
    vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();

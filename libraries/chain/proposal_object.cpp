@@ -15,7 +15,7 @@ bool proposal_object::is_authorized_to_execute(database& db) const
                         [&]( account_id_type id ){ return &id(db).active; },
                         [&]( account_id_type id ){ return &id(db).owner;  },
                         db.get_global_properties().parameters.max_authority_depth,
-                        true, /* allow committee */
+                        true, /* allow council */
                         available_active_approvals,
                         available_owner_approvals );
    } 

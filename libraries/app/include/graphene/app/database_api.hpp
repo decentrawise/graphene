@@ -711,7 +711,7 @@ class database_api
             uint32_t limit )const;
 
       /**
-       * @brief Get the total number of committee registered with the blockchain
+       * @brief Get the total number of council members registered with the blockchain
       */
       uint64_t get_council_count()const;
 

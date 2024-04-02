@@ -147,7 +147,7 @@ namespace graphene { namespace protocol {
       global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
       witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
-      delegate_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
+      delegate_fed_asset  = 0x100 /**< allow the asset to be fed by the delegates */
    };
 
    /// The bits that can be used in asset issuer permissions for non-UIA assets

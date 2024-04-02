@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE( other_peoples_money )
 try {
    test_setup(this);
 
-   // Initialize committee by voting for each member and for desired count and HTLC parameters
+   // Initialize council by voting for each member and for desired count and HTLC parameters
    vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    set_expiration(db, trx);
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
    try {
       test_setup(this);
 
-      // Initialize committee by voting for each member and for desired count and HTLC parameters
+      // Initialize council by voting for each member and for desired count and HTLC parameters
       vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration(db, trx);

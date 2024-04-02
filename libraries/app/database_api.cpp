@@ -1960,7 +1960,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
    {
       switch( id.type() )
       {
-         case vote_id_type::committee:
+         case vote_id_type::delegate:
          {
             auto itr = delegate_idx.find( id );
             if( itr != delegate_idx.end() )

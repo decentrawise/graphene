@@ -100,7 +100,7 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
    FC_ASSERT ( other.empty(),
                "Proposals containing operations requiring non-account authorities are not yet implemented." );
 
-   // If we're dealing with the committee authority, make sure this transaction has a sufficient review period.
+   // If we're dealing with the council authority, make sure this transaction has a sufficient review period.
    if( _required_active_auths.count( GRAPHENE_COUNCIL_ACCOUNT ) > 0 ||
        _required_owner_auths.count( GRAPHENE_COUNCIL_ACCOUNT ) > 0 )
    {

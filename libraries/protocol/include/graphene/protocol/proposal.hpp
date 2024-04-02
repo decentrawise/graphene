@@ -61,7 +61,7 @@ namespace graphene { namespace protocol {
        extensions_type    extensions;
 
        /**
-        * Constructs a proposal_create_operation suitable for committee
+        * Constructs a proposal_create_operation suitable for council
         * proposals, with expiration time and review period set
         * appropriately.  No proposed_ops are added.  When used to
         * create a proposal to change chain parameters, this method

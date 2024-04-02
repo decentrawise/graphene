@@ -1206,22 +1206,22 @@ BOOST_AUTO_TEST_CASE( transfer_uia )
 
       const asset_object& uia = *db.get_index_type<asset_index>().indices().get<by_symbol>().find(UIA_TEST_SYMBOL);
       const account_object& nathan = *db.get_index_type<account_index>().indices().get<by_name>().find("nathan");
-      const account_object& committee = account_id_type()(db);
+      const account_object& delegate = account_id_type()(db);
 
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000);
       transfer_operation top;
       top.from = nathan.id;
-      top.to = committee.id;
+      top.to = delegate.id;
       top.amount = uia.amount(5000);
       trx.operations.push_back(top);
-      BOOST_TEST_MESSAGE( "Transfering 5000 TEST from nathan to committee" );
+      BOOST_TEST_MESSAGE( "Transfering 5000 TEST from nathan to delegate" );
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000 - 5000);
-      BOOST_CHECK_EQUAL(get_balance(committee, uia), 5000);
+      BOOST_CHECK_EQUAL(get_balance(delegate, uia), 5000);
 
       PUSH_TX( db, trx, ~0 );
       BOOST_CHECK_EQUAL(get_balance(nathan, uia), 10000000 - 10000);
-      BOOST_CHECK_EQUAL(get_balance(committee, uia), 10000);
+      BOOST_CHECK_EQUAL(get_balance(delegate, uia), 10000);
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -1487,7 +1487,7 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
 {
    using namespace graphene::chain;
    try {
-      // Initialize committee by voting for each member and for desired count
+      // Initialize council by voting for each member and for desired count
       vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
