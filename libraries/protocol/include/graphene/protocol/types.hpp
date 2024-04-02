@@ -131,7 +131,7 @@ namespace graphene { namespace protocol {
     * - @ref disable_force_settle
     * - @ref global_settle
     * - @ref disable_confidential
-    * - @ref witness_fed_asset
+    * - @ref validator_fed_asset
     * - @ref delegate_fed_asset
     */
    enum asset_issuer_permission_flags {
@@ -146,7 +146,7 @@ namespace graphene { namespace protocol {
       disable_force_settle = 0x10, /**< disable force settling */
       global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
-      witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
+      validator_fed_asset    = 0x80, /**< allow the asset to be fed by validators */
       delegate_fed_asset  = 0x100 /**< allow the asset to be fed by the delegates */
    };
 
@@ -159,7 +159,7 @@ namespace graphene { namespace protocol {
       | disable_force_settle
       | global_settle
       | disable_confidential
-      | witness_fed_asset
+      | validator_fed_asset
       | delegate_fed_asset;
 
    /// The bits that can be used in asset issuer permissions for UIA assets
@@ -244,7 +244,7 @@ GRAPHENE_DEFINE_IDS(protocol, protocol_ids, /*protocol objects are not prefixed*
                     /* 1.3.x  */ (asset)
                     /* 1.4.x  */ (force_settlement)
                     /* 1.5.x  */ (delegate)
-                    /* 1.6.x  */ (witness)
+                    /* 1.6.x  */ (validator)
                     /* 1.7.x  */ (limit_order)
                     /* 1.8.x  */ (call_order)
                     /* 1.9.x  */ (custom) // unused
@@ -271,7 +271,7 @@ FC_REFLECT_ENUM(graphene::protocol::asset_issuer_permission_flags,
                 (disable_force_settle)
                 (global_settle)
                 (disable_confidential)
-                (witness_fed_asset)
+                (validator_fed_asset)
                 (delegate_fed_asset)
 )
 

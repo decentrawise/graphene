@@ -709,7 +709,7 @@ BOOST_AUTO_TEST_CASE( fee_refund_test )
       int64_t order_create_fee = 537;
       int64_t order_cancel_fee = 129;
 
-      uint32_t skip = database::skip_witness_signature
+      uint32_t skip = database::skip_validator_signature
                     | database::skip_transaction_signatures
                     | database::skip_transaction_dupe_check
                     | database::skip_block_size_check
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE( fee_refund_original_asset )
       int64_t order_cancel_fee1 = 139;
       int64_t order_cancel_fee2 = 829;
 
-      uint32_t skip = database::skip_witness_signature
+      uint32_t skip = database::skip_validator_signature
                     | database::skip_transaction_signatures
                     | database::skip_transaction_dupe_check
                     | database::skip_block_size_check

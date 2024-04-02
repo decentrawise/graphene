@@ -48,8 +48,8 @@ def main():
     for vb in genesis["initial_vesting_balances"]:
         vb["owner"] = convert(vb["owner"])
 
-    for witness in genesis["initial_witness_candidates"]:
-        witness["block_signing_key"] = convert(witness["block_signing_key"])
+    for validator in genesis["initial_validator_candidates"]:
+        validator["block_signing_key"] = convert(validator["block_signing_key"])
 
     if opts.output == "-":
         dump_json( genesis, sys.stdout, opts.pretty )

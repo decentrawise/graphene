@@ -11,7 +11,7 @@ list(APPEND SOURCES account.cpp
                     proposal.cpp
                     transfer.cpp
                     vote.cpp
-                    witness.cpp
+                    validator.cpp
                     address.cpp
                     asset.cpp
                     authority.cpp

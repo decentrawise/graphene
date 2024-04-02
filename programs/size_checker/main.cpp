@@ -48,18 +48,18 @@ int main( int argc, char** argv )
       graphene::protocol::operation op;
 
 
-      vector<uint64_t> witnesses; witnesses.resize(50);
+      vector<uint64_t> validators; validators.resize(50);
       for( uint32_t i = 0; i < 60*60*24*30; ++i )
       {
-         witnesses[ rand() % 50 ]++;
+         validators[ rand() % 50 ]++;
       }
 
-      std::sort( witnesses.begin(), witnesses.end() );
-      idump((witnesses.back() - witnesses.front()) );
+      std::sort( validators.begin(), validators.end() );
+      idump((validators.back() - validators.front()) );
       idump((60*60*24*30/50));
-      idump(("deviation: ")((60*60*24*30/50-witnesses.front())/(60*60*24*30/50.0)));
+      idump(("deviation: ")((60*60*24*30/50-validators.front())/(60*60*24*30/50.0)));
 
-      idump( (witnesses) );
+      idump( (validators) );
 
       for( size_t i = 0; i < op.count(); ++i )
       {

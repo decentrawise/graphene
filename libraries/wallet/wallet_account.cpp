@@ -144,21 +144,21 @@ namespace graphene { namespace wallet { namespace detail {
       }
    }
 
-   // after a witness registration succeeds, this saves the private key in the wallet permanently
+   // after a validator registration succeeds, this saves the private key in the wallet permanently
    //
-   void wallet_api_impl::claim_registered_witness(const std::string& witness_name)
+   void wallet_api_impl::claim_registered_validator(const std::string& validator_name)
    {
-      auto iter = _wallet.pending_witness_registrations.find(witness_name);
-      FC_ASSERT(iter != _wallet.pending_witness_registrations.end());
+      auto iter = _wallet.pending_validator_registrations.find(validator_name);
+      FC_ASSERT(iter != _wallet.pending_validator_registrations.end());
       std::string wif_key = iter->second;
 
       // get the list key id this key is registered with in the chain
-      fc::optional<fc::ecc::private_key> witness_private_key = wif_to_key(wif_key);
-      FC_ASSERT(witness_private_key);
+      fc::optional<fc::ecc::private_key> validator_private_key = wif_to_key(wif_key);
+      FC_ASSERT(validator_private_key);
 
-      auto pub_key = witness_private_key->get_public_key();
+      auto pub_key = validator_private_key->get_public_key();
       _keys[pub_key] = wif_key;
-      _wallet.pending_witness_registrations.erase(iter);
+      _wallet.pending_validator_registrations.erase(iter);
    }
 
    account_object wallet_api_impl::get_account(account_id_type id) const

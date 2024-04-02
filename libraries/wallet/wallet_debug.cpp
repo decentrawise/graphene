@@ -63,7 +63,7 @@ namespace graphene { namespace wallet { namespace detail {
          "to access the debug API on the node you are connecting to.\n"
          "\n"
          "To fix this problem:\n"
-         "- Please ensure you are running debug_node, not witness_node.\n"
+         "- Please ensure you are running debug_node, not graphened.\n"
          "- Please follow the instructions in README.md to set up an apiaccess file.\n"
          "\n";
       }

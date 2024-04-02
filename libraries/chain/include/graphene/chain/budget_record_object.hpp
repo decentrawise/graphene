@@ -11,16 +11,16 @@ struct budget_record
    // sources of budget
    share_type from_initial_reserve = 0;
    share_type from_accumulated_fees = 0;
-   share_type from_unused_witness_budget = 0;
+   share_type from_unused_validator_budget = 0;
 
-   // witness budget requested by the council
-   share_type requested_witness_budget = 0;
+   // validator budget requested by the council
+   share_type requested_validator_budget = 0;
 
    // funds that can be released from reserve at maximum rate
    share_type total_budget = 0;
 
    // sinks of budget, should sum up to total_budget
-   share_type witness_budget = 0;
+   share_type validator_budget = 0;
    share_type worker_budget = 0;
 
    // unused budget

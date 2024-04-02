@@ -247,7 +247,7 @@ try {
    test_setup(this);
 
    // Initialize council by voting for each member and for desired count and HTLC parameters
-   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    set_expiration(db, trx);
    set_htlc_council_parameters();
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
       test_setup(this);
 
       // Initialize council by voting for each member and for desired count and HTLC parameters
-      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       set_expiration(db, trx);
       set_htlc_council_parameters();

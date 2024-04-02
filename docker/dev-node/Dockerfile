@@ -45,8 +45,8 @@ RUN \
     -DCMAKE_BUILD_TYPE=Release \
     -DGRAPHENE_DISABLE_UNITY_BUILD=ON \
     . && \
-  make witness_node cli_wallet get_dev_key && \
-  install -s programs/witness_node/witness_node \
+  make graphened cli_wallet get_dev_key && \
+  install -s programs/graphened/graphened \
     programs/genesis_util/get_dev_key \
     programs/cli_wallet/cli_wallet \
     /usr/local/bin && \

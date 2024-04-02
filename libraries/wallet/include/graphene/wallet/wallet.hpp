@@ -39,7 +39,7 @@ class wallet_api
 
       fc::ecc::private_key derive_private_key( const string& prefix_string, uint32_t sequence_number ) const;
 
-      /** Returns info about head block, chain_id, maintenance, participation, current active witnesses and
+      /** Returns info about head block, chain_id, maintenance, participation, current block producers and
        * delegates.
        * @returns runtime info about the blockchain
        */
@@ -207,7 +207,7 @@ class wallet_api
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
        * or that change only once per maintenance interval (daily) such as the
-       * current list of witnesses, delegates, block interval, etc.
+       * current list of validators, delegates, block interval, etc.
        * @see \c get_dynamic_global_properties() for frequently changing properties
        * @returns the global properties
        */
@@ -229,7 +229,7 @@ class wallet_api
 
       /** Returns the block chain's rapidly-changing properties.
        * The returned object contains information that changes every block interval
-       * such as the head block number, the next witness, etc.
+       * such as the head block number, the next validator, etc.
        * @see \c get_global_properties() for less-frequently changing properties
        * @returns the dynamic global properties
        */
@@ -1340,20 +1340,20 @@ class wallet_api
                                                   const string& url,
                                                   bool broadcast = false )const;
 
-      /** Lists all witnesses registered in the blockchain.
-       * This returns a list of all account names that own witnesses, and the associated witness id,
-       * sorted by name.  This lists witnesses whether they are currently voted in or not.
+      /** Lists all validators registered in the blockchain.
+       * This returns a list of all account names that own validators, and the associated validator id,
+       * sorted by name.  This lists validators whether they are currently voted in or not.
        *
-       * Use the \c lowerbound and limit parameters to page through the list.  To retrieve all witnesss,
+       * Use the \c lowerbound and limit parameters to page through the list.  To retrieve all validators,
        * start by setting \c lowerbound to the empty string \c "", and then each iteration, pass
-       * the last witness name returned as the \c lowerbound for the next \c list_witnesss() call.
+       * the last validator name returned as the \c lowerbound for the next \c list_validators() call.
        *
-       * @param lowerbound the name of the first witness to return.  If the named witness does not exist,
-       *                   the list will start at the witness that comes after \c lowerbound
-       * @param limit the maximum number of witnesss to return (max: 1000)
-       * @returns a list of witnesss mapping witness names to witness ids
+       * @param lowerbound the name of the first validator to return.  If the named validator does not exist,
+       *                   the list will start at the validator that comes after \c lowerbound
+       * @param limit the maximum number of validators to return (max: 1000)
+       * @returns a list of validators mapping validator names to validator ids
        */
-      map<string, witness_id_type, std::less<>> list_witnesses( const string& lowerbound, uint32_t limit )const;
+      map<string, validator_id_type, std::less<>> list_validators( const string& lowerbound, uint32_t limit )const;
 
       /** Lists all delegates registered in the blockchain.
        * This returns a list of all account names that own delegates, and the associated delegate id,
@@ -1371,11 +1371,11 @@ class wallet_api
       map<string, delegate_id_type, std::less<>> list_delegates(
             const string& lowerbound, uint32_t limit )const;
 
-      /** Returns information about the given witness.
-       * @param owner_account the name or id of the witness account owner, or the id of the witness
-       * @returns the information about the witness stored in the block chain
+      /** Returns information about the given validator.
+       * @param owner_account the name or id of the validator account owner, or the id of the validator
+       * @returns the information about the validator stored in the block chain
        */
-      witness_object get_witness( const string& owner_account )const;
+      validator_object get_validator( const string& owner_account )const;
 
       /** Returns information about the given delegate.
        * @param owner_account the name or id of the delegate account owner, or the id of the delegate
@@ -1383,31 +1383,31 @@ class wallet_api
        */
       delegate_object get_delegate( const string& owner_account )const;
 
-      /** Creates a witness object owned by the given account.
+      /** Creates a validator object owned by the given account.
        *
-       * An account can have at most one witness object.
+       * An account can have at most one validator object.
        *
-       * @param owner_account the name or id of the account which is creating the witness
-       * @param url a URL to include in the witness record in the blockchain.  Clients may
-       *            display this when showing a list of witnesses.  May be blank.
+       * @param owner_account the name or id of the account which is creating the validator
+       * @param url a URL to include in the validator record in the blockchain.  Clients may
+       *            display this when showing a list of validators.  May be blank.
        * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction registering a witness
+       * @returns the signed transaction registering a validator
        */
-      signed_transaction create_witness( const string& owner_account,
+      signed_transaction create_validator( const string& owner_account,
                                          const string& url,
                                          bool broadcast = false )const;
 
       /**
-       * Update a witness object owned by the given account.
+       * Update a validator object owned by the given account.
        *
-       * @param witness_name The name of the witness's owner account.
-       *                     Also accepts the ID of the owner account or the ID of the witness.
-       * @param url Same as for create_witness.  The empty string makes it remain the same.
+       * @param validator_name The name of the validator's owner account.
+       *                     Also accepts the ID of the owner account or the ID of the validator.
+       * @param url Same as for create_validator.  The empty string makes it remain the same.
        * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
        * @param broadcast true if you wish to broadcast the transaction.
        * @return the signed transaction
        */
-      signed_transaction update_witness( const string& witness_name,
+      signed_transaction update_validator( const string& validator_name,
                                          const string& url,
                                          const string& block_signing_key,
                                          bool broadcast = false )const;
@@ -1505,14 +1505,14 @@ class wallet_api
       /**
        * Withdraw a vesting balance.
        *
-       * @param witness_name The account name of the witness, also accepts account ID or vesting balance ID type.
+       * @param validator_name The account name of the validator, also accepts account ID or vesting balance ID type.
        * @param amount The amount to withdraw.
        * @param asset_symbol_or_id The symbol or id of the asset to withdraw.
        * @param broadcast true if you wish to broadcast the transaction
        * @return the signed transaction
        */
       signed_transaction withdraw_vesting(
-         const string& witness_name,
+         const string& validator_name,
          const string& amount,
          const string& asset_symbol_or_id,
          bool broadcast = false )const;
@@ -1539,25 +1539,25 @@ class wallet_api
                                                     bool approve,
                                                     bool broadcast = false )const;
 
-      /** Vote for a given witness.
+      /** Vote for a given validator.
        *
-       * An account can publish a list of all witnesses they approve of.  This
-       * command allows you to add or remove witnesses from this list.
+       * An account can publish a list of all validators they approve of.  This
+       * command allows you to add or remove validators from this list.
        * Each account's vote is weighted according to the number of voting stake
        * owned by that account at the time the votes are tallied.
        *
-       * @note you cannot vote against a witness, you can only vote for the witness
-       *       or not vote for the witness.
+       * @note you cannot vote against a validator, you can only vote for the validator
+       *       or not vote for the validator.
        *
        * @param voting_account the name or id of the account who is voting with their stake
-       * @param witness the name or id of the witness' owner account
-       * @param approve true if you wish to vote in favor of that witness, false to
-       *                remove your vote in favor of that witness
+       * @param validator the name or id of the validator' owner account
+       * @param approve true if you wish to vote in favor of that validator, false to
+       *                remove your vote in favor of that validator
        * @param broadcast true if you wish to broadcast the transaction
-       * @return the signed transaction changing your vote for the given witness
+       * @return the signed transaction changing your vote for the given validator
        */
-      signed_transaction vote_for_witness( const string& voting_account,
-                                           const string& witness,
+      signed_transaction vote_for_validator( const string& voting_account,
+                                           const string& validator,
                                            bool approve,
                                            bool broadcast = false )const;
 
@@ -1583,12 +1583,12 @@ class wallet_api
                                            const optional<string>& voting_account,
                                            bool broadcast = false )const;
 
-      /** Set your vote for the number of witnesses and delegates in the system.
+      /** Set your vote for the number of validators and delegates in the system.
        *
        * Each account can voice their opinion on how many delegates and how many
-       * witnesses there should be in the active delegate/active witness list.  These
+       * validators there should be in the active delegate/block producer list.  These
        * are independent of each other.  You must vote your approval of at least as many
-       * delegates or witnesses as you claim there should be (you can't say that there should
+       * delegates or validators as you claim there should be (you can't say that there should
        * be 20 delegates but only vote for 10).
        *
        * There are maximum values for each set in the blockchain parameters (currently
@@ -1598,14 +1598,14 @@ class wallet_api
        * set, your preferences will be ignored.
        *
        * @param account_to_modify the name or id of the account to update
-       * @param desired_number_of_witnesses desired number of active witnesses
+       * @param desired_number_of_validators desired number of block producers
        * @param desired_number_of_delegates desired number of active delegates
        *
        * @param broadcast true if you wish to broadcast the transaction
        * @return the signed transaction changing your vote proxy settings
        */
-      signed_transaction set_desired_witness_and_delegate_count( const string& account_to_modify,
-                                                                uint16_t desired_number_of_witnesses,
+      signed_transaction set_desired_validator_and_delegate_count( const string& account_to_modify,
+                                                                uint16_t desired_number_of_validators,
                                                                 uint16_t desired_number_of_delegates,
                                                                 bool broadcast = false )const;
 
@@ -1864,12 +1864,12 @@ FC_API( graphene::wallet::wallet_api,
         (bid_collateral)
         (whitelist_account)
         (create_delegate)
-        (get_witness)
+        (get_validator)
         (get_delegate)
-        (list_witnesses)
+        (list_validators)
         (list_delegates)
-        (create_witness)
-        (update_witness)
+        (create_validator)
+        (update_validator)
         (create_worker)
         (update_worker_votes)
         (htlc_create)
@@ -1878,9 +1878,9 @@ FC_API( graphene::wallet::wallet_api,
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_delegate)
-        (vote_for_witness)
+        (vote_for_validator)
         (set_voting_proxy)
-        (set_desired_witness_and_delegate_count)
+        (set_desired_validator_and_delegate_count)
         (get_account)
         (get_account_id)
         (get_account_name)

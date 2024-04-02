@@ -258,13 +258,13 @@ public:
 
    signed_transaction create_delegate(string owner_account, string url, bool broadcast );
 
-   witness_object get_witness( string owner_account );
+   validator_object get_validator( string owner_account );
 
    delegate_object get_delegate( string owner_account );
 
-   signed_transaction create_witness(string owner_account, string url, bool broadcast );
+   signed_transaction create_validator(string owner_account, string url, bool broadcast );
 
-   signed_transaction update_witness(string witness_name, string url, string block_signing_key,
+   signed_transaction update_validator(string validator_name, string url, string block_signing_key,
          bool broadcast );
 
    signed_transaction create_worker( string owner_account, time_point_sec work_begin_date,
@@ -289,20 +289,20 @@ public:
 
    vector< vesting_balance_object_with_info > get_vesting_balances( string account_name );
 
-   signed_transaction withdraw_vesting( string witness_name, string amount, string asset_symbol,
+   signed_transaction withdraw_vesting( string validator_name, string amount, string asset_symbol,
          bool broadcast = false );
 
    signed_transaction vote_for_delegate(string voting_account, string delegate,
          bool approve, bool broadcast );
 
-   signed_transaction vote_for_witness(string voting_account, string witness, bool approve,
+   signed_transaction vote_for_validator(string voting_account, string validator, bool approve,
          bool broadcast );
 
    signed_transaction set_voting_proxy(string account_to_modify, optional<string> voting_account,
          bool broadcast );
 
-   signed_transaction set_desired_witness_and_delegate_count(string account_to_modify,
-         uint16_t desired_number_of_witnesses, uint16_t desired_number_of_delegates,
+   signed_transaction set_desired_validator_and_delegate_count(string account_to_modify,
+         uint16_t desired_number_of_validators, uint16_t desired_number_of_delegates,
          bool broadcast );
 
    signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false);
@@ -392,7 +392,7 @@ public:
    fc::api<history_api>    _remote_hist;
    fc::api<custom_operations_api>    _custom_operations;
    optional< fc::api<network_node_api> > _remote_net_node;
-   optional< fc::api<graphene::debug_witness::debug_api> > _remote_debug;
+   optional< fc::api<graphene::debug_validator::debug_api> > _remote_debug;
 
    flat_map<string, operation> _prototype_ops;
 
@@ -413,9 +413,9 @@ private:
 
    void claim_registered_account(const graphene::chain::account_object& account);
 
-   // after a witness registration succeeds, this saves the private key in the wallet permanently
+   // after a validator registration succeeds, this saves the private key in the wallet permanently
    //
-   void claim_registered_witness(const std::string& witness_name);
+   void claim_registered_validator(const std::string& validator_name);
 
    fc::mutex _resync_mutex;
    void resync();

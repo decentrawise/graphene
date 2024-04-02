@@ -315,7 +315,7 @@ namespace graphene { namespace app {
          create_logging_config_file(logging_ini_path, data_dir);
       }
 
-      // load witness node configuration
+      // load validator node configuration
       load_config_file(config_ini_path, cfg_options, options);
 
       // load logging configuration

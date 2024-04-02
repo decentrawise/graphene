@@ -18,7 +18,7 @@ endif()
 file(GLOB UNIT_TESTS "tests/*.cpp")
 add_executable( chain_test ${UNIT_TESTS} )
 target_link_libraries( chain_test database_fixture
-                       graphene_witness graphene_wallet graphene_app ${PLATFORM_SPECIFIC_LIBS} )
+                       graphene_validator graphene_wallet graphene_app ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
   set_source_files_properties( tests/common/database_fixture.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

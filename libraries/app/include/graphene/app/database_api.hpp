@@ -12,7 +12,7 @@
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/worker_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 
 #include <fc/api.hpp>
 #include <fc/variant_object.hpp>
@@ -127,24 +127,24 @@ class database_api
       /**
        * @brief Retrieve a block header
        * @param block_num Height of the block whose header should be returned
-       * @param with_witness_signature Whether to return witness signature. Optional.
-       *                               If omitted or is @a false, will not return witness signature.
+       * @param with_validator_signature Whether to return validator signature. Optional.
+       *                               If omitted or is @a false, will not return validator signature.
        * @return header of the referenced block, or null if no matching block was found
        */
       optional<maybe_signed_block_header> get_block_header(
             uint32_t block_num,
-            const optional<bool>& with_witness_signature = optional<bool>() )const;
+            const optional<bool>& with_validator_signature = optional<bool>() )const;
 
       /**
        * @brief Retrieve multiple block headers by block numbers
        * @param block_nums vector containing heights of the blocks whose headers should be returned
-       * @param with_witness_signatures Whether to return witness signatures. Optional.
-       *                                If omitted or is @a false, will not return witness signatures.
+       * @param with_validator_signatures Whether to return validator signatures. Optional.
+       *                                If omitted or is @a false, will not return validator signatures.
        * @return array of headers of the referenced blocks, or null if no matching block was found
        */
       map<uint32_t, optional<maybe_signed_block_header>> get_block_header_batch(
             const vector<uint32_t>& block_nums,
-            const optional<bool>& with_witness_signatures = optional<bool>() )const;
+            const optional<bool>& with_validator_signatures = optional<bool>() )const;
 
       /**
        * @brief Retrieve a full, signed block
@@ -644,39 +644,39 @@ class database_api
 
 
       ///////////////
-      // Witnesses //
+      // validators //
       ///////////////
 
       /**
-       * @brief Get a list of witnesses by ID
-       * @param witness_ids IDs of the witnesses to retrieve
-       * @return The witnesses corresponding to the provided IDs
+       * @brief Get a list of validators by ID
+       * @param validator_ids IDs of the validators to retrieve
+       * @return The validators corresponding to the provided IDs
        *
        * This function has semantics identical to @ref get_objects, but doesn't subscribe
        */
-      vector<optional<witness_object>> get_witnesses(const vector<witness_id_type>& witness_ids)const;
+      vector<optional<validator_object>> get_validators(const vector<validator_id_type>& validator_ids)const;
 
       /**
-       * @brief Get the witness owned by a given account
-       * @param account_name_or_id The name or ID of the account whose witness should be retrieved
-       * @return The witness object, or null if the account does not have a witness
+       * @brief Get the validator owned by a given account
+       * @param account_name_or_id The name or ID of the account whose validator should be retrieved
+       * @return The validator object, or null if the account does not have a validator
        */
-      fc::optional<witness_object> get_witness_by_account(const std::string& account_name_or_id)const;
+      fc::optional<validator_object> get_validator_by_account(const std::string& account_name_or_id)const;
 
       /**
-       * @brief Get names and IDs for registered witnesses
+       * @brief Get names and IDs for registered validators
        * @param lower_bound_name Lower bound of the first name to return
        * @param limit Maximum number of results to return, must not exceed the configured value of
-       *              @a api_limit_lookup_witness_accounts
-       * @return Map of witness names to corresponding IDs
+       *              @a api_limit_lookup_validator_accounts
+       * @return Map of validator names to corresponding IDs
        */
-      map<string, witness_id_type, std::less<>> lookup_witness_accounts( const string& lower_bound_name,
+      map<string, validator_id_type, std::less<>> lookup_validator_accounts( const string& lower_bound_name,
                                                                          uint32_t limit )const;
 
       /**
-       * @brief Get the total number of witnesses registered with the blockchain
+       * @brief Get the total number of validators registered with the blockchain
        */
-      uint64_t get_witness_count()const;
+      uint64_t get_validator_count()const;
 
       ///////////////
       // Delegates //
@@ -753,7 +753,7 @@ class database_api
        *              @a api_limit_lookup_vote_ids
        * @return the referenced objects
        *
-       * This will be a mixture of delegate_objects, witness_objects, and worker_objects
+       * This will be a mixture of delegate_objects, validator_objects, and worker_objects
        *
        * The results will be in the same order as the votes.  Null will be returned for
        * any vote IDs that are not found.
@@ -1024,11 +1024,11 @@ FC_API(graphene::app::database_api,
    (get_trade_history)
    (get_trade_history_by_sequence)
 
-   // Witnesses
-   (get_witnesses)
-   (get_witness_by_account)
-   (lookup_witness_accounts)
-   (get_witness_count)
+   // Validators
+   (get_validators)
+   (get_validator_by_account)
+   (lookup_validator_accounts)
+   (get_validator_count)
 
    // Delegates
    (get_delegates)

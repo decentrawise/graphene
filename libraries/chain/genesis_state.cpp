@@ -10,10 +10,10 @@ chain_id_type genesis_state_type::compute_chain_id() const
    return initial_chain_id;
 }
 
-void genesis_state_type::override_witness_signing_keys(const std::string &new_key)
+void genesis_state_type::override_validator_signing_keys(const std::string &new_key)
 {
    public_key_type new_pubkey(new_key);
-   for (auto &wit : initial_witness_candidates)
+   for (auto &wit : initial_validator_candidates)
    {
       wit.block_signing_key = new_pubkey;
    }
@@ -37,7 +37,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_bala
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_vesting_balance_type, BOOST_PP_SEQ_NIL,
            (owner)(asset_symbol)(amount)(begin_timestamp)(vesting_duration_seconds)(begin_balance))
 
-FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_witness_type, BOOST_PP_SEQ_NIL,
+FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_validator_type, BOOST_PP_SEQ_NIL,
            (owner_name)(block_signing_key))
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_delegate_type, BOOST_PP_SEQ_NIL,
@@ -48,7 +48,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_work
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type, BOOST_PP_SEQ_NIL,
            (initial_timestamp)(max_core_supply)(initial_parameters)(initial_accounts)(initial_assets)
-           (initial_balances)(initial_vesting_balances)(initial_active_witnesses)(initial_witness_candidates)
+           (initial_balances)(initial_vesting_balances)(initial_block_producers)(initial_validator_candidates)
            (initial_council_candidates)(initial_worker_candidates)
            (immutable_parameters))
 
@@ -57,7 +57,7 @@ GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_balance_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_vesting_balance_type )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_witness_type )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_validator_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_delegate_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_worker_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type )

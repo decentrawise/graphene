@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
 {
    try {
       // Initialize council by voting for each member and for desired count
-      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
@@ -1043,14 +1043,14 @@ BOOST_AUTO_TEST_CASE( lookup_vote_ids )
    upgrade_to_lifetime_member(wolverine);
 
    const auto& delegate = create_delegate( connie );
-   const auto& witness = create_witness( whitney );
+   const auto& validator = create_validator( whitney );
    const auto& worker = create_worker( wolverine_id );
 
    graphene::app::database_api db_api(db, &(app.get_options()));
 
    std::vector<vote_id_type> votes;
    votes.push_back( delegate.vote_id );
-   votes.push_back( witness.vote_id );
+   votes.push_back( validator.vote_id );
    votes.push_back( worker.vote_id );
 
    const auto results = db_api.lookup_vote_ids( votes );
@@ -1398,14 +1398,14 @@ BOOST_AUTO_TEST_CASE( get_assets_by_issuer ) {
 
       generate_block();
 
-      auto assets = db_api.get_assets_by_issuer("witness-account", asset_id_type(), 10);
+      auto assets = db_api.get_assets_by_issuer("validator-account", asset_id_type(), 10);
 
       BOOST_CHECK(assets.size() == 3);
       BOOST_CHECK(assets[0].symbol == "CNY");
       BOOST_CHECK(assets[1].symbol == "EUR");
       BOOST_CHECK(assets[2].symbol == "USD");
 
-      assets = db_api.get_assets_by_issuer("witness-account", asset_id_type(200), 100);
+      assets = db_api.get_assets_by_issuer("validator-account", asset_id_type(200), 100);
       BOOST_CHECK(assets.size() == 0);
 
       GRAPHENE_CHECK_THROW(db_api.get_assets_by_issuer("nosuchaccount", asset_id_type(), 100), fc::exception);

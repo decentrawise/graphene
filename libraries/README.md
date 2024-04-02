@@ -14,7 +14,7 @@ Folder | Name | Description | Status
 [app](app) | Application | Bundles component libraries (chain, network, plugins) into a useful application. Also provides API access. | Active 
 [chain](chain) | Blockchain | Blockchain implementation and business logic. Database structure in the form of objects and updates to the blockchain in the form of evaluators are implemented here. | Active 
 [db](db) | Database | Defines the internal database graphene uses. | Active 
-[egenesis](egenesis) | Genesis | Hardcodes the `genesis.json` file into the `witness_node` executable.| Active
+[egenesis](egenesis) | Genesis | Hardcodes the `genesis.json` file into the `graphened` executable.| Active
 [fc](fc) | Fast-compiling C++ library | https://github.com/decentrawise/fc | Active 
 [net](net) | Network | The graphene p2p layer. | Active 
 [plugins](plugins) | Plugins | Collection of singleton designed modules used for extending the Graphene core.  | Active 

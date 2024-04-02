@@ -71,7 +71,7 @@ namespace graphene { namespace wallet { namespace detail {
       catch (const fc::exception& e)
       {
          // Right now the wallet_api has no way of knowing if the connection to the
-         // witness has already disconnected (via the witness node exiting first).
+         // validator has already disconnected (via the validator node exiting first).
          // If it has exited, cancel_all_subscriptsions() will throw and there's
          // nothing we can do about it.
          // dlog("Caught exception ${e} while canceling database subscriptions", ("e", e));
@@ -95,7 +95,7 @@ namespace graphene { namespace wallet { namespace detail {
       stringstream participation;
       participation << fixed << std::setprecision(2) << (100.0*fc::popcount(dynamic_props.recent_slots_filled)) / 128.0;
       result["participation"] = participation.str();
-      result["active_witnesses"] = fc::variant(global_props.active_witnesses, GRAPHENE_MAX_NESTED_OBJECTS);
+      result["block_producers"] = fc::variant(global_props.block_producers, GRAPHENE_MAX_NESTED_OBJECTS);
       result["active_delegates"] =
             fc::variant(global_props.active_delegates, GRAPHENE_MAX_NESTED_OBJECTS);
       return result;
@@ -304,24 +304,24 @@ namespace graphene { namespace wallet { namespace detail {
                claim_registered_account(*optional_account);
       }
 
-      if (!_wallet.pending_witness_registrations.empty())
+      if (!_wallet.pending_validator_registrations.empty())
       {
-         // make a vector of the owner accounts for witnesses pending registration
-         std::vector<string> pending_witness_names =
-               boost::copy_range<std::vector<string> >(boost::adaptors::keys(_wallet.pending_witness_registrations));
+         // make a vector of the owner accounts for validators pending registration
+         std::vector<string> pending_validator_names =
+               boost::copy_range<std::vector<string> >(boost::adaptors::keys(_wallet.pending_validator_registrations));
 
          // look up the owners on the blockchain
          std::vector<fc::optional<graphene::chain::account_object>> owner_account_objects =
-               _remote_db->lookup_account_names(pending_witness_names);
+               _remote_db->lookup_account_names(pending_validator_names);
 
-         // if any of them have registered witnesses, claim them
+         // if any of them have registered validators, claim them
          for( const fc::optional<graphene::chain::account_object>& optional_account : owner_account_objects )
             if (optional_account)
             {
                auto account_id = std::string(optional_account->id);
-               fc::optional<witness_object> witness_obj = _remote_db->get_witness_by_account(account_id);
-               if (witness_obj)
-                  claim_registered_witness(optional_account->name);
+               fc::optional<validator_object> validator_obj = _remote_db->get_validator_by_account(account_id);
+               if (validator_obj)
+                  claim_registered_validator(optional_account->name);
             }
       }
    }

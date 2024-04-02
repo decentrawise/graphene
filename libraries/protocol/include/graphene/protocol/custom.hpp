@@ -6,7 +6,7 @@
 namespace graphene { namespace protocol { 
 
    /**
-    * @brief provides a generic way to add higher level protocols on top of witness consensus
+    * @brief provides a generic way to add higher level protocols on top of validator consensus
     * @ingroup operations
     *
     * There is no validation for this operation other than that required auths are valid and a fee

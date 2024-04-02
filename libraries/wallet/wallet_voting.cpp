@@ -90,19 +90,19 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
 
-   witness_object wallet_api_impl::get_witness(string owner_account)
+   validator_object wallet_api_impl::get_validator(string owner_account)
    {
       try
       {
-         fc::optional<witness_id_type> witness_id = maybe_id<witness_id_type>(owner_account);
-         if (witness_id)
+         fc::optional<validator_id_type> validator_id = maybe_id<validator_id_type>(owner_account);
+         if (validator_id)
          {
-            std::vector<witness_id_type> ids_to_get;
-            ids_to_get.push_back(*witness_id);
-            std::vector<fc::optional<witness_object>> witness_objects = _remote_db->get_witnesses(ids_to_get);
-            if (witness_objects.front())
-               return *witness_objects.front();
-            FC_THROW("No witness is registered for id ${id}", ("id", owner_account));
+            std::vector<validator_id_type> ids_to_get;
+            ids_to_get.push_back(*validator_id);
+            std::vector<fc::optional<validator_object>> validator_objects = _remote_db->get_validators(ids_to_get);
+            if (validator_objects.front())
+               return *validator_objects.front();
+            FC_THROW("No validator is registered for id ${id}", ("id", owner_account));
          }
          else
          {
@@ -110,15 +110,15 @@ namespace graphene { namespace wallet { namespace detail {
             try
             {
                auto owner_account_id = std::string(get_account_id(owner_account));
-               fc::optional<witness_object> witness = _remote_db->get_witness_by_account(owner_account_id);
-               if (witness)
-                  return *witness;
+               fc::optional<validator_object> validator = _remote_db->get_validator_by_account(owner_account_id);
+               if (validator)
+                  return *validator;
                else
-                  FC_THROW("No witness is registered for account ${account}", ("account", owner_account));
+                  FC_THROW("No validator is registered for account ${account}", ("account", owner_account));
             }
             catch (const fc::exception&)
             {
-               FC_THROW("No account or witness named ${account}", ("account", owner_account));
+               FC_THROW("No account or validator named ${account}", ("account", owner_account));
             }
          }
       }
@@ -162,55 +162,55 @@ namespace graphene { namespace wallet { namespace detail {
       FC_CAPTURE_AND_RETHROW( (owner_account) )
    }
 
-   signed_transaction wallet_api_impl::create_witness(string owner_account,
+   signed_transaction wallet_api_impl::create_validator(string owner_account,
          string url, bool broadcast /* = false */)
    { try {
-      account_object witness_account = get_account(owner_account);
-      fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
-      int witness_key_index = find_first_unused_derived_key_index(active_private_key);
-      fc::ecc::private_key witness_private_key =
-            derive_private_key(key_to_wif(active_private_key), witness_key_index);
-      graphene::chain::public_key_type witness_public_key = witness_private_key.get_public_key();
+      account_object validator_account = get_account(owner_account);
+      fc::ecc::private_key active_private_key = get_private_key_for_account(validator_account);
+      int validator_key_index = find_first_unused_derived_key_index(active_private_key);
+      fc::ecc::private_key validator_private_key =
+            derive_private_key(key_to_wif(active_private_key), validator_key_index);
+      graphene::chain::public_key_type validator_public_key = validator_private_key.get_public_key();
 
-      witness_create_operation witness_create_op;
-      witness_create_op.witness_account = witness_account.id;
-      witness_create_op.block_signing_key = witness_public_key;
-      witness_create_op.url = url;
+      validator_create_operation validator_create_op;
+      validator_create_op.validator_account = validator_account.id;
+      validator_create_op.block_signing_key = validator_public_key;
+      validator_create_op.url = url;
 
-      if (_remote_db->get_witness_by_account(std::string(witness_create_op.witness_account)))
-         FC_THROW("Account ${owner_account} is already a witness", ("owner_account", owner_account));
+      if (_remote_db->get_validator_by_account(std::string(validator_create_op.validator_account)))
+         FC_THROW("Account ${owner_account} is already a validator", ("owner_account", owner_account));
 
       signed_transaction tx;
-      tx.operations.push_back( witness_create_op );
+      tx.operations.push_back( validator_create_op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.get_current_fees());
       tx.validate();
 
-      _wallet.pending_witness_registrations[owner_account] = key_to_wif(witness_private_key);
+      _wallet.pending_validator_registrations[owner_account] = key_to_wif(validator_private_key);
 
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
 
-   signed_transaction wallet_api_impl::update_witness(string witness_name, string url,
+   signed_transaction wallet_api_impl::update_validator(string validator_name, string url,
          string block_signing_key, bool broadcast )
    { try {
-      witness_object witness = get_witness(witness_name);
-      account_object witness_account = get_account( witness.witness_account );
+      validator_object validator = get_validator(validator_name);
+      account_object validator_account = get_account( validator.validator_account );
 
-      witness_update_operation witness_update_op;
-      witness_update_op.witness = witness.id;
-      witness_update_op.witness_account = witness_account.id;
+      validator_update_operation validator_update_op;
+      validator_update_op.validator = validator.id;
+      validator_update_op.validator_account = validator_account.id;
       if( url != "" )
-         witness_update_op.new_url = url;
+         validator_update_op.new_url = url;
       if( block_signing_key != "" )
-         witness_update_op.new_signing_key = public_key_type( block_signing_key );
+         validator_update_op.new_signing_key = public_key_type( block_signing_key );
 
       signed_transaction tx;
-      tx.operations.push_back( witness_update_op );
+      tx.operations.push_back( validator_update_op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.get_current_fees() );
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (witness_name)(url)(block_signing_key)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (validator_name)(url)(block_signing_key)(broadcast) ) }
 
    signed_transaction wallet_api_impl::create_worker( string owner_account, time_point_sec work_begin_date,
          time_point_sec work_end_date, share_type daily_pay, string name, string url,
@@ -283,27 +283,27 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (voting_account)(delegate)(approve)(broadcast) ) }
 
-   signed_transaction wallet_api_impl::vote_for_witness(string voting_account, string witness,
+   signed_transaction wallet_api_impl::vote_for_validator(string voting_account, string validator,
          bool approve, bool broadcast )
    { try {
       account_object voting_account_object = get_account(voting_account);
 
-      fc::optional<witness_object> witness_obj = _remote_db->get_witness_by_account(witness);
-      if (!witness_obj)
-         FC_THROW("Account ${witness} is not registered as a witness", ("witness", witness));
+      fc::optional<validator_object> validator_obj = _remote_db->get_validator_by_account(validator);
+      if (!validator_obj)
+         FC_THROW("Account ${validator} is not registered as a validator", ("validator", validator));
       if (approve)
       {
-         auto insert_result = voting_account_object.options.votes.insert(witness_obj->vote_id);
+         auto insert_result = voting_account_object.options.votes.insert(validator_obj->vote_id);
          if (!insert_result.second)
-            FC_THROW("Account ${account} was already voting for witness ${witness}",
-                     ("account", voting_account)("witness", witness));
+            FC_THROW("Account ${account} was already voting for validator ${validator}",
+                     ("account", voting_account)("validator", validator));
       }
       else
       {
-         auto votes_removed = voting_account_object.options.votes.erase(witness_obj->vote_id);
+         auto votes_removed = voting_account_object.options.votes.erase(validator_obj->vote_id);
          if( 0 == votes_removed )
-            FC_THROW("Account ${account} is already not voting for witness ${witness}",
-                     ("account", voting_account)("witness", witness));
+            FC_THROW("Account ${account} is already not voting for validator ${validator}",
+                     ("account", voting_account)("validator", validator));
       }
       account_update_operation account_update_op;
       account_update_op.account = voting_account_object.id;
@@ -315,7 +315,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (voting_account)(witness)(approve)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (voting_account)(validator)(approve)(broadcast) ) }
 
    signed_transaction wallet_api_impl::set_voting_proxy(string account_to_modify,
          optional<string> voting_account, bool broadcast )
@@ -348,19 +348,19 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
 
-   signed_transaction wallet_api_impl::set_desired_witness_and_delegate_count(
-         string account_to_modify, uint16_t desired_number_of_witnesses, uint16_t desired_number_of_delegates,
+   signed_transaction wallet_api_impl::set_desired_validator_and_delegate_count(
+         string account_to_modify, uint16_t desired_number_of_validators, uint16_t desired_number_of_delegates,
          bool broadcast )
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
 
-      if (account_object_to_modify.options.num_witness == desired_number_of_witnesses &&
+      if (account_object_to_modify.options.num_validator == desired_number_of_validators &&
           account_object_to_modify.options.num_council == desired_number_of_delegates)
-         FC_THROW("Account ${account} is already voting for ${witnesses} witnesses"
+         FC_THROW("Account ${account} is already voting for ${validators} validators"
                   " and ${delegates} delegates",
-                  ("account", account_to_modify)("witnesses", desired_number_of_witnesses)
-                  ("delegates",desired_number_of_witnesses));
-      account_object_to_modify.options.num_witness = desired_number_of_witnesses;
+                  ("account", account_to_modify)("validators", desired_number_of_validators)
+                  ("delegates",desired_number_of_validators));
+      account_object_to_modify.options.num_validator = desired_number_of_validators;
       account_object_to_modify.options.num_council = desired_number_of_delegates;
 
       account_update_operation account_update_op;
@@ -373,7 +373,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_witnesses)
+   } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_validators)
                              (desired_number_of_delegates)(broadcast) ) }
 
    signed_transaction wallet_api_impl::propose_parameter_change( const string& proposing_account,

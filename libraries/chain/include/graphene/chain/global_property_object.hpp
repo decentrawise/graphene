@@ -23,8 +23,8 @@ namespace graphene { namespace chain {
 
          uint32_t                           next_available_vote_id = 0;
          vector<delegate_id_type>   active_delegates; // updated once per maintenance interval
-         flat_set<witness_id_type>          active_witnesses; // updated once per maintenance interval
-         // n.b. witness scheduling is done by witness_schedule object
+         flat_set<validator_id_type>          block_producers; // updated once per maintenance interval
+         // n.b. validator scheduling is done by validator_schedule object
    };
 
    /**
@@ -43,10 +43,10 @@ namespace graphene { namespace chain {
          uint32_t          head_block_number = 0;
          block_id_type     head_block_id;
          time_point_sec    time;
-         witness_id_type   current_witness;
+         validator_id_type   current_validator;
          time_point_sec    next_maintenance_time;
          time_point_sec    last_budget_time;
-         share_type        witness_budget;
+         share_type        validator_budget;
          uint32_t          accounts_registered_this_interval = 0;
          /**
           *  Every time a block is missed this increases by
@@ -65,7 +65,7 @@ namespace graphene { namespace chain {
          uint64_t                current_aslot = 0;
 
          /**
-          * used to compute witness participation.
+          * used to compute validator participation.
           */
          fc::uint128_t recent_slots_filled;
 
