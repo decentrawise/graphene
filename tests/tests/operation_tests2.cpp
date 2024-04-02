@@ -5,7 +5,7 @@
 
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -949,7 +949,7 @@ BOOST_AUTO_TEST_CASE( witness_create )
       op.new_options->votes.insert(nathan_witness_id(db).vote_id);
       op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                   [](vote_id_type id) { return id.type() == vote_id_type::witness; });
-      op.new_options->num_committee = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+      op.new_options->num_council = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                     [](vote_id_type id) { return id.type() == vote_id_type::committee; });
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );

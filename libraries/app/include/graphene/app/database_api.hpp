@@ -8,7 +8,7 @@
 
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/worker_object.hpp>
@@ -678,42 +678,42 @@ class database_api
        */
       uint64_t get_witness_count()const;
 
-      ///////////////////////
-      // Committee members //
-      ///////////////////////
+      ///////////////
+      // Delegates //
+      ///////////////
 
       /**
-       * @brief Get a list of committee_members by ID
-       * @param committee_member_ids IDs of the committee_members to retrieve
-       * @return The committee_members corresponding to the provided IDs
+       * @brief Get a list of delegates by ID
+       * @param delegate_ids IDs of the delegates to retrieve
+       * @return The delegates corresponding to the provided IDs
        *
        * This function has semantics identical to @ref get_objects, but doesn't subscribe
        */
-      vector<optional<committee_member_object>> get_committee_members(
-            const vector<committee_member_id_type>& committee_member_ids)const;
+      vector<optional<delegate_object>> get_delegates(
+            const vector<delegate_id_type>& delegate_ids)const;
 
       /**
-       * @brief Get the committee_member owned by a given account
-       * @param account_name_or_id The name or ID of the account whose committee_member should be retrieved
-       * @return The committee_member object, or null if the account does not have a committee_member
+       * @brief Get the delegate owned by a given account
+       * @param account_name_or_id The name or ID of the account whose delegate should be retrieved
+       * @return The delegate object, or null if the account does not have a delegate
        */
-      fc::optional<committee_member_object> get_committee_member_by_account( const string& account_name_or_id )const;
+      fc::optional<delegate_object> get_delegate_by_account( const string& account_name_or_id )const;
 
       /**
-       * @brief Get names and IDs for registered committee_members
+       * @brief Get names and IDs for registered delegates
        * @param lower_bound_name Lower bound of the first name to return
        * @param limit Maximum number of results to return, must not exceed the configured value of
-       *              @a api_limit_lookup_committee_member_accounts
-       * @return Map of committee_member names to corresponding IDs
+       *              @a api_limit_lookup_delegate_accounts
+       * @return Map of delegate names to corresponding IDs
        */
-      map<string, committee_member_id_type, std::less<>> lookup_committee_member_accounts(
+      map<string, delegate_id_type, std::less<>> lookup_delegate_accounts(
             const string& lower_bound_name,
             uint32_t limit )const;
 
       /**
        * @brief Get the total number of committee registered with the blockchain
       */
-      uint64_t get_committee_count()const;
+      uint64_t get_council_count()const;
 
 
       ///////////////////////
@@ -753,7 +753,7 @@ class database_api
        *              @a api_limit_lookup_vote_ids
        * @return the referenced objects
        *
-       * This will be a mixture of committee_member_objects, witness_objects, and worker_objects
+       * This will be a mixture of delegate_objects, witness_objects, and worker_objects
        *
        * The results will be in the same order as the votes.  Null will be returned for
        * any vote IDs that are not found.
@@ -1030,11 +1030,11 @@ FC_API(graphene::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
 
-   // Committee members
-   (get_committee_members)
-   (get_committee_member_by_account)
-   (lookup_committee_member_accounts)
-   (get_committee_count)
+   // Delegates
+   (get_delegates)
+   (get_delegate_by_account)
+   (lookup_delegate_accounts)
+   (get_council_count)
 
    // workers
    (get_all_workers)

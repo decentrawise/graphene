@@ -114,12 +114,12 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       // Each witness is voted with incremental stake so last witness created will be the ones with more votes
 
       // by default we have 9 witnesses, we need to vote for desired witness count (11) to increase them
-      vote_for_committee_and_witnesses(9, 11);
+      vote_for_delegates_and_witnesses(9, 11);
 
       int c = 0;
       for (auto l : witness_map) {
          // voting stake have step of 100
-         // so vote_for_committee_and_witnesses() with stake=10 does not affect the expected result
+         // so vote_for_delegates_and_witnesses() with stake=10 does not affect the expected result
          int stake = 100 * (c + 1);
          transfer(council_account, l.first, asset(stake));
          {
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(update_feed_producers)
 {
    try
    {
-      /* For MPA fed by non witnesses or non committee members but by feed producers changes should do nothing */
+      /* For MPA fed by non witnesses or non delegates but by feed producers changes should do nothing */
       ACTORS( (sam)(alice)(paul)(bob) );
 
       // Create the asset

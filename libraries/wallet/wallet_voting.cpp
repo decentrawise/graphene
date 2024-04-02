@@ -72,18 +72,18 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction wallet_api_impl::create_committee_member(string owner_account, string url,
+   signed_transaction wallet_api_impl::create_delegate(string owner_account, string url,
          bool broadcast )
    { try {
 
-      committee_member_create_operation committee_member_create_op;
-      committee_member_create_op.committee_member_account = get_account_id(owner_account);
-      committee_member_create_op.url = url;
-      if (_remote_db->get_committee_member_by_account(owner_account))
-         FC_THROW("Account ${owner_account} is already a committee_member", ("owner_account", owner_account));
+      delegate_create_operation delegate_create_op;
+      delegate_create_op.delegate_account = get_account_id(owner_account);
+      delegate_create_op.url = url;
+      if (_remote_db->get_delegate_by_account(owner_account))
+         FC_THROW("Account ${owner_account} is already a delegate", ("owner_account", owner_account));
 
       signed_transaction tx;
-      tx.operations.push_back( committee_member_create_op );
+      tx.operations.push_back( delegate_create_op );
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.get_current_fees());
       tx.validate();
 
@@ -125,37 +125,37 @@ namespace graphene { namespace wallet { namespace detail {
       FC_CAPTURE_AND_RETHROW( (owner_account) )
    }
 
-   committee_member_object wallet_api_impl::get_committee_member(string owner_account)
+   delegate_object wallet_api_impl::get_delegate(string owner_account)
    {
       try
       {
-         fc::optional<committee_member_id_type> committee_member_id =
-               maybe_id<committee_member_id_type>(owner_account);
-         if (committee_member_id)
+         fc::optional<delegate_id_type> delegate_id =
+               maybe_id<delegate_id_type>(owner_account);
+         if (delegate_id)
          {
-            std::vector<committee_member_id_type> ids_to_get;
-            ids_to_get.push_back(*committee_member_id);
-            std::vector<fc::optional<committee_member_object>> committee_member_objects =
-                  _remote_db->get_committee_members(ids_to_get);
-            if (committee_member_objects.front())
-               return *committee_member_objects.front();
-            FC_THROW("No committee_member is registered for id ${id}", ("id", owner_account));
+            std::vector<delegate_id_type> ids_to_get;
+            ids_to_get.push_back(*delegate_id);
+            std::vector<fc::optional<delegate_object>> delegate_objects =
+                  _remote_db->get_delegates(ids_to_get);
+            if (delegate_objects.front())
+               return *delegate_objects.front();
+            FC_THROW("No delegate is registered for id ${id}", ("id", owner_account));
          }
          else
          {
             // then maybe it's the owner account
             try
             {
-               fc::optional<committee_member_object> committee_member =
-                     _remote_db->get_committee_member_by_account(owner_account);
-               if (committee_member)
-                  return *committee_member;
+               fc::optional<delegate_object> delegate =
+                     _remote_db->get_delegate_by_account(owner_account);
+               if (delegate)
+                  return *delegate;
                else
-                  FC_THROW("No committee_member is registered for account ${account}", ("account", owner_account));
+                  FC_THROW("No delegate is registered for account ${account}", ("account", owner_account));
             }
             catch (const fc::exception&)
             {
-               FC_THROW("No account or committee_member named ${account}", ("account", owner_account));
+               FC_THROW("No account or delegate named ${account}", ("account", owner_account));
             }
          }
       }
@@ -248,28 +248,28 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction wallet_api_impl::vote_for_committee_member(string voting_account,
-         string committee_member, bool approve, bool broadcast )
+   signed_transaction wallet_api_impl::vote_for_delegate(string voting_account,
+         string delegate, bool approve, bool broadcast )
    { try {
       account_object voting_account_object = get_account(voting_account);
-      fc::optional<committee_member_object> committee_member_obj =
-            _remote_db->get_committee_member_by_account(committee_member);
-      if (!committee_member_obj)
-         FC_THROW("Account ${committee_member} is not registered as a committee_member",
-                  ("committee_member", committee_member));
+      fc::optional<delegate_object> delegate_obj =
+            _remote_db->get_delegate_by_account(delegate);
+      if (!delegate_obj)
+         FC_THROW("Account ${delegate} is not registered as a delegate",
+                  ("delegate", delegate));
       if (approve)
       {
-         auto insert_result = voting_account_object.options.votes.insert(committee_member_obj->vote_id);
+         auto insert_result = voting_account_object.options.votes.insert(delegate_obj->vote_id);
          if (!insert_result.second)
-            FC_THROW("Account ${account} was already voting for committee_member ${committee_member}",
-                     ("account", voting_account)("committee_member", committee_member));
+            FC_THROW("Account ${account} was already voting for delegate ${delegate}",
+                     ("account", voting_account)("delegate", delegate));
       }
       else
       {
-         auto votes_removed = voting_account_object.options.votes.erase(committee_member_obj->vote_id);
+         auto votes_removed = voting_account_object.options.votes.erase(delegate_obj->vote_id);
          if( 0 == votes_removed )
-            FC_THROW("Account ${account} is already not voting for committee_member ${committee_member}",
-                     ("account", voting_account)("committee_member", committee_member));
+            FC_THROW("Account ${account} is already not voting for delegate ${delegate}",
+                     ("account", voting_account)("delegate", delegate));
       }
       account_update_operation account_update_op;
       account_update_op.account = voting_account_object.id;
@@ -281,7 +281,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (voting_account)(committee_member)(approve)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (voting_account)(delegate)(approve)(broadcast) ) }
 
    signed_transaction wallet_api_impl::vote_for_witness(string voting_account, string witness,
          bool approve, bool broadcast )
@@ -348,20 +348,20 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
 
-   signed_transaction wallet_api_impl::set_desired_witness_and_committee_member_count(
-         string account_to_modify, uint16_t desired_number_of_witnesses, uint16_t desired_number_of_committee_members,
+   signed_transaction wallet_api_impl::set_desired_witness_and_delegate_count(
+         string account_to_modify, uint16_t desired_number_of_witnesses, uint16_t desired_number_of_delegates,
          bool broadcast )
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
 
       if (account_object_to_modify.options.num_witness == desired_number_of_witnesses &&
-          account_object_to_modify.options.num_committee == desired_number_of_committee_members)
+          account_object_to_modify.options.num_council == desired_number_of_delegates)
          FC_THROW("Account ${account} is already voting for ${witnesses} witnesses"
-                  " and ${committee_members} committee_members",
+                  " and ${delegates} delegates",
                   ("account", account_to_modify)("witnesses", desired_number_of_witnesses)
-                  ("committee_members",desired_number_of_witnesses));
+                  ("delegates",desired_number_of_witnesses));
       account_object_to_modify.options.num_witness = desired_number_of_witnesses;
-      account_object_to_modify.options.num_committee = desired_number_of_committee_members;
+      account_object_to_modify.options.num_council = desired_number_of_delegates;
 
       account_update_operation account_update_op;
       account_update_op.account = account_object_to_modify.id;
@@ -374,7 +374,7 @@ namespace graphene { namespace wallet { namespace detail {
 
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_witnesses)
-                             (desired_number_of_committee_members)(broadcast) ) }
+                             (desired_number_of_delegates)(broadcast) ) }
 
    signed_transaction wallet_api_impl::propose_parameter_change( const string& proposing_account,
          fc::time_point_sec expiration_time, const variant_object& changed_values, bool broadcast )
@@ -387,7 +387,7 @@ namespace graphene { namespace wallet { namespace detail {
          fc::from_variant_visitor<chain_parameters>( changed_values, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
          );
 
-      committee_member_update_global_parameters_operation update_op;
+      delegate_update_global_parameters_operation update_op;
       update_op.new_parameters = new_params;
 
       proposal_create_operation prop_op;
@@ -466,7 +466,7 @@ namespace graphene { namespace wallet { namespace detail {
       chain_parameters new_params = current_params;
       new_params.get_mutable_fees() = new_fees;
 
-      committee_member_update_global_parameters_operation update_op;
+      delegate_update_global_parameters_operation update_op;
       update_op.new_parameters = new_params;
 
       proposal_create_operation prop_op;

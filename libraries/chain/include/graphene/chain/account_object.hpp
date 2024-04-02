@@ -120,7 +120,7 @@ namespace graphene { namespace chain {
     * @ingroup protocol
     *
     * Accounts are the primary unit of authority on the graphene system. Users must have an account in order to use
-    * assets, trade in the markets, vote for committee_members, etc.
+    * assets, trade in the markets, vote for delegates, etc.
     */
    class account_object : public graphene::db::abstract_object<account_object, protocol_ids, account_object_type>
    {

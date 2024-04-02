@@ -29,7 +29,7 @@
 #define GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS                   32
 
 /**
- * Don't allow the committee_members to publish a limit that would
+ * Don't allow the delegates to publish a limit that would
  * make the network unable to operate.
  */
 #define GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT 1024
@@ -52,7 +52,7 @@
 #define GRAPHENE_DEFAULT_MAX_ASSET_FEED_PUBLISHERS              10
 
 #define GRAPHENE_DEFAULT_MIN_WITNESS_COUNT                    (11)
-#define GRAPHENE_DEFAULT_MIN_COMMITTEE_MEMBER_COUNT           (11)
+#define GRAPHENE_DEFAULT_MIN_COUNCIL_COUNT           (11)
 #define GRAPHENE_DEFAULT_MAX_WITNESSES                        (1001) // SHOULD BE ODD
 #define GRAPHENE_DEFAULT_MAX_COMMITTEE                        (1001) // SHOULD BE ODD
 #define GRAPHENE_DEFAULT_MAX_PROPOSAL_LIFETIME_SEC            (60*60*24*7*4) // Four weeks
@@ -98,11 +98,11 @@
  *  Reserved Account IDs with special meaning
  */
 ///@{
-/// Represents the current committee members, two-week review period
+/// Represents the current delegates, two-week review period
 #define GRAPHENE_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(0))
 /// Represents the current witnesses
 #define GRAPHENE_WITNESS_ACCOUNT (graphene::protocol::account_id_type(1))
-/// Represents the current committee members
+/// Represents the current delegates
 #define GRAPHENE_RELAXED_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(2))
 /// Represents the canonical account with NO authority (nobody can access funds in null account)
 #define GRAPHENE_NULL_ACCOUNT (graphene::protocol::account_id_type(3))

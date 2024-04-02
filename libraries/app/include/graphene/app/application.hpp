@@ -44,7 +44,7 @@ namespace graphene { namespace app {
          uint32_t api_limit_get_collateral_bids = 100;
          uint32_t api_limit_lookup_accounts = 1000;
          uint32_t api_limit_lookup_witness_accounts = 1000;
-         uint32_t api_limit_lookup_committee_member_accounts = 1000;
+         uint32_t api_limit_lookup_delegate_accounts = 1000;
          uint32_t api_limit_lookup_vote_ids = 1000;
          uint32_t api_limit_list_htlcs = 100;
          uint32_t api_limit_get_htlc_by = 100;
@@ -170,7 +170,7 @@ FC_REFLECT( graphene::app::application_options,
             ( api_limit_get_collateral_bids )
             ( api_limit_lookup_accounts )
             ( api_limit_lookup_witness_accounts )
-            ( api_limit_lookup_committee_member_accounts )
+            ( api_limit_lookup_delegate_accounts )
             ( api_limit_lookup_vote_ids )
             ( api_limit_list_htlcs )
             ( api_limit_get_htlc_by )

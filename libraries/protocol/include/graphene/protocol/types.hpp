@@ -243,7 +243,7 @@ GRAPHENE_DEFINE_IDS(protocol, protocol_ids, /*protocol objects are not prefixed*
                     /* 1.2.x  */ (account)
                     /* 1.3.x  */ (asset)
                     /* 1.4.x  */ (force_settlement)
-                    /* 1.5.x  */ (committee_member)
+                    /* 1.5.x  */ (delegate)
                     /* 1.6.x  */ (witness)
                     /* 1.7.x  */ (limit_order)
                     /* 1.8.x  */ (call_order)

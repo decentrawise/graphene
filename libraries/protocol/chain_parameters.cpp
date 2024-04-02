@@ -41,7 +41,7 @@ namespace graphene { namespace protocol {
       to.maximum_asset_whitelist_authorities = from.maximum_asset_whitelist_authorities;
       to.maximum_asset_feed_publishers = from.maximum_asset_feed_publishers;
       to.maximum_witness_count = from.maximum_witness_count;
-      to.maximum_committee_count = from.maximum_committee_count;
+      to.maximum_council_count = from.maximum_council_count;
       to.maximum_authority_membership = from.maximum_authority_membership;
       to.reserve_percent_of_fee = from.reserve_percent_of_fee;
       to.network_percent_of_fee = from.network_percent_of_fee;

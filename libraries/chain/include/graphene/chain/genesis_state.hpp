@@ -67,7 +67,7 @@ struct genesis_state_type {
       string owner_name;
       public_key_type block_signing_key;
    };
-   struct initial_committee_member_type {
+   struct initial_delegate_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
    };
@@ -87,7 +87,7 @@ struct genesis_state_type {
    vector<initial_vesting_balance_type>     initial_vesting_balances;
    uint64_t                                 initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
    vector<initial_witness_type>             initial_witness_candidates;
-   vector<initial_committee_member_type>    initial_committee_candidates;
+   vector<initial_delegate_type>    initial_committee_candidates;
    vector<initial_worker_type>              initial_worker_candidates;
 
    /**
@@ -115,7 +115,7 @@ FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_asset_type::in
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_balance_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_vesting_balance_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_witness_type )
-FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_committee_member_type )
+FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_delegate_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_worker_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type )
 
@@ -125,6 +125,6 @@ GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::in
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_balance_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_vesting_balance_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_witness_type )
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_committee_member_type )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_delegate_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_worker_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type )

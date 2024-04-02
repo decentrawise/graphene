@@ -380,9 +380,9 @@ void application_impl::set_api_limit() {
       _app_options.api_limit_lookup_witness_accounts =
             _options->at("api-limit-lookup-witness-accounts").as<uint32_t>();
    }
-   if(_options->count("api-limit-lookup-committee-member-accounts") > 0) {
-      _app_options.api_limit_lookup_committee_member_accounts =
-            _options->at("api-limit-lookup-committee-member-accounts").as<uint32_t>();
+   if(_options->count("api-limit-lookup-delegate-accounts") > 0) {
+      _app_options.api_limit_lookup_delegate_accounts =
+            _options->at("api-limit-lookup-delegate-accounts").as<uint32_t>();
    }
    if(_options->count("api-limit-lookup-vote-ids") > 0) {
       _app_options.api_limit_lookup_vote_ids =
@@ -1170,7 +1170,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("enable-subscribe-to-all", bpo::value<bool>()->implicit_value(true),
           "Whether allow API clients to subscribe to universal object creation and removal events")
          ("enable-standby-votes-tracking", bpo::value<bool>()->implicit_value(true),
-          "Whether to enable tracking of votes of standby witnesses and committee members. "
+          "Whether to enable tracking of votes of standby witnesses and delegates. "
           "Set it to true to provide accurate data to API clients, set to false for slightly better performance.")
          ("api-limit-get-account-history-operations",
           bpo::value<uint32_t>()->default_value(default_opts.api_limit_get_account_history_operations),
@@ -1235,9 +1235,9 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("api-limit-lookup-witness-accounts",
           bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_witness_accounts),
           "For database_api_impl::lookup_witness_accounts to set max limit value")
-         ("api-limit-lookup-committee-member-accounts",
-          bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_committee_member_accounts),
-          "For database_api_impl::lookup_committee_member_accounts to set max limit value")
+         ("api-limit-lookup-delegate-accounts",
+          bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_delegate_accounts),
+          "For database_api_impl::lookup_delegate_accounts to set max limit value")
          ("api-limit-lookup-vote-ids",
           bpo::value<uint32_t>()->default_value(default_opts.api_limit_lookup_vote_ids),
           "For database_api_impl::lookup_vote_ids to set max limit value")

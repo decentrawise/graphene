@@ -10,7 +10,7 @@
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/htlc_object.hpp>
 #include <graphene/chain/market_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -186,15 +186,15 @@ struct get_impacted_account_visitor
       _impacted.insert( op.fee_payer() ); // withdraw_from_account
       _impacted.insert( op.authorized_account );
    }
-   void operator()( const committee_member_create_operation& op )
+   void operator()( const delegate_create_operation& op )
    {
-      _impacted.insert( op.fee_payer() ); // committee_member_account
+      _impacted.insert( op.fee_payer() ); // delegate_account
    }
-   void operator()( const committee_member_update_operation& op )
+   void operator()( const delegate_update_operation& op )
    {
-      _impacted.insert( op.fee_payer() ); // committee_member_account
+      _impacted.insert( op.fee_payer() ); // delegate_account
    }
-   void operator()( const committee_member_update_global_parameters_operation& op )
+   void operator()( const delegate_update_global_parameters_operation& op )
    {
       _impacted.insert( op.fee_payer() ); // account_id_type()
    }
@@ -322,10 +322,10 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
            FC_ASSERT( aobj != nullptr );
            accounts.insert( aobj->owner );
            break;
-        } case committee_member_object_type:{
-           const auto& aobj = dynamic_cast<const committee_member_object*>(obj);
+        } case delegate_object_type:{
+           const auto& aobj = dynamic_cast<const delegate_object*>(obj);
            FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->committee_member_account );
+           accounts.insert( aobj->delegate_account );
            break;
         } case witness_object_type:{
            const auto& aobj = dynamic_cast<const witness_object*>(obj);

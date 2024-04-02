@@ -40,7 +40,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_vest
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_witness_type, BOOST_PP_SEQ_NIL,
            (owner_name)(block_signing_key))
 
-FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_committee_member_type, BOOST_PP_SEQ_NIL,
+FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_delegate_type, BOOST_PP_SEQ_NIL,
            (owner_name))
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_worker_type, BOOST_PP_SEQ_NIL,
@@ -58,6 +58,6 @@ GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_balance_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_vesting_balance_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_witness_type )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_committee_member_type )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_delegate_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_worker_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type )

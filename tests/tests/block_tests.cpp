@@ -5,7 +5,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/hardfork.hpp>
@@ -29,7 +29,7 @@ genesis_state_type make_genesis() {
 
    auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    genesis_state.initial_active_witnesses = 10;
-   genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
+   genesis_state.immutable_parameters.min_delegate_count = INITIAL_COUNCIL_COUNT;
    genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
 
    for( unsigned int i = 0; i < genesis_state.initial_active_witnesses; ++i )
@@ -832,12 +832,12 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       auto initial_properties = db.get_global_properties();
       const account_object& nathan = create_account("nathan");
       upgrade_to_lifetime_member(nathan);
-      const committee_member_object nathans_committee_member = create_committee_member(nathan);
+      const delegate_object nathans_delegate = create_delegate(nathan);
       {
          account_update_operation op;
          op.account = nathan.id;
          op.new_options = nathan.options;
-         op.new_options->votes.insert(nathans_committee_member.vote_id);
+         op.new_options->votes.insert(nathans_delegate.vote_id);
          trx.operations.push_back(op);
          PUSH_TX( db, trx, ~0 );
          trx.operations.clear();
@@ -850,15 +850,15 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         db.head_block_time().sec_since_epoch() + db.get_global_properties().parameters.block_interval);
       BOOST_CHECK(db.get_global_properties().active_witnesses == initial_properties.active_witnesses);
-      BOOST_CHECK(db.get_global_properties().active_committee_members == initial_properties.active_committee_members);
+      BOOST_CHECK(db.get_global_properties().active_delegates == initial_properties.active_delegates);
 
       generate_block();
 
       auto new_properties = db.get_global_properties();
-      BOOST_CHECK(new_properties.active_committee_members != initial_properties.active_committee_members);
-      BOOST_CHECK(std::find(new_properties.active_committee_members.begin(),
-                            new_properties.active_committee_members.end(), nathans_committee_member.id) !=
-                  new_properties.active_committee_members.end());
+      BOOST_CHECK(new_properties.active_delegates != initial_properties.active_delegates);
+      BOOST_CHECK(std::find(new_properties.active_delegates.begin(),
+                            new_properties.active_delegates.end(), nathans_delegate.id) !=
+                  new_properties.active_delegates.end());
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         maintenence_time.sec_since_epoch() + new_properties.parameters.maintenance_interval);
       maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
@@ -962,7 +962,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
    // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -976,13 +976,13 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
       proposal_create_operation cop = proposal_create_operation::committee_proposal(db.get_global_properties().parameters, db.head_block_time());
       cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
       cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-      committee_member_update_global_parameters_operation uop;
+      delegate_update_global_parameters_operation uop;
       uop.new_parameters.block_interval = 1;
       cop.proposed_ops.emplace_back(uop);
       trx.operations.push_back(cop);
       PUSH_TX(db, trx);
    }
-   BOOST_TEST_MESSAGE( "Updating proposal by signing with the committee_member private key" );
+   BOOST_TEST_MESSAGE( "Updating proposal by signing with the delegate private key" );
    {
       proposal_update_operation uop;
       uop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;

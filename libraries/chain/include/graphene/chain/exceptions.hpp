@@ -149,7 +149,7 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_settle );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_global_settle );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_publish_feed );
-   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( committee_member_create );
+   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( delegate_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( witness_create );
 
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( proposal_create );

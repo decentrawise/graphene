@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( one_hundred_k_benchmark )
       aco.active = authority( 1, public_key_type(nathan_pub), 1 );
       aco.options.memo_key = nathan_pub;
       aco.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
-      aco.options.num_committee = 0;
+      aco.options.num_council = 0;
       aco.options.num_witness = 0;
       aco.fee = db.current_fee_schedule().calculate_fee( aco );
       trx.clear();

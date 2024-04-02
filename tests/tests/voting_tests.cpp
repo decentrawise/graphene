@@ -16,42 +16,42 @@ BOOST_FIXTURE_TEST_SUITE(voting_tests, database_fixture)
 
 BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
 { try {
-   // Check current default committee
-   // By default chain is configured with INITIAL_COMMITTEE_MEMBER_COUNT=9 members
-   const auto &committee_members = db.get_global_properties().active_committee_members;
-   const auto &committee = council_account(db);
+   // Check current default council
+   // By default chain is configured with INITIAL_COUNCIL_COUNT=9 members
+   const auto &delegates = db.get_global_properties().active_delegates;
+   const auto &council = council_account(db);
 
-   BOOST_CHECK_EQUAL(committee_members.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
-   BOOST_CHECK_EQUAL(committee.active.num_auths(), 0);
+   BOOST_CHECK_EQUAL(delegates.size(), INITIAL_COUNCIL_COUNT);
+   BOOST_CHECK_EQUAL(council.active.num_auths(), 0);
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
 
-   // Check that committee not changed, votes absent
-   const auto &committee_members_after_maint = db.get_global_properties().active_committee_members;
-   const auto &committee_after_maint = council_account(db);
-   BOOST_CHECK_EQUAL(committee_members_after_maint.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
-   BOOST_CHECK_EQUAL(committee_after_maint.active.num_auths(), 0);
+   // Check that council not changed, votes absent
+   const auto &delegates_after_maint = db.get_global_properties().active_delegates;
+   const auto &council_after_maint = council_account(db);
+   BOOST_CHECK_EQUAL(delegates_after_maint.size(), INITIAL_COUNCIL_COUNT);
+   BOOST_CHECK_EQUAL(council_after_maint.active.num_auths(), 0);
 
-   // You can't use uninitialized committee
-   // when any user with stake created (create_account method automatically set up votes for committee)
-   // committee is incomplete and consist of random active members
+   // You can't use uninitialized council
+   // when any user with stake created (create_account method automatically set up votes for council)
+   // council is incomplete and consist of random active members
    ACTOR(alice);
    fund(alice);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-   const auto &committee_after_maint_with_stake = council_account(db);
-   BOOST_CHECK_LT(committee_after_maint_with_stake.active.num_auths(), INITIAL_COMMITTEE_MEMBER_COUNT);
+   const auto &council_after_maint_with_stake = council_account(db);
+   BOOST_CHECK_LT(council_after_maint_with_stake.active.num_auths(), INITIAL_COUNCIL_COUNT);
 
-   // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   // Initialize council by voting for each member and for desired count
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-   const auto &committee_members_after_maint_and_init = db.get_global_properties().active_committee_members;
-   const auto &committee_after_maint_and_init = council_account(db);
-   BOOST_CHECK_EQUAL(committee_members_after_maint_and_init.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
-   BOOST_CHECK_EQUAL(committee_after_maint_and_init.active.num_auths(), INITIAL_COMMITTEE_MEMBER_COUNT);
+   const auto &delegates_after_maint_and_init = db.get_global_properties().active_delegates;
+   const auto &council_after_maint_and_init = council_account(db);
+   BOOST_CHECK_EQUAL(delegates_after_maint_and_init.size(), INITIAL_COUNCIL_COUNT);
+   BOOST_CHECK_EQUAL(council_after_maint_and_init.active.num_auths(), INITIAL_COUNCIL_COUNT);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE(put_my_witnesses)
@@ -226,122 +226,122 @@ BOOST_AUTO_TEST_CASE(track_votes_witnesses_disabled)
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(put_my_committee_members)
+BOOST_AUTO_TEST_CASE(put_my_delegates)
 {
    try
    {
-      ACTORS( (committee0)
-              (committee1)
-              (committee2)
-              (committee3)
-              (committee4)
-              (committee5)
-              (committee6)
-              (committee7)
-              (committee8)
-              (committee9)
-              (committee10)
-              (committee11)
-              (committee12)
-              (committee13) );
+      ACTORS( (delegate0)
+              (delegate1)
+              (delegate2)
+              (delegate3)
+              (delegate4)
+              (delegate5)
+              (delegate6)
+              (delegate7)
+              (delegate8)
+              (delegate9)
+              (delegate10)
+              (delegate11)
+              (delegate12)
+              (delegate13) );
 
       // Upgrade all accounts to LTM
-      upgrade_to_lifetime_member(committee0_id);
-      upgrade_to_lifetime_member(committee1_id);
-      upgrade_to_lifetime_member(committee2_id);
-      upgrade_to_lifetime_member(committee3_id);
-      upgrade_to_lifetime_member(committee4_id);
-      upgrade_to_lifetime_member(committee5_id);
-      upgrade_to_lifetime_member(committee6_id);
-      upgrade_to_lifetime_member(committee7_id);
-      upgrade_to_lifetime_member(committee8_id);
-      upgrade_to_lifetime_member(committee9_id);
-      upgrade_to_lifetime_member(committee10_id);
-      upgrade_to_lifetime_member(committee11_id);
-      upgrade_to_lifetime_member(committee12_id);
-      upgrade_to_lifetime_member(committee13_id);
+      upgrade_to_lifetime_member(delegate0_id);
+      upgrade_to_lifetime_member(delegate1_id);
+      upgrade_to_lifetime_member(delegate2_id);
+      upgrade_to_lifetime_member(delegate3_id);
+      upgrade_to_lifetime_member(delegate4_id);
+      upgrade_to_lifetime_member(delegate5_id);
+      upgrade_to_lifetime_member(delegate6_id);
+      upgrade_to_lifetime_member(delegate7_id);
+      upgrade_to_lifetime_member(delegate8_id);
+      upgrade_to_lifetime_member(delegate9_id);
+      upgrade_to_lifetime_member(delegate10_id);
+      upgrade_to_lifetime_member(delegate11_id);
+      upgrade_to_lifetime_member(delegate12_id);
+      upgrade_to_lifetime_member(delegate13_id);
 
-      // Create all the committee
-      const committee_member_id_type committee0_committee_id = create_committee_member(committee0_id(db)).get_id();
-      const committee_member_id_type committee1_committee_id = create_committee_member(committee1_id(db)).get_id();
-      const committee_member_id_type committee2_committee_id = create_committee_member(committee2_id(db)).get_id();
-      const committee_member_id_type committee3_committee_id = create_committee_member(committee3_id(db)).get_id();
-      const committee_member_id_type committee4_committee_id = create_committee_member(committee4_id(db)).get_id();
-      const committee_member_id_type committee5_committee_id = create_committee_member(committee5_id(db)).get_id();
-      const committee_member_id_type committee6_committee_id = create_committee_member(committee6_id(db)).get_id();
-      const committee_member_id_type committee7_committee_id = create_committee_member(committee7_id(db)).get_id();
-      const committee_member_id_type committee8_committee_id = create_committee_member(committee8_id(db)).get_id();
-      const committee_member_id_type committee9_committee_id = create_committee_member(committee9_id(db)).get_id();
-      const committee_member_id_type committee10_committee_id = create_committee_member(committee10_id(db)).get_id();
-      const committee_member_id_type committee11_committee_id = create_committee_member(committee11_id(db)).get_id();
-      const committee_member_id_type committee12_committee_id = create_committee_member(committee12_id(db)).get_id();
-      const committee_member_id_type committee13_committee_id = create_committee_member(committee13_id(db)).get_id();
+      // Create all the delegates
+      const delegate_id_type delegate0_delegate_id = create_delegate(delegate0_id(db)).get_id();
+      const delegate_id_type delegate1_delegate_id = create_delegate(delegate1_id(db)).get_id();
+      const delegate_id_type delegate2_delegate_id = create_delegate(delegate2_id(db)).get_id();
+      const delegate_id_type delegate3_delegate_id = create_delegate(delegate3_id(db)).get_id();
+      const delegate_id_type delegate4_delegate_id = create_delegate(delegate4_id(db)).get_id();
+      const delegate_id_type delegate5_delegate_id = create_delegate(delegate5_id(db)).get_id();
+      const delegate_id_type delegate6_delegate_id = create_delegate(delegate6_id(db)).get_id();
+      const delegate_id_type delegate7_delegate_id = create_delegate(delegate7_id(db)).get_id();
+      const delegate_id_type delegate8_delegate_id = create_delegate(delegate8_id(db)).get_id();
+      const delegate_id_type delegate9_delegate_id = create_delegate(delegate9_id(db)).get_id();
+      const delegate_id_type delegate10_delegate_id = create_delegate(delegate10_id(db)).get_id();
+      const delegate_id_type delegate11_delegate_id = create_delegate(delegate11_id(db)).get_id();
+      const delegate_id_type delegate12_delegate_id = create_delegate(delegate12_id(db)).get_id();
+      const delegate_id_type delegate13_delegate_id = create_delegate(delegate13_id(db)).get_id();
 
-      // Create a vector with private key of all committee members, will be used to activate 9 members at a time
+      // Create a vector with private key of all delegates, will be used to activate 9 members at a time
       const vector <fc::ecc::private_key> private_keys = {
-            committee0_private_key,
-            committee1_private_key,
-            committee2_private_key,
-            committee3_private_key,
-            committee4_private_key,
-            committee5_private_key,
-            committee6_private_key,
-            committee7_private_key,
-            committee8_private_key,
-            committee9_private_key,
-            committee10_private_key,
-            committee11_private_key,
-            committee12_private_key,
-            committee13_private_key
+            delegate0_private_key,
+            delegate1_private_key,
+            delegate2_private_key,
+            delegate3_private_key,
+            delegate4_private_key,
+            delegate5_private_key,
+            delegate6_private_key,
+            delegate7_private_key,
+            delegate8_private_key,
+            delegate9_private_key,
+            delegate10_private_key,
+            delegate11_private_key,
+            delegate12_private_key,
+            delegate13_private_key
       };
 
-      // create a map with account id and committee member id
-      const flat_map <account_id_type, committee_member_id_type> committee_map = {
-            {committee0_id, committee0_committee_id},
-            {committee1_id, committee1_committee_id},
-            {committee2_id, committee2_committee_id},
-            {committee3_id, committee3_committee_id},
-            {committee4_id, committee4_committee_id},
-            {committee5_id, committee5_committee_id},
-            {committee6_id, committee6_committee_id},
-            {committee7_id, committee7_committee_id},
-            {committee8_id, committee8_committee_id},
-            {committee9_id, committee9_committee_id},
-            {committee10_id, committee10_committee_id},
-            {committee11_id, committee11_committee_id},
-            {committee12_id, committee12_committee_id},
-            {committee13_id, committee13_committee_id}
+      // create a map with account id and delegate id
+      const flat_map <account_id_type, delegate_id_type> delegate_map = {
+            {delegate0_id, delegate0_delegate_id},
+            {delegate1_id, delegate1_delegate_id},
+            {delegate2_id, delegate2_delegate_id},
+            {delegate3_id, delegate3_delegate_id},
+            {delegate4_id, delegate4_delegate_id},
+            {delegate5_id, delegate5_delegate_id},
+            {delegate6_id, delegate6_delegate_id},
+            {delegate7_id, delegate7_delegate_id},
+            {delegate8_id, delegate8_delegate_id},
+            {delegate9_id, delegate9_delegate_id},
+            {delegate10_id, delegate10_delegate_id},
+            {delegate11_id, delegate11_delegate_id},
+            {delegate12_id, delegate12_delegate_id},
+            {delegate13_id, delegate13_delegate_id}
       };
 
-      // Check current default committee, default chain is configured with 9 committee members
-      auto committee_members = db.get_global_properties().active_committee_members;
+      // Check current default council, default chain is configured with 9 delegates
+      auto delegates = db.get_global_properties().active_delegates;
 
-      BOOST_CHECK_EQUAL(committee_members.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
-      BOOST_CHECK_EQUAL(committee_members.begin()[0].instance.value, 0u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[1].instance.value, 1u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[2].instance.value, 2u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[3].instance.value, 3u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[4].instance.value, 4u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[5].instance.value, 5u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[6].instance.value, 6u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[7].instance.value, 7u);
-      BOOST_CHECK_EQUAL(committee_members.begin()[8].instance.value, 8u);
+      BOOST_CHECK_EQUAL(delegates.size(), INITIAL_COUNCIL_COUNT);
+      BOOST_CHECK_EQUAL(delegates.begin()[0].instance.value, 0u);
+      BOOST_CHECK_EQUAL(delegates.begin()[1].instance.value, 1u);
+      BOOST_CHECK_EQUAL(delegates.begin()[2].instance.value, 2u);
+      BOOST_CHECK_EQUAL(delegates.begin()[3].instance.value, 3u);
+      BOOST_CHECK_EQUAL(delegates.begin()[4].instance.value, 4u);
+      BOOST_CHECK_EQUAL(delegates.begin()[5].instance.value, 5u);
+      BOOST_CHECK_EQUAL(delegates.begin()[6].instance.value, 6u);
+      BOOST_CHECK_EQUAL(delegates.begin()[7].instance.value, 7u);
+      BOOST_CHECK_EQUAL(delegates.begin()[8].instance.value, 8u);
 
-      // Activate all committee
-      // Each committee is voted with incremental stake so last member created will be the ones with more votes
+      // Activate all delegates
+      // Each delegate is voted with incremental stake so last member created will be the ones with more votes
       int c = 0;
-      for (auto committee : committee_map) {
+      for (auto delegate : delegate_map) {
          int stake = 100 + c + 10;
-         transfer(council_account, committee.first, asset(stake));
+         transfer(council_account, delegate.first, asset(stake));
          {
             set_expiration(db, trx);
             account_update_operation op;
-            op.account = committee.first;
-            op.new_options = committee.first(db).options;
+            op.account = delegate.first;
+            op.new_options = delegate.first(db).options;
 
             op.new_options->votes.clear();
-            op.new_options->votes.insert(committee.second(db).vote_id);
-            op.new_options->num_committee = 1;
+            op.new_options->votes.insert(delegate.second(db).vote_id);
+            op.new_options->num_council = 1;
 
             trx.operations.push_back(op);
             sign(trx, private_keys.at(c));
@@ -351,56 +351,56 @@ BOOST_AUTO_TEST_CASE(put_my_committee_members)
          ++c;
       }
 
-      // Trigger the new committee
+      // Trigger the new council
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
       // Check my witnesses are now in control of the system
-      committee_members = db.get_global_properties().active_committee_members;
-      std::sort(committee_members.begin(), committee_members.end());
+      delegates = db.get_global_properties().active_delegates;
+      std::sort(delegates.begin(), delegates.end());
 
-      BOOST_CHECK_EQUAL(committee_members.size(), INITIAL_COMMITTEE_MEMBER_COUNT);
+      BOOST_CHECK_EQUAL(delegates.size(), INITIAL_COUNCIL_COUNT);
 
-      // Check my committee members are now in control of the system
-      BOOST_CHECK_EQUAL(committee_members.begin()[0].instance.value, 15);
-      BOOST_CHECK_EQUAL(committee_members.begin()[1].instance.value, 16);
-      BOOST_CHECK_EQUAL(committee_members.begin()[2].instance.value, 17);
-      BOOST_CHECK_EQUAL(committee_members.begin()[3].instance.value, 18);
-      BOOST_CHECK_EQUAL(committee_members.begin()[4].instance.value, 19);
-      BOOST_CHECK_EQUAL(committee_members.begin()[5].instance.value, 20);
-      BOOST_CHECK_EQUAL(committee_members.begin()[6].instance.value, 21);
-      BOOST_CHECK_EQUAL(committee_members.begin()[7].instance.value, 22);
-      BOOST_CHECK_EQUAL(committee_members.begin()[8].instance.value, 23);
+      // Check my delegates are now in control of the system
+      BOOST_CHECK_EQUAL(delegates.begin()[0].instance.value, 15);
+      BOOST_CHECK_EQUAL(delegates.begin()[1].instance.value, 16);
+      BOOST_CHECK_EQUAL(delegates.begin()[2].instance.value, 17);
+      BOOST_CHECK_EQUAL(delegates.begin()[3].instance.value, 18);
+      BOOST_CHECK_EQUAL(delegates.begin()[4].instance.value, 19);
+      BOOST_CHECK_EQUAL(delegates.begin()[5].instance.value, 20);
+      BOOST_CHECK_EQUAL(delegates.begin()[6].instance.value, 21);
+      BOOST_CHECK_EQUAL(delegates.begin()[7].instance.value, 22);
+      BOOST_CHECK_EQUAL(delegates.begin()[8].instance.value, 23);
 
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(track_votes_committee_enabled)
+BOOST_AUTO_TEST_CASE(track_votes_council_enabled)
 {
    try
    {
       graphene::app::database_api db_api1(db);
 
-      INVOKE(put_my_committee_members);
+      INVOKE(put_my_delegates);
 
-      const account_id_type committee1_id= get_account("committee1").get_id();
-      auto committee1_object = db_api1.get_committee_member_by_account(committee1_id(db).name);
-      BOOST_CHECK_EQUAL(committee1_object->total_votes, 111u);
+      const account_id_type delegate1_id= get_account("delegate1").get_id();
+      auto delegate1_object = db_api1.get_delegate_by_account(delegate1_id(db).name);
+      BOOST_CHECK_EQUAL(delegate1_object->total_votes, 111u);
 
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(track_votes_committee_disabled)
+BOOST_AUTO_TEST_CASE(track_votes_council_disabled)
 {
    try
    {
       graphene::app::database_api db_api1(db);
 
-      INVOKE(put_my_committee_members);
+      INVOKE(put_my_delegates);
 
-      const account_id_type committee1_id= get_account("committee1").get_id();
-      auto committee1_object = db_api1.get_committee_member_by_account(committee1_id(db).name);
-      BOOST_CHECK_EQUAL(committee1_object->total_votes, 0u);
+      const account_id_type delegate1_id= get_account("delegate1").get_id();
+      auto delegate1_object = db_api1.get_delegate_by_account(delegate1_id(db).name);
+      BOOST_CHECK_EQUAL(delegate1_object->total_votes, 0u);
 
    } FC_LOG_AND_RETHROW()
 }

@@ -1,6 +1,6 @@
 {
   "immutable_parameters": {
-    "min_committee_member_count": 11,
+    "min_delegate_count": 11,
     "min_witness_count": 11,
     "num_special_accounts": 0,
     "num_special_assets": 0
@@ -364,7 +364,7 @@
     "maximum_asset_whitelist_authorities": 10,
     "maximum_authority_membership": 10,
     "maximum_block_size": 2097152,
-    "maximum_committee_count": 1001,
+    "maximum_council_count": 1001,
     "maximum_proposal_lifetime": 2419200,
     "maximum_time_until_expiration": 86400,
     "maximum_transaction_size": 98304,

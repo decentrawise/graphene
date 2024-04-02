@@ -7,7 +7,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -707,20 +707,20 @@ BOOST_AUTO_TEST_CASE( create_account_test )
       REQUIRE_THROW_WITH_VALUE(op, options.voting_account, account_id_type(999999999));
 
       // Not allow voting for non-exist entities.
-      auto save_num_committee = op.options.num_committee;
+      auto save_num_council = op.options.num_council;
       auto save_num_witness = op.options.num_witness;
-      op.options.num_committee = 1;
+      op.options.num_council = 1;
       op.options.num_witness = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("0:1")).convert_to_container<flat_set<vote_id_type>>());
       op.options.num_witness = 1;
-      op.options.num_committee = 0;
+      op.options.num_council = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("1:19")).convert_to_container<flat_set<vote_id_type>>());
       op.options.num_witness = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("2:19")).convert_to_container<flat_set<vote_id_type>>());
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("3:99")).convert_to_container<flat_set<vote_id_type>>());
       GRAPHENE_REQUIRE_THROW( vote_id_type("2:a"), fc::exception );
       GRAPHENE_REQUIRE_THROW( vote_id_type(""), fc::exception );
-      op.options.num_committee = save_num_committee;
+      op.options.num_council = save_num_council;
       op.options.num_witness = save_num_witness;
 
       auto auth_bak = op.owner;
@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE( update_account )
       const account_object& nathan = create_account("nathan", init_account_pub_key);
       const fc::ecc::private_key nathan_new_key = fc::ecc::private_key::generate();
       const public_key_type key_id = nathan_new_key.get_public_key();
-      const auto& active_committee_members = db.get_global_properties().active_committee_members;
+      const auto& active_delegates = db.get_global_properties().active_delegates;
 
       transfer(account_id_type()(db), nathan, asset(1000000000));
 
@@ -772,8 +772,8 @@ BOOST_AUTO_TEST_CASE( update_account )
       op.owner = authority(2, key_id, 1, init_account_pub_key, 1);
       op.active = authority(2, key_id, 1, init_account_pub_key, 1);
       op.new_options = nathan.options;
-      op.new_options->votes = flat_set<vote_id_type>({active_committee_members[0](db).vote_id, active_committee_members[5](db).vote_id});
-      op.new_options->num_committee = 2;
+      op.new_options->votes = flat_set<vote_id_type>({active_delegates[0](db).vote_id, active_delegates[5](db).vote_id});
+      op.new_options->num_council = 2;
       trx.operations.push_back(op);
       BOOST_TEST_MESSAGE( "Updating account" );
       PUSH_TX( db, trx, ~0 );
@@ -854,23 +854,23 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
    }
 }
 
-BOOST_AUTO_TEST_CASE( create_committee_member )
+BOOST_AUTO_TEST_CASE( create_delegate )
 {
    try {
-      committee_member_create_operation op;
-      op.committee_member_account = account_id_type();
+      delegate_create_operation op;
+      op.delegate_account = account_id_type();
       op.fee = asset();
       trx.operations.push_back(op);
 
-      REQUIRE_THROW_WITH_VALUE(op, committee_member_account, account_id_type(99999999));
+      REQUIRE_THROW_WITH_VALUE(op, delegate_account, account_id_type(99999999));
       REQUIRE_THROW_WITH_VALUE(op, fee, asset(-600));
       trx.operations.back() = op;
 
-      committee_member_id_type committee_member_id { db.get_index_type<committee_member_index>().get_next_id() };
+      delegate_id_type delegate_id { db.get_index_type<delegate_index>().get_next_id() };
       PUSH_TX( db, trx, ~0 );
-      const committee_member_object& d = committee_member_id(db);
+      const delegate_object& d = delegate_id(db);
 
-      BOOST_CHECK(d.committee_member_account == account_id_type());
+      BOOST_CHECK(d.delegate_account == account_id_type());
    } catch (fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE( update_mia )
 {
    try {
       // Initialize witnesses by voting for each member and for desired count
-      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
       set_expiration(db, trx);
@@ -1488,7 +1488,7 @@ BOOST_AUTO_TEST_CASE( witness_feeds )
    using namespace graphene::chain;
    try {
       // Initialize committee by voting for each member and for desired count
-      vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+      vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
       set_expiration(db, trx);

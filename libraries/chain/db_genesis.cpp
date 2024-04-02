@@ -6,7 +6,7 @@
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/market_object.hpp>
@@ -250,8 +250,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );
-   FC_ASSERT( (genesis_state.immutable_parameters.min_committee_member_count & 1) == 1,
-              "min_committee_member_count must be odd" );
+   FC_ASSERT( (genesis_state.immutable_parameters.min_delegate_count & 1) == 1,
+              "min_delegate_count must be odd" );
 
    _p_chain_property_obj = & create<chain_property_object>([chain_id,&genesis_state](chain_property_object& p)
    {
@@ -487,12 +487,12 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       this->apply_operation(genesis_eval_state, op);
    });
 
-   // Create initial committee members
+   // Create initial delegates
    std::for_each( genesis_state.initial_committee_candidates.begin(),
                   genesis_state.initial_committee_candidates.end(),
                   [this,&get_account_id,&genesis_eval_state](const auto& member) {
-      committee_member_create_operation op;
-      op.committee_member_account = get_account_id(member.owner_name);
+      delegate_create_operation op;
+      op.delegate_account = get_account_id(member.owner_name);
       this->apply_operation(genesis_eval_state, op);
    });
 

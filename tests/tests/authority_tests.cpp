@@ -5,7 +5,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    const auto& global_params = db.get_global_properties().parameters;
 
    // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -491,14 +491,14 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    BOOST_CHECK_THROW( db.get<proposal_object>(prop.id), fc::exception );
 } FC_LOG_AND_RETHROW() }
 
-BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
+BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
 { try {
    generate_block();
    fc::ecc::private_key committee_key = init_account_priv_key;
-   fc::ecc::private_key committee_member_key = fc::ecc::private_key::generate();
+   fc::ecc::private_key delegate_key = fc::ecc::private_key::generate();
 
    // Initialize committee by voting for each member and for desired count
-   vote_for_committee_and_witnesses(INITIAL_COMMITTEE_MEMBER_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -508,7 +508,7 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    transfer(account_id_type()(db), *nathan, asset(5000));
    generate_block();
    nathan = &get_account("nathan");
-   flat_set<vote_id_type> committee_members;
+   flat_set<vote_id_type> delegates;
 
    /*
    db.modify(db.get_global_properties(), [](global_property_object& p) {
@@ -519,9 +519,9 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
 
    for( int i = 0; i < 15; ++i )
    {
-      const auto& account = create_account("committee-member" + fc::to_string(i+1), committee_member_key.get_public_key());
+      const auto& account = create_account("delegate" + fc::to_string(i+1), delegate_key.get_public_key());
       upgrade_to_lifetime_member(account);
-      committee_members.insert(create_committee_member(account).vote_id);
+      delegates.insert(create_delegate(account).vote_id);
    }
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
@@ -572,11 +572,11 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    BOOST_REQUIRE_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
    {
-      //Oh noes! Nathan votes for a whole new slate of committee_members!
+      //Oh noes! Nathan votes for a whole new slate of delegates!
       account_update_operation op;
       op.account = nathan->id;
       op.new_options = nathan->options;
-      op.new_options->votes = committee_members;
+      op.new_options->votes = delegates;
       trx.operations.push_back(op);
       set_expiration( db, trx );
       PUSH_TX( db, trx, ~0 );
@@ -586,9 +586,9 @@ BOOST_FIXTURE_TEST_CASE( fired_committee_members, database_fixture )
    // still no money
    BOOST_CHECK_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
 
-   //Time passes... the set of active committee_members gets updated.
+   //Time passes... the set of active delegates gets updated.
    generate_blocks(maintenance_time);
-   //The proposal is no longer authorized, because the active committee_members got changed.
+   //The proposal is no longer authorized, because the active delegates got changed.
    BOOST_CHECK(!pid(db).is_authorized_to_execute(db));
    // still no money
    BOOST_CHECK_EQUAL(get_balance(*nathan, asset_id_type()(db)), 5000);
@@ -1061,8 +1061,8 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
    ACTORS((nathan)(vikram));
    upgrade_to_lifetime_member(nathan_id);
    upgrade_to_lifetime_member(vikram_id);
-   committee_member_id_type nathan_committee_member = create_committee_member(nathan_id(db)).get_id();
-   committee_member_id_type vikram_committee_member = create_committee_member(vikram_id(db)).get_id();
+   delegate_id_type nathan_delegate = create_delegate(nathan_id(db)).get_id();
+   delegate_id_type vikram_delegate = create_delegate(vikram_id(db)).get_id();
 
    //wdump((db.get_balance(account_id_type(), asset_id_type())));
    generate_block();
@@ -1076,8 +1076,8 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
       op.new_options->voting_account = vikram_id;
-      op.new_options->votes = flat_set<vote_id_type>{nathan_committee_member(db).vote_id};
-      op.new_options->num_committee = 1;
+      op.new_options->votes = flat_set<vote_id_type>{nathan_delegate(db).vote_id};
+      op.new_options->num_council = 1;
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );
       PUSH_TX( db, trx );
@@ -1087,13 +1087,13 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
       account_update_operation op;
       op.account = vikram_id;
       op.new_options = vikram_id(db).options;
-      op.new_options->votes.insert(vikram_committee_member(db).vote_id);
-      op.new_options->num_committee = 11;
+      op.new_options->votes.insert(vikram_delegate(db).vote_id);
+      op.new_options->num_council = 11;
       trx.operations.push_back(op);
       sign( trx, vikram_private_key );
-      // Fails because num_committee is larger than the cardinality of committee members being voted for
+      // Fails because num_council is larger than the cardinality of delegates being voted for
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
-      op.new_options->num_committee = 3;
+      op.new_options->num_council = 3;
       trx.operations = {op};
       trx.clear_signatures();
       sign( trx, vikram_private_key );
@@ -1102,12 +1102,12 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
    }
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time + GRAPHENE_DEFAULT_BLOCK_INTERVAL);
-   BOOST_CHECK(std::find(db.get_global_properties().active_committee_members.begin(),
-                         db.get_global_properties().active_committee_members.end(),
-                         nathan_committee_member) == db.get_global_properties().active_committee_members.end());
-   BOOST_CHECK(std::find(db.get_global_properties().active_committee_members.begin(),
-                         db.get_global_properties().active_committee_members.end(),
-                         vikram_committee_member) != db.get_global_properties().active_committee_members.end());
+   BOOST_CHECK(std::find(db.get_global_properties().active_delegates.begin(),
+                         db.get_global_properties().active_delegates.end(),
+                         nathan_delegate) == db.get_global_properties().active_delegates.end());
+   BOOST_CHECK(std::find(db.get_global_properties().active_delegates.begin(),
+                         db.get_global_properties().active_delegates.end(),
+                         vikram_delegate) != db.get_global_properties().active_delegates.end());
 } FC_LOG_AND_RETHROW() }
 
 /*

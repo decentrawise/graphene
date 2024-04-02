@@ -11,7 +11,7 @@
 #include <graphene/debug_witness/debug_witness.hpp>
 
 #include <graphene/chain/balance_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
@@ -128,7 +128,7 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
    fixture.genesis_state.initial_timestamp = fc::time_point_sec(GRAPHENE_TESTING_GENESIS_TIMESTAMP);
 
    fixture.genesis_state.initial_active_witnesses = 10;
-   fixture.genesis_state.immutable_parameters.min_committee_member_count = INITIAL_COMMITTEE_MEMBER_COUNT;
+   fixture.genesis_state.immutable_parameters.min_delegate_count = INITIAL_COUNCIL_COUNT;
    fixture.genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
 
    for( unsigned int i = 0; i < fixture.genesis_state.initial_active_witnesses; ++i )
@@ -255,13 +255,13 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
    {
       set_option( options, "api-limit-lookup-witness-accounts", (uint32_t)200 );
    }
-   if(fixture.current_test_name =="api_limit_lookup_committee_member_accounts")
+   if(fixture.current_test_name =="api_limit_lookup_delegate_accounts")
    {
-      set_option( options, "api-limit-lookup-committee-member-accounts", (uint32_t)200 );
+      set_option( options, "api-limit-lookup-delegate-accounts", (uint32_t)200 );
    }
-   if(fixture.current_test_name =="api_limit_lookup_committee_member_accounts")
+   if(fixture.current_test_name =="api_limit_lookup_delegate_accounts")
    {
-      set_option( options, "api-limit-lookup-committee-member-accounts", (uint32_t)200 );
+      set_option( options, "api-limit-lookup-delegate-accounts", (uint32_t)200 );
    }
    if(fixture.current_test_name =="api_limit_lookup_vote_ids")
    {
@@ -375,7 +375,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
    }
    // standby votes tracking
    if( fixture.current_test_name == "track_votes_witnesses_disabled"
-          || fixture.current_test_name == "track_votes_committee_disabled") {
+          || fixture.current_test_name == "track_votes_council_disabled") {
       fixture.app.chain_database()->enable_standby_votes_tracking( false );
    }
    // load ES or AH, but not both
@@ -444,7 +444,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
    return sharable_options;
 }
 
-void database_fixture_base::vote_for_committee_and_witnesses(uint16_t num_committee, uint16_t num_witness)
+void database_fixture_base::vote_for_delegates_and_witnesses(uint16_t num_council, uint16_t num_witness)
 { try {
 
    auto &init0 = get_account("init0");
@@ -460,20 +460,20 @@ void database_fixture_base::vote_for_committee_and_witnesses(uint16_t num_commit
                   std::inserter(votes, votes.end()),
                   [](const witness_object& w) { return w.vote_id; });
 
-   const auto& comms = db.get_index_type<committee_member_index>().indices().get<by_id>();
-   num_committee = std::min(num_committee, (uint16_t) comms.size());
+   const auto& comms = db.get_index_type<delegate_index>().indices().get<by_id>();
+   num_council = std::min(num_council, (uint16_t) comms.size());
    auto comm_end = comms.begin();
-   std::advance(comm_end, num_committee);
+   std::advance(comm_end, num_council);
    std::transform(comms.begin(), comm_end,
                   std::inserter(votes, votes.end()),
-                  [](const committee_member_object& cm) { return cm.vote_id; });
+                  [](const delegate_object& cm) { return cm.vote_id; });
 
    account_update_operation op;
    op.account = init0.get_id();
    op.new_options = init0.options;
    op.new_options->votes = votes;
    op.new_options->num_witness = num_witness;
-   op.new_options->num_committee = num_committee;
+   op.new_options->num_council = num_council;
 
    op.fee = db.current_fee_schedule().calculate_fee( op );
 
@@ -637,18 +637,18 @@ account_create_operation database_fixture_base::make_account(
    create_account.options.memo_key = key;
    create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-   auto& active_committee_members = db.get_global_properties().active_committee_members;
-   if( active_committee_members.size() > 0 )
+   auto& active_delegates = db.get_global_properties().active_delegates;
+   if( active_delegates.size() > 0 )
    {
       set<vote_id_type> votes;
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
       create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
    }
-   create_account.options.num_committee = create_account.options.votes.size();
+   create_account.options.num_council = create_account.options.votes.size();
 
    create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
    return create_account;
@@ -676,18 +676,18 @@ account_create_operation database_fixture_base::make_account(
       create_account.options.memo_key = key;
       create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-      const vector<committee_member_id_type>& active_committee_members = db.get_global_properties().active_committee_members;
-      if( active_committee_members.size() > 0 )
+      const vector<delegate_id_type>& active_delegates = db.get_global_properties().active_delegates;
+      if( active_delegates.size() > 0 )
       {
          set<vote_id_type> votes;
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
-         votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
          create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
       }
-      create_account.options.num_committee = create_account.options.votes.size();
+      create_account.options.num_council = create_account.options.votes.size();
 
       create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
       return create_account;
@@ -973,16 +973,16 @@ const account_object& database_fixture_base::create_account(
    FC_CAPTURE_AND_RETHROW( (name)(registrar_id)(referrer_id) )
 }
 
-const committee_member_object& database_fixture_base::create_committee_member( const account_object& owner )
+const delegate_object& database_fixture_base::create_delegate( const account_object& owner )
 {
-   committee_member_create_operation op;
-   op.committee_member_account = owner.id;
+   delegate_create_operation op;
+   op.delegate_account = owner.id;
    trx.operations.clear();
    trx.operations.push_back(op);
    trx.validate();
    processed_transaction ptx = PUSH_TX(db, trx, ~0);
    trx.operations.clear();
-   return db.get<committee_member_object>(ptx.operation_results[0].get<object_id_type>());
+   return db.get<delegate_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
 const witness_object& database_fixture_base::create_witness(account_id_type owner,
@@ -1561,7 +1561,7 @@ void database_fixture_base::set_htlc_committee_parameters()
          db.get_global_properties().parameters, db.head_block_time());
    cop.fee_paying_account = GRAPHENE_TEMP_ACCOUNT;
    cop.expiration_time = db.head_block_time() + *cop.review_period_seconds + 10;
-   committee_member_update_global_parameters_operation uop;
+   delegate_update_global_parameters_operation uop;
    graphene::chain::htlc_options new_params;
    new_params.max_preimage_size = 19200;
    new_params.max_timeout_secs = 60 * 60 * 24 * 28;

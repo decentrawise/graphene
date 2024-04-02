@@ -730,7 +730,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    else if( base.options.flags & committee_fed_asset )
    {
       FC_ASSERT( d.get(GRAPHENE_COUNCIL_ACCOUNT).active.account_auths.count(o.publisher),
-                 "Only active committee members are allowed to publish price feeds for this asset" );
+                 "Only active delegates are allowed to publish price feeds for this asset" );
    }
    else
    {

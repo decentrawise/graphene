@@ -10,7 +10,7 @@
 #include <graphene/protocol/types.hpp>
 #include <graphene/protocol/market.hpp>
 
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/database.hpp>
@@ -157,7 +157,7 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 #define ACTORS(names) BOOST_PP_SEQ_FOR_EACH(ACTORS_IMPL, ~, names)
 
 #define INITIAL_WITNESS_COUNT (9u)
-#define INITIAL_COMMITTEE_MEMBER_COUNT INITIAL_WITNESS_COUNT
+#define INITIAL_COUNCIL_COUNT INITIAL_WITNESS_COUNT
 
 namespace graphene { namespace chain {
 
@@ -207,7 +207,7 @@ struct database_fixture_base {
    static fc::ecc::private_key generate_private_key(string seed);
    string generate_anon_acct_name();
    static void verify_asset_supplies( const database& db );
-   void vote_for_committee_and_witnesses(uint16_t num_committee, uint16_t num_witness);
+   void vote_for_delegates_and_witnesses(uint16_t num_council, uint16_t num_witness);
    signed_block generate_block(uint32_t skip = ~0,
                                const fc::ecc::private_key& key = generate_private_key("null_key"),
                                int miss_blocks = 0);
@@ -339,7 +339,7 @@ struct database_fixture_base {
       uint16_t referrer_percent = 100
       );
 
-   const committee_member_object& create_committee_member( const account_object& owner );
+   const delegate_object& create_delegate( const account_object& owner );
    const witness_object& create_witness(account_id_type owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"),
                                         uint32_t skip_flags = ~0);

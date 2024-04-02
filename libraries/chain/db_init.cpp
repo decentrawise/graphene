@@ -8,7 +8,7 @@
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/buyback_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
@@ -28,7 +28,7 @@
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/assert_evaluator.hpp>
 #include <graphene/chain/balance_evaluator.hpp>
-#include <graphene/chain/committee_member_evaluator.hpp>
+#include <graphene/chain/delegate_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
@@ -54,9 +54,9 @@ void database::initialize_evaluators()
    register_evaluator<account_update_evaluator>();
    register_evaluator<account_upgrade_evaluator>();
    register_evaluator<account_whitelist_evaluator>();
-   register_evaluator<committee_member_create_evaluator>();
-   register_evaluator<committee_member_update_evaluator>();
-   register_evaluator<committee_member_update_global_parameters_evaluator>();
+   register_evaluator<delegate_create_evaluator>();
+   register_evaluator<delegate_update_evaluator>();
+   register_evaluator<delegate_update_global_parameters_evaluator>();
    register_evaluator<custom_evaluator>();
    register_evaluator<asset_create_evaluator>();
    register_evaluator<asset_issue_evaluator>();
@@ -112,7 +112,7 @@ void database::initialize_indexes()
    acnt_index->add_secondary_index<account_member_index>();
    acnt_index->add_secondary_index<account_referrer_index>();
 
-   add_index< primary_index<committee_member_index, 8> >(); // 256 members per chunk
+   add_index< primary_index<delegate_index, 8> >(); // 256 members per chunk
    add_index< primary_index<witness_index, 10> >(); // 1024 witnesses per chunk
    add_index< primary_index<limit_order_index > >();
    add_index< primary_index<call_order_index > >();
