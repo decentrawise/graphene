@@ -71,7 +71,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
    FC_ASSERT(council_account.get_id() == GRAPHENE_COUNCIL_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
-       a.name = "validator-account";
+       a.name = "producers-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
                          s.owner = a.id;
                          s.name = a.name;

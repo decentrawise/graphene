@@ -1398,14 +1398,14 @@ BOOST_AUTO_TEST_CASE( get_assets_by_issuer ) {
 
       generate_block();
 
-      auto assets = db_api.get_assets_by_issuer("validator-account", asset_id_type(), 10);
+      auto assets = db_api.get_assets_by_issuer("producers-account", asset_id_type(), 10);
 
       BOOST_CHECK(assets.size() == 3);
       BOOST_CHECK(assets[0].symbol == "CNY");
       BOOST_CHECK(assets[1].symbol == "EUR");
       BOOST_CHECK(assets[2].symbol == "USD");
 
-      assets = db_api.get_assets_by_issuer("validator-account", asset_id_type(200), 100);
+      assets = db_api.get_assets_by_issuer("producers-account", asset_id_type(200), 100);
       BOOST_CHECK(assets.size() == 0);
 
       GRAPHENE_CHECK_THROW(db_api.get_assets_by_issuer("nosuchaccount", asset_id_type(), 100), fc::exception);

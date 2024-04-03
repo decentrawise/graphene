@@ -25,7 +25,7 @@ def main():
             genesis = json.load(f)
 
     for asset in genesis["initial_assets"]:
-        if asset["issuer_name"] == "validator-account":
+        if asset["issuer_name"] == "producers-account":
             asset["issuer_name"] = "council-account"
 
     if opts.output == "-":
