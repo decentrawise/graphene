@@ -158,17 +158,17 @@ void database::clear_expired_proposals()
  *  A black swan occurs if MAX(HB,SP) <= LC
  */
 bool database::check_for_blackswan( const asset_object& mia, bool enable_black_swan,
-                                    const asset_bitasset_data_object* bitasset_ptr )
+                                    const backed_asset_data_object* backed_asset_ptr )
 {
-    if( !mia.is_market_issued() ) return false;
+    if( !mia.is_backed() ) return false;
 
-    const asset_bitasset_data_object& bitasset = ( bitasset_ptr ? *bitasset_ptr : mia.bitasset_data(*this) );
-    if( bitasset.has_settlement() ) return true; // already force settled
-    auto settle_price = bitasset.current_feed.settlement_price;
+    const backed_asset_data_object& ba = ( backed_asset_ptr ? *backed_asset_ptr : mia.backed_asset_data(*this) );
+    if( ba.has_settlement() ) return true; // already force settled
+    auto settle_price = ba.current_feed.settlement_price;
     if( settle_price.is_null() ) return false; // no feed
 
-    asset_id_type debt_asset_id = bitasset.asset_id;
-    auto call_min = price::min( bitasset.options.short_backing_asset, debt_asset_id );
+    asset_id_type debt_asset_id = ba.asset_id;
+    auto call_min = price::min( ba.options.short_backing_asset, debt_asset_id );
 
     //check with collateralization
     const auto& call_collateral_index = get_index_type<call_order_index>().indices().get<by_collateral>();
@@ -181,15 +181,15 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
        return false;
 
     // We won't check for black swan on incoming limit order, so need to check with MSSP here
-    price highest = bitasset.current_feed.max_short_squeeze_price();
+    price highest = ba.current_feed.max_short_squeeze_price();
 
     const limit_order_index& limit_index = get_index_type<limit_order_index>();
     const auto& limit_price_index = limit_index.indices().get<by_price>();
 
     // looking for limit orders selling the most USD for the least CORE
-    auto highest_possible_bid = price::max( bitasset.asset_id, bitasset.options.short_backing_asset );
+    auto highest_possible_bid = price::max( ba.asset_id, ba.options.short_backing_asset );
     // stop when limit orders are selling too little USD for too much CORE
-    auto lowest_possible_bid  = price::min( bitasset.asset_id, bitasset.options.short_backing_asset );
+    auto lowest_possible_bid  = price::min( ba.asset_id, ba.options.short_backing_asset );
 
     FC_ASSERT( highest_possible_bid.base.asset_id == lowest_possible_bid.base.asset_id );
     // NOTE limit_price_index is sorted from greatest to least
@@ -249,7 +249,7 @@ void database::clear_expired_force_settlements()
    //        However, due to max_settlement_volume, this does not work, i.e. time meets but have to
    //        skip due to volume limit.
    //      - Instead, maintain some data e.g. (whether_force_settle_volume_meets, first_settle_time)
-   //        in bitasset_data object and index by them, then we could process here faster.
+   //        in backed_asset_data object and index by them, then we could process here faster.
    //        Note: due to rounding, even when settled < max_volume, it is still possible that we have to skip
    const auto& settlement_index = get_index_type<force_settlement_index>().indices().get<by_expiration>();
    if( settlement_index.empty() )
@@ -296,7 +296,7 @@ void database::clear_expired_force_settlements()
       auto order_id = order.id;
       current_asset = order.settlement_asset_id();
       const asset_object& mia_object = get(current_asset);
-      const asset_bitasset_data_object& mia = mia_object.bitasset_data(*this);
+      const backed_asset_data_object& mia = mia_object.backed_asset_data(*this);
 
       extra_dump = ((count >= 1000) && (count <= 1020));
 
@@ -376,7 +376,7 @@ void database::clear_expired_force_settlements()
       // Match against the least collateralized short until the settlement is finished or we reach max settlements
       while( settled < max_settlement_volume && find_object(order_id) )
       {
-         auto itr = call_index.lower_bound(boost::make_tuple(price::min(mia_object.bitasset_data(*this).options.short_backing_asset,
+         auto itr = call_index.lower_bound(boost::make_tuple(price::min(mia_object.backed_asset_data(*this).options.short_backing_asset,
                                                                         mia_object.get_id())));
          // There should always be a call order, since asset exists!
          assert(itr != call_index.end() && itr->debt_type() == mia_object.get_id());
@@ -412,7 +412,7 @@ void database::clear_expired_force_settlements()
       }
       if( mia.force_settled_volume != settled.amount )
       {
-         modify(mia, [settled](asset_bitasset_data_object& b) {
+         modify(mia, [settled](backed_asset_data_object& b) {
             b.force_settled_volume = settled.amount;
          });
       }
@@ -424,17 +424,17 @@ void database::update_expired_feeds()
    const auto head_time = head_block_time();
    const auto next_maint_time = get_dynamic_global_properties().next_maintenance_time;
 
-   const auto& idx = get_index_type<asset_bitasset_data_index>().indices().get<by_feed_expiration>();
+   const auto& idx = get_index_type<backed_asset_data_index>().indices().get<by_feed_expiration>();
    auto itr = idx.begin();
    while( itr != idx.end() && itr->feed_is_expired( head_time ) )
    {
-      const asset_bitasset_data_object& b = *itr;
+      const backed_asset_data_object& b = *itr;
       ++itr;
-      bool update_cer = false; // for better performance, to only update bitasset once, also check CER in this function
+      bool update_cer = false; // for better performance, to only update backed asset once, also check CER in this function
       const asset_object* asset_ptr = nullptr;
       // update feeds, check margin calls
       auto old_median_feed = b.current_feed;
-      modify( b, [head_time,next_maint_time,&update_cer]( asset_bitasset_data_object& abdo )
+      modify( b, [head_time,next_maint_time,&update_cer]( backed_asset_data_object& abdo )
       {
          abdo.update_median_feeds( head_time, next_maint_time );
          if( abdo.need_to_update_cer() )
@@ -467,12 +467,12 @@ void database::update_expired_feeds()
 
 void database::update_core_exchange_rates()
 {
-   const auto& idx = get_index_type<asset_bitasset_data_index>().indices().get<by_cer_update>();
+   const auto& idx = get_index_type<backed_asset_data_index>().indices().get<by_cer_update>();
    if( idx.begin() != idx.end() )
    {
       for( auto itr = idx.rbegin(); itr->need_to_update_cer(); itr = idx.rbegin() )
       {
-         const asset_bitasset_data_object& b = *itr;
+         const backed_asset_data_object& b = *itr;
          const asset_object& a = b.asset_id( *this );
          if( a.options.core_exchange_rate != b.current_feed.core_exchange_rate )
          {
@@ -481,7 +481,7 @@ void database::update_core_exchange_rates()
                ao.options.core_exchange_rate = b.current_feed.core_exchange_rate;
             });
          }
-         modify( b, []( asset_bitasset_data_object& abdo )
+         modify( b, []( backed_asset_data_object& abdo )
          {
             abdo.asset_cer_updated = false;
             abdo.feed_cer_updated = false;

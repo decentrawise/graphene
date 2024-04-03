@@ -282,7 +282,7 @@ struct database_fixture_base {
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
-   asset_create_operation make_bitasset( const string& name,
+   asset_create_operation make_backed_asset( const string& name,
                                        account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
@@ -291,7 +291,7 @@ struct database_fixture_base {
                                        share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY,
                                        optional<uint16_t> initial_cr = {},
                                        optional<uint16_t> margin_call_fee_ratio = {} );
-   const asset_object& create_bitasset(const string& name,
+   const asset_object& create_backed_asset(const string& name,
                                        account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
@@ -306,16 +306,16 @@ struct database_fixture_base {
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS,
                                        asset_id_type backing_asset = {});
-   const asset_object& create_user_issued_asset( const string& name );
-   const asset_object& create_user_issued_asset( const string& name,
+   const asset_object& create_user_asset( const string& name );
+   const asset_object& create_user_asset( const string& name,
                                                  const account_object& issuer,
                                                  uint16_t flags,
                                                  const price& core_exchange_rate = price(asset(1, asset_id_type(1)), asset(1)),
                                                  uint8_t precision = 2 /* traditional precision for tests */,
                                                  uint16_t market_fee_percent = 0,
                                                  additional_asset_options_t options = additional_asset_options_t());
-   void issue_uia( const account_object& recipient, asset amount );
-   void issue_uia( account_id_type recipient_id, asset amount );
+   void issue_ua( const account_object& recipient, asset amount );
+   void issue_ua( account_id_type recipient_id, asset amount );
    void reserve_asset( account_id_type account, asset amount );
 
    const account_object& create_account(
@@ -442,9 +442,9 @@ struct database_fixture_init : database_fixture_base {
    {
       F::init( *this );
 
-      asset_id_type mpa1_id(1);
-      BOOST_REQUIRE( mpa1_id(db).is_market_issued() );
-      BOOST_CHECK( mpa1_id(db).bitasset_data(db).asset_id == mpa1_id );
+      asset_id_type ba1_id(1);
+      BOOST_REQUIRE( ba1_id(db).is_backed() );
+      BOOST_CHECK( ba1_id(db).backed_asset_data(db).asset_id == ba1_id );
 
       BOOST_CHECK_EQUAL( account_id_type()(db).creation_block_num, 0 );
       BOOST_CHECK( account_id_type()(db).creation_time == genesis_state.initial_timestamp );
@@ -452,8 +452,8 @@ struct database_fixture_init : database_fixture_base {
       BOOST_CHECK_EQUAL( asset_id_type()(db).creation_block_num, 0 );
       BOOST_CHECK( asset_id_type()(db).creation_time == genesis_state.initial_timestamp );
 
-      BOOST_CHECK_EQUAL( mpa1_id(db).creation_block_num, 0 );
-      BOOST_CHECK( mpa1_id(db).creation_time == genesis_state.initial_timestamp );
+      BOOST_CHECK_EQUAL( ba1_id(db).creation_block_num, 0 );
+      BOOST_CHECK( ba1_id(db).creation_time == genesis_state.initial_timestamp );
    }
 
    static void init( database_fixture_init<F>& fixture )

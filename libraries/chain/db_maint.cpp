@@ -688,7 +688,7 @@ void create_buyback_orders( database& db )
    return;
 }
 
-void database::process_bids( const asset_bitasset_data_object& bad )
+void database::process_bids( const backed_asset_data_object& bad )
 {
    if( bad.is_prediction_market || bad.current_feed.settlement_price.is_null() )
       return;
@@ -699,7 +699,7 @@ void database::process_bids( const asset_bitasset_data_object& bad )
 
    if( bdd.current_supply == 0 ) // shortcut
    {
-      _cancel_bids_and_revive_mpa( to_revive, bad );
+      _cancel_bids_and_revive_backed_asset( to_revive, bad );
       return;
    }
 
@@ -750,20 +750,20 @@ void database::process_bids( const asset_bitasset_data_object& bad )
    FC_ASSERT( remaining_fund == 0 );
    FC_ASSERT( to_cover == 0 );
 
-   _cancel_bids_and_revive_mpa( to_revive, bad );
+   _cancel_bids_and_revive_backed_asset( to_revive, bad );
 }
 
-void database::process_bitassets()
+void database::process_backed_assets()
 {
    time_point_sec head_time = head_block_time();
    uint32_t head_epoch_seconds = head_time.sec_since_epoch();
 
-   const auto& update_bitasset = [this,&head_time,head_epoch_seconds]
-                                 ( asset_bitasset_data_object &o )
+   const auto& update_backed_asset = [this,&head_time,head_epoch_seconds]
+                                 ( backed_asset_data_object &o )
    {
-      o.force_settled_volume = 0; // Reset all BitAsset force settlement volumes to zero
+      o.force_settled_volume = 0; // Reset all Backed Asset force settlement volumes to zero
 
-      // clear expired feeds if smartcoin (validator_fed or delegate_fed) && check overflow
+      // clear expired feeds if non-user asset (validator_fed or delegate_fed) && check overflow
       if( o.options.feed_lifetime_sec < head_epoch_seconds
             && ( 0 != ( o.asset_id(*this).options.flags & ( validator_fed_asset | delegate_fed_asset ) ) ) )
       {
@@ -783,9 +783,9 @@ void database::process_bitassets()
       }
    };
 
-   for( const auto& d : get_index_type<asset_bitasset_data_index>().indices() )
+   for( const auto& d : get_index_type<backed_asset_data_index>().indices() )
    {
-      modify( d, update_bitasset );
+      modify( d, update_backed_asset );
       if( d.has_settlement() )
          process_bids(d);
    }
@@ -931,7 +931,7 @@ void database::perform_chain_maintenance(const signed_block& next_block)
       d.accounts_registered_this_interval = 0;
    });
 
-   process_bitassets();
+   process_backed_assets();
 
    // process_budget needs to run at the bottom because
    //   it needs to know the next_maintenance_time

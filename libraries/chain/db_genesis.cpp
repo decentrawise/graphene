@@ -325,8 +325,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       total_supplies[ new_asset_id ] = 0;
 
       asset_dynamic_data_id_type dynamic_data_id;
-      optional<asset_bitasset_data_id_type> bitasset_data_id;
-      if( asst.is_bitasset )
+      optional<backed_asset_data_id_type> backed_asset_data_id;
+      if( asst.is_backed )
       {
          size_t collateral_holder_number = 0;
          total_debts[ new_asset_id ] = 0;
@@ -359,7 +359,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             ++collateral_holder_number;
          }
 
-         bitasset_data_id = create<asset_bitasset_data_object>([&core_asset,new_asset_id](asset_bitasset_data_object& b) {
+         backed_asset_data_id = create<backed_asset_data_object>([&core_asset,new_asset_id](backed_asset_data_object& b) {
             b.options.short_backing_asset = core_asset.id;
             b.options.minimum_feeds = GRAPHENE_DEFAULT_MINIMUM_FEEDS;
             b.asset_id = new_asset_id;
@@ -372,7 +372,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
       total_supplies[ new_asset_id ] += asst.accumulated_fees;
 
-      create<asset_object>([&asst,&get_account_id,&dynamic_data_id,&bitasset_data_id,this](asset_object& a)
+      create<asset_object>([&asst,&get_account_id,&dynamic_data_id,&backed_asset_data_id,this](asset_object& a)
       {
          a.symbol = asst.symbol;
          a.options.description = asst.description;
@@ -381,10 +381,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.issuer = get_account_id(issuer_name);
          a.options.max_supply = asst.max_supply;
          a.options.flags = validator_fed_asset;
-         a.options.issuer_permissions = ( asst.is_bitasset ? ASSET_ISSUER_PERMISSION_MASK
-                                                           : UIA_ASSET_ISSUER_PERMISSION_MASK );
+         a.options.issuer_permissions = ( asst.is_backed ? ASSET_ISSUER_PERMISSION_MASK
+                                                           : USER_ASSET_ISSUER_PERMISSION_MASK );
          a.dynamic_asset_data_id = dynamic_data_id;
-         a.bitasset_data_id = bitasset_data_id;
+         a.backed_asset_data_id = backed_asset_data_id;
          a.creation_block_num = 0;
          a.creation_time = _current_block_time;
       });
@@ -437,7 +437,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    while( it != idx.end() )
    {
-      if( it->bitasset_data_id.valid() )
+      if( it->backed_asset_data_id.valid() )
       {
          auto supply_itr = total_supplies.find( it->get_id() );
          auto debt_itr = total_debts.find( it->get_id() );

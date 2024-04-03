@@ -3,7 +3,7 @@
 #include <cmath>
 #include <graphene/chain/asset_object.hpp>
 
-BOOST_AUTO_TEST_SUITE(asset_tests)
+BOOST_AUTO_TEST_SUITE(asset_amount_tests)
 
 BOOST_AUTO_TEST_CASE( asset_to_from_string )
 {

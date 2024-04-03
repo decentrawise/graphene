@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(short_positions_called)
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
    asset_id_type usd_id = bitusd.get_id();
    asset_id_type core_id = core.get_id();
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(short_positions_called)
    // settlement price = 1/16, mssp = 10/176
 
    // black swan event will occur: #649 fixed
-   BOOST_CHECK( usd_id(db).bitasset_data(db).has_settlement() );
+   BOOST_CHECK( usd_id(db).backed_asset_data(db).has_settlement() );
    // short positions will be closed
    BOOST_CHECK( !db.find( call_id ) );
    BOOST_CHECK( !db.find( call2_id ) );
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(multiple_limit_order_filling)
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
    asset_id_type usd_id = bitusd.get_id();
 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(big_limit_order_test)
 
    ACTORS((buyer)(buyer2)(buyer3)(seller)(borrower)(borrower2)(borrower3)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
 
    ACTORS((buyer)(buyer2)(buyer3)(seller)(borrower)(borrower2)(borrower3)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(target_cr_test_call_limit)
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(mcr_increase)
 
    ACTORS((seller)(borrower)(borrower2)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(mcr_decrease)
 
    ACTORS((seller)(borrower)(borrower2)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);

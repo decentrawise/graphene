@@ -192,7 +192,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          if( amount_in_collateral_index )
          {
             result.total_in_collateral = amount_in_collateral_index->get_amount_in_collateral( id );
-            if( result.bitasset_data_id.valid() )
+            if( result.backed_asset_data_id.valid() )
                result.total_backing_collateral = amount_in_collateral_index->get_backing_collateral( id );
          }
          return result;
@@ -275,7 +275,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       const std::pair<asset_id_type,asset_id_type> get_order_market( const force_settlement_object& order )
       {
          // TODO cache the result to avoid repeatly fetching from db
-         asset_id_type backing_id = order.balance.asset_id( _db ).bitasset_data( _db ).options.short_backing_asset;
+         asset_id_type backing_id = order.balance.asset_id( _db ).backed_asset_data( _db ).options.short_backing_asset;
          auto tmp = std::make_pair( order.balance.asset_id, backing_id );
          if( tmp.first > tmp.second ) std::swap( tmp.first, tmp.second );
          return tmp;

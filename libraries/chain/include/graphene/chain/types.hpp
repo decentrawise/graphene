@@ -9,7 +9,7 @@ GRAPHENE_DEFINE_IDS(chain, implementation_ids, impl_,
                     /* 2.1.x  */ (dynamic_global_property)
                     /* 2.2.x  */ (reserved0) // unused, but can not be simply deleted due to API compatibility
                     /* 2.3.x  */ (asset_dynamic_data)
-                    /* 2.4.x  */ (asset_bitasset_data)
+                    /* 2.4.x  */ (backed_asset_data)
                     /* 2.5.x  */ (account_balance)
                     /* 2.6.x  */ (account_statistics)
                     /* 2.7.x  */ (transaction_history)

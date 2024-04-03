@@ -8,7 +8,7 @@
 /**
  * @defgroup prediction_market Prediction Market
  *
- * A prediction market is a specialized BitAsset such that total debt and total collateral are always equal amounts
+ * A prediction market is a specialized Backed Asset such that total debt and total collateral are always equal amounts
  * (although asset IDs differ). No margin calls or force settlements may be performed on a prediction market asset. A
  * prediction market is globally settled by the issuer after the event being predicted resolves, thus a prediction
  * market must always have the @ref global_settle permission enabled. The maximum price for global settlement or short
@@ -16,7 +16,7 @@
  */
 
 namespace graphene { namespace chain {
-   class asset_bitasset_data_object;
+   class backed_asset_data_object;
    class database;
    using namespace graphene::db;
 
@@ -58,11 +58,11 @@ namespace graphene { namespace chain {
          /// @return true if symbol is a valid ticker symbol; false otherwise.
          static bool is_valid_symbol( const string& symbol );
 
-         /// @return true if this is a market-issued asset; false otherwise.
-         bool is_market_issued()const { return bitasset_data_id.valid(); }
-         /// @return true if users may request force-settlement of this market-issued asset; false otherwise
+         /// @return true if this is a backed asset; false otherwise.
+         bool is_backed()const { return backed_asset_data_id.valid(); }
+         /// @return true if users may request force-settlement of this backed asset; false otherwise
          bool can_force_settle()const { return !(options.flags & disable_force_settle); }
-         /// @return true if the issuer of this market-issued asset may globally settle the asset; false otherwise
+         /// @return true if the issuer of this backed asset may globally settle the asset; false otherwise
          bool can_global_settle()const { return options.issuer_permissions & global_settle; }
          /// @return true if this asset charges a fee for the issuer on market operations; false otherwise
          bool charges_market_fees()const { return options.flags & charge_market_fee; }
@@ -100,8 +100,8 @@ namespace graphene { namespace chain {
 
          /// Current supply, fee pool, and collected fees are stored in a separate object as they change frequently.
          asset_dynamic_data_id_type  dynamic_asset_data_id;
-         /// Extra data associated with BitAssets. This field is non-null if and only if is_market_issued() returns true
-         optional<asset_bitasset_data_id_type> bitasset_data_id;
+         /// Extra data associated with Backed Assets. This field is non-null if and only if is_backed() returns true
+         optional<backed_asset_data_id_type> backed_asset_data_id;
 
          optional<account_id_type> buyback_account;
 
@@ -112,8 +112,8 @@ namespace graphene { namespace chain {
 
          void validate() const
          {
-            // UIAs may not be prediction markets, have force settlement, or global settlements
-            if( !is_market_issued() )
+            // UAs may not be prediction markets, have force settlement, or global settlements
+            if( !is_backed() )
             {
                FC_ASSERT(!(options.flags & disable_force_settle || options.flags & global_settle));
                FC_ASSERT(!(options.issuer_permissions & disable_force_settle || options.issuer_permissions & global_settle));
@@ -121,12 +121,12 @@ namespace graphene { namespace chain {
          }
 
          template<class DB>
-         const asset_bitasset_data_object& bitasset_data(const DB& db)const
+         const backed_asset_data_object& backed_asset_data(const DB& db)const
          {
-            FC_ASSERT( bitasset_data_id.valid(),
-                       "Asset ${a} (${id}) is not a market issued asset.",
+            FC_ASSERT( backed_asset_data_id.valid(),
+                       "Asset ${a} (${id}) is not a backed asset.",
                        ("a",this->symbol)("id",this->id) );
-            return db.get( *bitasset_data_id );
+            return db.get( *backed_asset_data_id );
          }
 
          template<class DB>
@@ -142,20 +142,20 @@ namespace graphene { namespace chain {
    };
 
    /**
-    *  @brief contains properties that only apply to bitassets (market issued assets)
+    *  @brief contains properties that only apply to backed assets (non-user assets)
     *
     *  @ingroup object
     *  @ingroup implementation
     */
-   class asset_bitasset_data_object : public abstract_object<asset_bitasset_data_object,
-                                                             implementation_ids, impl_asset_bitasset_data_object_type>
+   class backed_asset_data_object : public abstract_object<backed_asset_data_object,
+                                                             implementation_ids, impl_backed_asset_data_object_type>
    {
       public:
          /// The asset this object belong to
          asset_id_type asset_id;
 
-         /// The tunable options for BitAssets are stored in this field.
-         bitasset_options options;
+         /// The tunable options for Backed Assets are stored in this field.
+         backed_asset_options options;
 
          /// Feeds published for this asset. If issuer is not council, the keys in this map are the feed publishing
          /// accounts; otherwise, the feed publishers are the currently active delegates and validators and this map
@@ -235,10 +235,10 @@ namespace graphene { namespace chain {
    };
 
    // key extractor for short backing asset
-   struct bitasset_short_backing_asset_extractor
+   struct short_backing_asset_extractor
    {
       typedef asset_id_type result_type;
-      result_type operator() (const asset_bitasset_data_object& obj) const
+      result_type operator() (const backed_asset_data_object& obj) const
       {
          return obj.options.short_backing_asset;
       }
@@ -249,22 +249,22 @@ namespace graphene { namespace chain {
    struct by_cer_update;
 
    typedef multi_index_container<
-      asset_bitasset_data_object,
+      backed_asset_data_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_non_unique< tag<by_short_backing_asset>, bitasset_short_backing_asset_extractor >,
+         ordered_non_unique< tag<by_short_backing_asset>, short_backing_asset_extractor >,
          ordered_unique< tag<by_feed_expiration>,
-            composite_key< asset_bitasset_data_object,
-               const_mem_fun< asset_bitasset_data_object, time_point_sec, &asset_bitasset_data_object::feed_expiration_time >,
-               member< asset_bitasset_data_object, asset_id_type, &asset_bitasset_data_object::asset_id >
+            composite_key< backed_asset_data_object,
+               const_mem_fun< backed_asset_data_object, time_point_sec, &backed_asset_data_object::feed_expiration_time >,
+               member< backed_asset_data_object, asset_id_type, &backed_asset_data_object::asset_id >
             >
          >,
          ordered_non_unique< tag<by_cer_update>,
-                             const_mem_fun< asset_bitasset_data_object, bool, &asset_bitasset_data_object::need_to_update_cer >
+                             const_mem_fun< backed_asset_data_object, bool, &backed_asset_data_object::need_to_update_cer >
          >
       >
-   > asset_bitasset_data_object_multi_index_type;
-   typedef generic_index<asset_bitasset_data_object, asset_bitasset_data_object_multi_index_type> asset_bitasset_data_index;
+   > backed_asset_data_object_multi_index_type;
+   typedef generic_index<backed_asset_data_object, backed_asset_data_object_multi_index_type> backed_asset_data_index;
 
    struct by_symbol;
    struct by_type;
@@ -276,7 +276,7 @@ namespace graphene { namespace chain {
          ordered_unique< tag<by_symbol>, member<asset_object, string, &asset_object::symbol> >,
          ordered_unique< tag<by_type>,
             composite_key< asset_object,
-                const_mem_fun<asset_object, bool, &asset_object::is_market_issued>,
+                const_mem_fun<asset_object, bool, &asset_object::is_backed>,
                 member< object, object_id_type, &object::id >
             >
          >,
@@ -294,7 +294,7 @@ namespace graphene { namespace chain {
 
 MAP_OBJECT_ID_TO_TYPE(graphene::chain::asset_object)
 MAP_OBJECT_ID_TO_TYPE(graphene::chain::asset_dynamic_data_object)
-MAP_OBJECT_ID_TO_TYPE(graphene::chain::asset_bitasset_data_object)
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::backed_asset_data_object)
 
 FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)
@@ -302,15 +302,15 @@ FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (issuer)
                     (options)
                     (dynamic_asset_data_id)
-                    (bitasset_data_id)
+                    (backed_asset_data_id)
                     (buyback_account)
                     (creation_block_num)
                     (creation_time)
                   )
 
-FC_REFLECT_TYPENAME( graphene::chain::asset_bitasset_data_object )
+FC_REFLECT_TYPENAME( graphene::chain::backed_asset_data_object )
 FC_REFLECT_TYPENAME( graphene::chain::asset_dynamic_data_object )
 
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::asset_object )
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::asset_bitasset_data_object )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::backed_asset_data_object )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::asset_dynamic_data_object )

@@ -15,8 +15,8 @@ if( GPERFTOOLS_FOUND )
     list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
 endif()
 
-file(GLOB UNIT_TESTS "tests/*.cpp")
-add_executable( chain_test ${UNIT_TESTS} )
+file(GLOB CHAIN_TESTS "chain/*.cpp")
+add_executable( chain_test ${CHAIN_TESTS} )
 target_link_libraries( chain_test database_fixture
                        graphene_validator graphene_wallet graphene_app ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)

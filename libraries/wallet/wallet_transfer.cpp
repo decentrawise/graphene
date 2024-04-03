@@ -188,8 +188,8 @@ namespace graphene { namespace wallet { namespace detail {
    {
       account_object seller = get_account(seller_name);
       auto mia = get_asset(asset_symbol);
-      FC_ASSERT(mia.is_market_issued());
-      auto collateral = get_asset(get_object(*mia.bitasset_data_id).options.short_backing_asset);
+      FC_ASSERT(mia.is_backed());
+      auto collateral = get_asset(get_object(*mia.backed_asset_data_id).options.short_backing_asset);
 
       call_order_update_operation op;
       op.funding_account = seller.id;

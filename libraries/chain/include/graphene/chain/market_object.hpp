@@ -130,7 +130,7 @@ class call_order_object : public abstract_object<call_order_object, protocol_ids
 };
 
 /**
- *  @brief tracks bitassets scheduled for force settlement at some point in the future.
+ *  @brief tracks backed assets scheduled for force settlement at some point in the future.
  *
  *  On the @ref settlement_date the @ref balance will be converted to the collateral asset
  *  and paid to @ref owner and then this object will be deleted.
@@ -152,7 +152,7 @@ class force_settlement_object : public abstract_object<force_settlement_object,
  * @brief bids of collateral for debt after a black swan
  *
  * There should only be one collateral_bid_object per asset per account, and
- * only for smartcoin assets that have a global settlement_price.
+ * only for non-user assets that have a global settlement_price.
  */
 class collateral_bid_object : public abstract_object<collateral_bid_object,
                                                      implementation_ids, impl_collateral_bid_object_type>

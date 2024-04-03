@@ -141,16 +141,16 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
    }
    fixture.genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
 
-   genesis_state_type::initial_asset_type init_mpa1;
-   init_mpa1.symbol = "INITMPA";
-   init_mpa1.issuer_name = "council-account";
-   init_mpa1.description = "Initial MPA";
-   init_mpa1.precision = 4;
-   init_mpa1.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
-   init_mpa1.accumulated_fees = 0;
-   init_mpa1.is_bitasset = true;
-   fixture.genesis_state.initial_assets.push_back( init_mpa1 );
-   // TODO add initial UIA's; add initial short positions; test non-zero accumulated_fees
+   genesis_state_type::initial_asset_type init_ba1;
+   init_ba1.symbol = "INITBA";
+   init_ba1.issuer_name = "council-account";
+   init_ba1.description = "Initial BA";
+   init_ba1.precision = 4;
+   init_ba1.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   init_ba1.accumulated_fees = 0;
+   init_ba1.is_backed = true;
+   fixture.genesis_state.initial_assets.push_back( init_ba1 );
+   // TODO add initial UA's; add initial short positions; test non-zero accumulated_fees
 }
 
 std::shared_ptr<boost::program_options::variables_map> database_fixture_base::init_options(
@@ -412,7 +412,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
       set_option( options, "es-objects-assets", true );
       set_option( options, "es-objects-balances", true );
       set_option( options, "es-objects-limit-orders", true );
-      set_option( options, "es-objects-asset-bitasset", true );
+      set_option( options, "es-objects-backed-assets", true );
 
       fixture.es_obj_index_prefix = string("objects-") + fc::to_string(uint64_t(rand())) + "-";
       BOOST_TEST_MESSAGE( string("ES_OBJ index prefix is ") + fixture.es_obj_index_prefix );
@@ -547,9 +547,9 @@ void database_fixture_base::verify_asset_supplies( const database& db )
       const auto &dasset_obj = asset_obj.dynamic_asset_data_id(db);
       total_balances[asset_obj.get_id()] += dasset_obj.accumulated_fees;
       total_balances[asset_id_type()] += dasset_obj.fee_pool;
-      if (asset_obj.is_market_issued())
+      if (asset_obj.is_backed())
       {
-         const auto &bad = asset_obj.bitasset_data(db);
+         const auto &bad = asset_obj.backed_asset_data(db);
          total_balances[bad.options.short_backing_asset] += bad.settlement_fund;
       }
       total_balances[asset_obj.get_id()] += dasset_obj.confidential_supply.value;
@@ -711,7 +711,7 @@ const account_object& database_fixture_base::get_account( const string& name )co
    return *itr;
 }
 
-asset_create_operation database_fixture_base::make_bitasset(
+asset_create_operation database_fixture_base::make_backed_asset(
    const string& name,
    account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
@@ -735,12 +735,12 @@ asset_create_operation database_fixture_base::make_bitasset(
    creator.common_options.issuer_permissions = flags;
    creator.common_options.flags = flags & ~global_settle;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
-   creator.bitasset_opts = bitasset_options();
-   creator.bitasset_opts->short_backing_asset = backing_asset;
+   creator.backed_options = backed_asset_options();
+   creator.backed_options->short_backing_asset = backing_asset;
    return creator;
 }
 
-const asset_object& database_fixture_base::create_bitasset(
+const asset_object& database_fixture_base::create_backed_asset(
    const string& name,
    account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
@@ -752,7 +752,7 @@ const asset_object& database_fixture_base::create_bitasset(
    optional<uint16_t> margin_call_fee_ratio /* = {} */
    )
 { try {
-   asset_create_operation creator = make_bitasset( name, issuer, market_fee_percent, flags,
+   asset_create_operation creator = make_backed_asset( name, issuer, market_fee_percent, flags,
                                                    precision, backing_asset, max_supply, initial_cr,
                                                    margin_call_fee_ratio );
    trx.operations.clear();
@@ -784,8 +784,8 @@ const asset_object& database_fixture_base::create_prediction_market(
    if( issuer == GRAPHENE_PRODUCERS_ACCOUNT )
       creator.common_options.flags |= validator_fed_asset;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
-   creator.bitasset_opts = bitasset_options();
-   creator.bitasset_opts->short_backing_asset = backing_asset;
+   creator.backed_options = backed_asset_options();
+   creator.backed_options->short_backing_asset = backing_asset;
    creator.is_prediction_market = true;
    trx.operations.clear();
    trx.operations.push_back(std::move(creator));
@@ -796,7 +796,7 @@ const asset_object& database_fixture_base::create_prediction_market(
 } FC_CAPTURE_AND_RETHROW( (name)(flags) ) } // GCOVR_EXCL_LINE
 
 
-const asset_object& database_fixture_base::create_user_issued_asset( const string& name )
+const asset_object& database_fixture_base::create_user_asset( const string& name )
 {
    asset_create_operation creator;
    creator.issuer = account_id_type();
@@ -816,7 +816,7 @@ const asset_object& database_fixture_base::create_user_issued_asset( const strin
    return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-const asset_object& database_fixture_base::create_user_issued_asset( const string& name, const account_object& issuer,
+const asset_object& database_fixture_base::create_user_asset( const string& name, const account_object& issuer,
                                                                uint16_t flags, const price& core_exchange_rate,
                                                                uint8_t precision, uint16_t market_fee_percent,
                                                                additional_asset_options_t additional_options)
@@ -842,9 +842,9 @@ const asset_object& database_fixture_base::create_user_issued_asset( const strin
    return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-void database_fixture_base::issue_uia( const account_object& recipient, asset amount )
+void database_fixture_base::issue_ua( const account_object& recipient, asset amount )
 {
-   BOOST_TEST_MESSAGE( "Issuing UIA" );
+   BOOST_TEST_MESSAGE( "Issuing UA" );
    asset_issue_operation op;
    op.issuer = amount.asset_id(db).issuer;
    op.asset_to_issue = amount;
@@ -855,9 +855,9 @@ void database_fixture_base::issue_uia( const account_object& recipient, asset am
    trx.operations.clear();
 }
 
-void database_fixture_base::issue_uia( account_id_type recipient_id, asset amount )
+void database_fixture_base::issue_ua( account_id_type recipient_id, asset amount )
 {
-   issue_uia( recipient_id(db), amount );
+   issue_ua( recipient_id(db), amount );
 }
 
 void database_fixture_base::reserve_asset( account_id_type account, asset amount )

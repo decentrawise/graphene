@@ -448,15 +448,15 @@ try {
 
    upgrade_to_lifetime_member( nathan );
 
-   // create a UIA
-   const asset_id_type uia_id = create_user_issued_asset( "NATHANCOIN", nathan, white_list ).get_id();
+   // create a UA
+   const asset_id_type ua_id = create_user_asset( "NATHANCOIN", nathan, white_list ).get_id();
    // Make a whitelist authority
    {
       BOOST_TEST_MESSAGE( "Changing the whitelist authority" );
       asset_update_operation uop;
       uop.issuer = nathan_id;
-      uop.asset_to_update = uia_id;
-      uop.new_options = uia_id(db).options;
+      uop.asset_to_update = ua_id;
+      uop.new_options = ua_id(db).options;
       uop.new_options.blacklist_authorities.insert(nathan_id);
       trx.operations.push_back(uop);
       PUSH_TX( db, trx, ~0 );
@@ -484,7 +484,7 @@ try {
       generate_block();
    }
 
-   issue_uia( alice_id, asset( init_balance, uia_id ) );
+   issue_ua( alice_id, asset( init_balance, ua_id ) );
 
    uint16_t preimage_size = 256;
    std::vector<char> pre_image(preimage_size);
@@ -494,7 +494,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
 
-      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION, uia_id );
+      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION, ua_id );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 86400;
       create_operation.preimage_hash = hash_it<fc::sha1>( pre_image );
@@ -528,7 +528,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
 
-      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION, uia_id );
+      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION, ua_id );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 86400;
       create_operation.preimage_hash = hash_it<fc::sha1>( pre_image );

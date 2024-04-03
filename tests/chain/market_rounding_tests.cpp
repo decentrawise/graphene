@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_would_be_zero )
    try {
       set_expiration( db, trx );
 
-      const asset_object& test = create_user_issued_asset( "UIATEST" );
+      const asset_object& test = create_user_asset( "UATEST" );
       const asset_id_type test_id = test.get_id();
       const asset_object& core = get_asset( GRAPHENE_SYMBOL );
       const asset_id_type core_id = core.get_id();
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_would_be_zero )
 
       transfer( council_account(db), core_seller, asset( 100000000 ) );
 
-      issue_uia( core_buyer, asset( 10000000, test_id ) );
+      issue_ua( core_buyer, asset( 10000000, test_id ) );
 
       BOOST_CHECK_EQUAL(get_balance(core_buyer, core), 0);
       BOOST_CHECK_EQUAL(get_balance(core_buyer, test), 10000000);
@@ -73,14 +73,14 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test1 )
 
       ACTORS( (seller)(buyer) );
 
-      const asset_object& test = create_user_issued_asset( "UIATEST" );
+      const asset_object& test = create_user_asset( "UATEST" );
       const asset_id_type test_id = test.get_id();
       const asset_object& core = get_asset( GRAPHENE_SYMBOL );
       const asset_id_type core_id = core.get_id();
 
       transfer( council_account(db), seller, asset( 100000000 ) );
 
-      issue_uia( buyer, asset( 10000000, test_id ) );
+      issue_ua( buyer, asset( 10000000, test_id ) );
 
       BOOST_CHECK_EQUAL(get_balance(buyer, core), 0);
       BOOST_CHECK_EQUAL(get_balance(buyer, test), 10000000);
@@ -134,14 +134,14 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test2 )
 
       ACTORS( (seller)(buyer) );
 
-      const asset_object& test = create_user_issued_asset( "UIATEST" );
+      const asset_object& test = create_user_asset( "UATEST" );
       const asset_id_type test_id = test.get_id();
       const asset_object& core = get_asset( GRAPHENE_SYMBOL );
       const asset_id_type core_id = core.get_id();
 
       transfer( council_account(db), seller, asset( 100000000 ) );
 
-      issue_uia( buyer, asset( 10000000, test_id ) );
+      issue_ua( buyer, asset( 10000000, test_id ) );
 
       BOOST_CHECK_EQUAL(get_balance(buyer, core), 0);
       BOOST_CHECK_EQUAL(get_balance(buyer, test), 10000000);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test1 )
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test2 )
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE( limit_and_call_test3 )
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
    const asset_id_type bitusd_id = bitusd.get_id();
    const asset_id_type core_id = core.get_id();
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test1 )
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE( limit_call_rounding_test2 )
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(1000000);
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE( call_limit_rounding_test1 )
 
    ACTORS((buyer)(seller)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
    const asset_id_type bitusd_id = bitusd.get_id();
    const asset_id_type core_id = core.get_id();
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE( call_limit_rounding_test2 )
 
    ACTORS((buyer)(seller)(seller2)(borrower)(borrower2)(borrower3)(borrower4)(feedproducer));
 
-   const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+   const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
    const auto& core   = asset_id_type()(db);
    const asset_id_type bitusd_id = bitusd.get_id();
    const asset_id_type core_id = core.get_id();

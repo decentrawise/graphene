@@ -38,7 +38,7 @@ namespace graphene { namespace protocol {
       /*  9 */ account_transfer_operation,
       /* 10 */ asset_create_operation,
       /* 11 */ asset_update_operation,
-      /* 12 */ asset_update_bitasset_operation,
+      /* 12 */ asset_update_backed_asset_operation,
       /* 13 */ asset_update_feed_producers_operation,
       /* 14 */ asset_issue_operation,
       /* 15 */ asset_reserve_operation,

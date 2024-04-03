@@ -40,7 +40,7 @@ struct swan_fixture : database_fixture {
 
     void standard_asset() {
         set_expiration( db, trx );
-        const auto& bitusd = create_bitasset("USDBIT", _feedproducer);
+        const auto& bitusd = create_backed_asset("USDBIT", _feedproducer);
         _swan = bitusd.id;
         _back = asset_id_type();
         update_feed_producers(swan(), {_feedproducer});
@@ -68,7 +68,7 @@ struct swan_fixture : database_fixture {
         FC_ASSERT( get_balance(borrower() , back()) == init_balance - 2*amount1 );
         FC_ASSERT( get_balance(borrower2(), back()) == init_balance - 2*amount2 );
 
-        BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+        BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
         return oid;
     }
@@ -83,7 +83,7 @@ struct swan_fixture : database_fixture {
     void expire_feed() {
       generate_blocks(db.head_block_time() + GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME);
       generate_block();
-      FC_ASSERT( swan().bitasset_data(db).current_feed.settlement_price.is_null() );
+      FC_ASSERT( swan().backed_asset_data(db).current_feed.settlement_price.is_null() );
     }
 
     void wait_for_maintenance() {
@@ -163,9 +163,9 @@ BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
 
       auto setup_asset = [&]() -> const asset_object&
       {
-         const asset_object& bitusd = create_bitasset("USDBIT"+fc::to_string(trial)+"X", feeder_id);
+         const asset_object& bitusd = create_backed_asset("USDBIT"+fc::to_string(trial)+"X", feeder_id);
          update_feed_producers( bitusd, {feeder.get_id()} );
-         BOOST_CHECK( !bitusd.bitasset_data(db).has_settlement() );
+         BOOST_CHECK( !bitusd.backed_asset_data(db).has_settlement() );
          trial++;
          return bitusd;
       };
@@ -213,9 +213,9 @@ BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
          transfer( borrower, settler, bitusd.amount(100) );
 
          // drop to $0.02 and settle
-         BOOST_CHECK( !bitusd.bitasset_data(db).has_settlement() );
+         BOOST_CHECK( !bitusd.backed_asset_data(db).has_settlement() );
          set_price( bitusd, bitusd.amount(1) / core.amount(50) ); // $0.02
-         BOOST_CHECK( bitusd.bitasset_data(db).has_settlement() );
+         BOOST_CHECK( bitusd.backed_asset_data(db).has_settlement() );
          GRAPHENE_REQUIRE_THROW( borrow( borrower2, bitusd.amount(100), asset(10000) ), fc::exception );
          force_settle( settler, bitusd.amount(100) );
 
@@ -237,9 +237,9 @@ BOOST_AUTO_TEST_CASE( revive_recovered )
 
       // revive after price recovers
       set_feed( 700, 800 );
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
       set_feed( 701, 800 );
-      BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( !swan().backed_asset_data(db).has_settlement() );
 
       graphene::app::database_api db_api( db, &( app.get_options() ));
       auto swan_symbol = _swan(db).symbol;
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE( recollateralize )
       bid_collateral( borrower2(), back().amount(1000), swan().amount(0) );
       BOOST_CHECK_EQUAL( get_balance( borrower2(), back() ), b2_balance );
 
-      // can't bid for non-bitassets
+      // can't bid for non-backed assets
       GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), swan().amount(100), asset(100) ), fc::exception );
       // can't cancel a non-existant bid
       GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), back().amount(0), swan().amount(0) ), fc::exception );
@@ -283,8 +283,8 @@ BOOST_AUTO_TEST_CASE( recollateralize )
       GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), back().amount(b2_balance + 100), swan().amount(100) ), fc::exception );
       trx.operations.clear();
 
-      // can't bid on a live bitasset
-      const asset_object& bitcny = create_bitasset("CNYBIT", _feedproducer);
+      // can't bid on a live backed asset
+      const asset_object& bitcny = create_backed_asset("CNYBIT", _feedproducer);
       GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), asset(100), bitcny.amount(100) ), fc::exception );
       update_feed_producers(bitcny, {_feedproducer});
       price_feed feed;
@@ -296,27 +296,27 @@ BOOST_AUTO_TEST_CASE( recollateralize )
       GRAPHENE_REQUIRE_THROW( bid_collateral( borrower2(), bitcny.amount(100), swan().amount(100) ), fc::exception );
 
       BOOST_CHECK( swan().dynamic_data(db).current_supply == 1400 );
-      BOOST_CHECK( swan().bitasset_data(db).settlement_fund == 2800 );
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
-      BOOST_CHECK( swan().bitasset_data(db).current_feed.settlement_price.is_null() );
+      BOOST_CHECK( swan().backed_asset_data(db).settlement_fund == 2800 );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).current_feed.settlement_price.is_null() );
 
       // doesn't happen without price feed
       bid_collateral( borrower(),  back().amount(1400), swan().amount(700) );
       bid_collateral( borrower2(), back().amount(1400), swan().amount(700) );
       wait_for_maintenance();
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       set_feed(1, 2);
       // doesn't happen if cover is insufficient
       bid_collateral( borrower2(), back().amount(1400), swan().amount(600) );
       wait_for_maintenance();
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       set_feed(1, 2);
       // doesn't happen if some bids have a bad swan price
       bid_collateral( borrower2(), back().amount(1050), swan().amount(700) );
       wait_for_maintenance();
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       set_feed(1, 2);
       // works
@@ -338,10 +338,10 @@ BOOST_AUTO_TEST_CASE( recollateralize )
       FC_ASSERT( _borrower == bids[0].bidder );
       FC_ASSERT( _borrower2 == bids[1].bidder );
 
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
       // revive
       wait_for_maintenance();
-      BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( !swan().backed_asset_data(db).has_settlement() );
       bids = db_api.get_collateral_bids(swan_symbol, 100, 0);
       BOOST_CHECK( bids.empty() );
 } catch( const fc::exception& e) {
@@ -361,12 +361,12 @@ BOOST_AUTO_TEST_CASE( revive_empty_recovered )
       force_settle( borrower(), swan().amount(1000) );
       force_settle( borrower2(), swan().amount(1000) );
       BOOST_CHECK_EQUAL( 0, swan().dynamic_data(db).current_supply.value );
-      BOOST_CHECK_EQUAL( 0, swan().bitasset_data(db).settlement_fund.value );
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK_EQUAL( 0, swan().backed_asset_data(db).settlement_fund.value );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       // revive after price recovers
       set_feed( 1, 1 );
-      BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( !swan().backed_asset_data(db).has_settlement() );
 
       auto& call_idx = db.get_index_type<call_order_index>().indices().get<by_account>();
       auto itr = call_idx.find( boost::make_tuple(_feedproducer, _swan) );
@@ -388,11 +388,11 @@ BOOST_AUTO_TEST_CASE( revive_empty )
       force_settle( borrower2(), swan().amount(1000) );
       BOOST_CHECK_EQUAL( 0, swan().dynamic_data(db).current_supply.value );
 
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       // revive
       wait_for_maintenance();
-      BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( !swan().backed_asset_data(db).has_settlement() );
 } catch( const fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
       set_feed( 1, 2 );
       // this sell order is designed to trigger a black swan
       limit_order_id_type oid = create_sell_order(borrower2(), swan().amount(1), back().amount(3))->get_id();
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       cancel_limit_order( oid(db) );
       force_settle( borrower(), swan().amount(500) );
@@ -421,15 +421,15 @@ BOOST_AUTO_TEST_CASE( revive_empty_with_bid )
       force_settle( borrower2(), swan().amount(667) );
       force_settle( borrower2(), swan().amount(333) );
       BOOST_CHECK_EQUAL( 0, swan().dynamic_data(db).current_supply.value );
-      BOOST_CHECK_EQUAL( 0, swan().bitasset_data(db).settlement_fund.value );
+      BOOST_CHECK_EQUAL( 0, swan().backed_asset_data(db).settlement_fund.value );
 
       bid_collateral( borrower(), back().amount(3000), swan().amount(700) );
 
-      BOOST_CHECK( swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( swan().backed_asset_data(db).has_settlement() );
 
       // revive
       wait_for_maintenance();
-      BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+      BOOST_CHECK( !swan().backed_asset_data(db).has_settlement() );
       graphene::app::database_api db_api(db, &(app.get_options()));
       auto swan_symbol = _swan(db).symbol;
       vector<collateral_bid_object> bids = db_api.get_collateral_bids(swan_symbol, 100, 0);
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE( overflow )
    BOOST_REQUIRE( itr != call_idx.end() );
    BOOST_CHECK_EQUAL( 1399, itr->debt.value );
 
-   BOOST_CHECK( !swan().bitasset_data(db).has_settlement() );
+   BOOST_CHECK( !swan().backed_asset_data(db).has_settlement() );
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

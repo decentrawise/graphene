@@ -156,10 +156,10 @@ std::string operation_printer::operator()(const account_update_operation& op) co
 std::string operation_printer::operator()(const asset_create_operation& op) const
 {
    out << "Create ";
-   if( op.bitasset_opts.valid() )
-      out << "BitAsset ";
+   if( op.backed_options.valid() )
+      out << "Secured Asset ";
    else
-      out << "User-Issued Asset ";
+      out << "User Asset ";
    out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
    print_fee(op.fee);
    print_result();

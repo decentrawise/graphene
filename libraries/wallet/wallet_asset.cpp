@@ -63,7 +63,7 @@ namespace graphene { namespace wallet { namespace detail {
    }
 
    signed_transaction wallet_api_impl::create_asset(string issuer, string symbol,
-         uint8_t precision, asset_options common, fc::optional<bitasset_options> bitasset_opts,
+         uint8_t precision, asset_options common, fc::optional<backed_asset_options> backed_options,
          bool broadcast )
    { try {
       account_object issuer_account = get_account( issuer );
@@ -74,7 +74,7 @@ namespace graphene { namespace wallet { namespace detail {
       create_op.symbol = symbol;
       create_op.precision = precision;
       create_op.common_options = common;
-      create_op.bitasset_opts = bitasset_opts;
+      create_op.backed_options = backed_options;
 
       signed_transaction tx;
       tx.operations.push_back( create_op );
@@ -82,7 +82,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(common)(bitasset_opts)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(common)(backed_options)(broadcast) ) }
 
    signed_transaction wallet_api_impl::update_asset(string symbol, asset_options new_options,
          bool broadcast /* = false */)
@@ -126,14 +126,14 @@ namespace graphene { namespace wallet { namespace detail {
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(broadcast) ) }
 
-   signed_transaction wallet_api_impl::update_bitasset(string symbol, bitasset_options new_options,
+   signed_transaction wallet_api_impl::update_backed_asset(string symbol, backed_asset_options new_options,
          bool broadcast /* = false */)
    { try {
       optional<asset_object> asset_to_update = find_asset(symbol);
       if (!asset_to_update)
         FC_THROW("No asset with that symbol exists!");
 
-      asset_update_bitasset_operation update_op;
+      asset_update_backed_asset_operation update_op;
       update_op.issuer = asset_to_update->issuer;
       update_op.asset_to_update = asset_to_update->id;
       update_op.new_options = new_options;
@@ -329,9 +329,9 @@ namespace graphene { namespace wallet { namespace detail {
       if (!debt_asset)
         FC_THROW("No asset with that symbol exists!");
 
-      FC_ASSERT(debt_asset->bitasset_data_id.valid(), "Not a bitasset, bidding not possible.");
+      FC_ASSERT(debt_asset->backed_asset_data_id.valid(), "Not a backed asset, bidding not possible.");
       const asset_object& collateral =
-            get_asset(get_object(*debt_asset->bitasset_data_id).options.short_backing_asset);
+            get_asset(get_object(*debt_asset->backed_asset_data_id).options.short_backing_asset);
 
       bid_collateral_operation op;
       op.bidder = get_account_id(bidder_name);

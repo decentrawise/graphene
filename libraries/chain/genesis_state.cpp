@@ -25,7 +25,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_acco
            (name)(owner_key)(active_key)(is_lifetime_member) )
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_asset_type, BOOST_PP_SEQ_NIL,
-           (symbol)(issuer_name)(description)(precision)(max_supply)(accumulated_fees)(is_bitasset)
+           (symbol)(issuer_name)(description)(precision)(max_supply)(accumulated_fees)(is_backed)
            (collateral_records))
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position,

@@ -32,10 +32,10 @@ namespace detail {
 */
 void database::globally_settle_asset( const asset_object& mia, const price& settlement_price )
 { try {
-   const asset_bitasset_data_object& bitasset = mia.bitasset_data(*this);
-   FC_ASSERT( !bitasset.has_settlement(), "black swan already occurred, it should not happen again" );
+   const backed_asset_data_object& ba = mia.backed_asset_data(*this);
+   FC_ASSERT( !ba.has_settlement(), "black swan already occurred, it should not happen again" );
 
-   const asset_object& backing_asset = bitasset.options.short_backing_asset(*this);
+   const asset_object& backing_asset = ba.options.short_backing_asset(*this);
    asset collateral_gathered = backing_asset.amount(0);
 
    const asset_dynamic_data_object& mia_dyn = mia.dynamic_asset_data_id(*this);
@@ -44,8 +44,8 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
    const auto& call_price_index = get_index_type<call_order_index>().indices().get<by_price>();
 
    // cancel all call orders and accumulate it into collateral_gathered
-   auto call_itr = call_price_index.lower_bound( price::min( bitasset.options.short_backing_asset, bitasset.asset_id ) );
-   auto call_end = call_price_index.upper_bound( price::max( bitasset.options.short_backing_asset, bitasset.asset_id ) );
+   auto call_itr = call_price_index.lower_bound( price::min( ba.options.short_backing_asset, ba.asset_id ) );
+   auto call_end = call_price_index.upper_bound( price::max( ba.options.short_backing_asset, ba.asset_id ) );
    asset pays;
    while( call_itr != call_end )
    {
@@ -60,7 +60,7 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
       FC_ASSERT( fill_call_order( order, pays, order.get_debt(), settlement_price, true ) ); // call order is maker
    }
 
-   modify( bitasset, [&mia,original_mia_supply,&collateral_gathered]( asset_bitasset_data_object& obj ){
+   modify( ba, [&mia,original_mia_supply,&collateral_gathered]( backed_asset_data_object& obj ){
            obj.settlement_price = mia.amount(original_mia_supply) / collateral_gathered;
            obj.settlement_fund  = collateral_gathered.amount;
            });
@@ -75,12 +75,12 @@ void database::globally_settle_asset( const asset_object& mia, const price& sett
 
 } FC_CAPTURE_AND_RETHROW( (mia)(settlement_price) ) } // GCOVR_EXCL_LINE
 
-void database::revive_bitasset( const asset_object& bitasset )
+void database::revive_backed_asset( const asset_object& backed_asset )
 { try {
-   FC_ASSERT( bitasset.is_market_issued() );
-   const asset_bitasset_data_object& bad = bitasset.bitasset_data(*this);
+   FC_ASSERT( backed_asset.is_backed() );
+   const backed_asset_data_object& bad = backed_asset.backed_asset_data(*this);
    FC_ASSERT( bad.has_settlement() );
-   const asset_dynamic_data_object& bdd = bitasset.dynamic_asset_data_id(*this);
+   const asset_dynamic_data_object& bdd = backed_asset.dynamic_asset_data_id(*this);
    FC_ASSERT( !bad.is_prediction_market );
    FC_ASSERT( !bad.current_feed.settlement_price.is_null() );
 
@@ -88,7 +88,7 @@ void database::revive_bitasset( const asset_object& bitasset )
    {
       // Create + execute a "bid" with 0 additional collateral
       const collateral_bid_object& pseudo_bid = create<collateral_bid_object>([&](collateral_bid_object& bid) {
-         bid.bidder = bitasset.issuer;
+         bid.bidder = backed_asset.issuer;
          bid.inv_swan_price = asset(0, bad.options.short_backing_asset)
                               / asset(bdd.current_supply, bad.asset_id);
       });
@@ -96,12 +96,12 @@ void database::revive_bitasset( const asset_object& bitasset )
    } else
       FC_ASSERT( bad.settlement_fund == 0 );
 
-   _cancel_bids_and_revive_mpa( bitasset, bad );
-} FC_CAPTURE_AND_RETHROW( (bitasset) ) } // GCOVR_EXCL_LINE
+   _cancel_bids_and_revive_backed_asset( backed_asset, bad );
+} FC_CAPTURE_AND_RETHROW( (backed_asset) ) } // GCOVR_EXCL_LINE
 
-void database::_cancel_bids_and_revive_mpa( const asset_object& bitasset, const asset_bitasset_data_object& bad )
+void database::_cancel_bids_and_revive_backed_asset( const asset_object& backed_asset, const backed_asset_data_object& bad )
 { try {
-   FC_ASSERT( bitasset.is_market_issued() );
+   FC_ASSERT( backed_asset.is_backed() );
    FC_ASSERT( bad.has_settlement() );
    FC_ASSERT( !bad.is_prediction_market );
 
@@ -117,11 +117,11 @@ void database::_cancel_bids_and_revive_mpa( const asset_object& bitasset, const 
    }
 
    // revive
-   modify( bad, [&]( asset_bitasset_data_object& obj ){
+   modify( bad, [&]( backed_asset_data_object& obj ){
               obj.settlement_price = price();
               obj.settlement_fund = 0;
            });
-} FC_CAPTURE_AND_RETHROW( (bitasset) ) } // GCOVR_EXCL_LINE
+} FC_CAPTURE_AND_RETHROW( (backed_asset) ) } // GCOVR_EXCL_LINE
 
 void database::cancel_bid(const collateral_bid_object& bid, bool create_virtual_op)
 {
@@ -340,11 +340,11 @@ bool database::apply_order(const limit_order_object& new_order_object, bool allo
 
    bool to_check_call_orders = false;
    const asset_object& sell_asset = sell_asset_id( *this );
-   const asset_bitasset_data_object* sell_abd = nullptr;
+   const backed_asset_data_object* sell_abd = nullptr;
    price call_match_price;
-   if( sell_asset.is_market_issued() )
+   if( sell_asset.is_backed() )
    {
-      sell_abd = &sell_asset.bitasset_data( *this );
+      sell_abd = &sell_asset.backed_asset_data( *this );
       if( sell_abd->options.short_backing_asset == recv_asset_id
           && !sell_abd->is_prediction_market
           && !sell_abd->has_settlement()
@@ -676,9 +676,9 @@ bool database::fill_call_order( const call_order_object& order, const asset& pay
    FC_ASSERT( order.collateral_type() == pays.asset_id );
    FC_ASSERT( order.collateral >= pays.amount );
 
-   // TODO pass in mia and bitasset_data for better performance
+   // TODO pass in mia and backed_asset_data for better performance
    const asset_object& mia = receives.asset_id(*this);
-   FC_ASSERT( mia.is_market_issued() );
+   FC_ASSERT( mia.is_backed() );
 
    optional<asset> collateral_freed;
    modify( order, [&]( call_order_object& o ){
@@ -754,33 +754,33 @@ bool database::fill_settle_order( const force_settlement_object& settle, const a
  *
  *  This method will return true if it filled a short or limit
  *
- *  @param mia - the market issued asset that should be called.
+ *  @param mia - the backed asset that should be called.
  *  @param enable_black_swan - when adjusting collateral, triggering a black swan is invalid and will throw
  *                             if enable_black_swan is not set to true.
- *  @param bitasset_ptr - an optional pointer to the bitasset_data object of the asset
+ *  @param backed_asset_ptr - an optional pointer to the backed_asset_data object of the asset
  *
  *  @return true if a margin call was executed.
  */
 bool database::check_call_orders( const asset_object& mia, bool enable_black_swan,
-                                  const asset_bitasset_data_object* bitasset_ptr )
+                                  const backed_asset_data_object* backed_asset_ptr )
 { try {
-    if( !mia.is_market_issued() ) return false;
+    if( !mia.is_backed() ) return false;
 
-    const asset_bitasset_data_object& bitasset = ( bitasset_ptr ? *bitasset_ptr : mia.bitasset_data(*this) );
+    const backed_asset_data_object& ba = ( backed_asset_ptr ? *backed_asset_ptr : mia.backed_asset_data(*this) );
 
-    if( check_for_blackswan( mia, enable_black_swan, &bitasset ) )
+    if( check_for_blackswan( mia, enable_black_swan, &ba ) )
        return false;
 
-    if( bitasset.is_prediction_market ) return false;
-    if( bitasset.current_feed.settlement_price.is_null() ) return false;
+    if( ba.is_prediction_market ) return false;
+    if( ba.current_feed.settlement_price.is_null() ) return false;
 
     const limit_order_index& limit_index = get_index_type<limit_order_index>();
     const auto& limit_price_index = limit_index.indices().get<by_price>();
 
     // looking for limit orders selling the most USD for the least CORE
-    auto max_price = price::max( bitasset.asset_id, bitasset.options.short_backing_asset );
+    auto max_price = price::max( ba.asset_id, ba.options.short_backing_asset );
     // stop when limit orders are selling too little USD for too much CORE
-    auto min_price = bitasset.current_feed.max_short_squeeze_price();
+    auto min_price = ba.current_feed.max_short_squeeze_price();
 
     // NOTE limit_price_index is sorted from greatest to least
     auto limit_itr = limit_price_index.lower_bound( max_price );
@@ -792,8 +792,8 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
     const call_order_index& call_index = get_index_type<call_order_index>();
     const auto& call_collateral_index = call_index.indices().get<by_collateral>();
 
-    auto call_min = price::min( bitasset.options.short_backing_asset, bitasset.asset_id );
-    auto call_max = price::max( bitasset.options.short_backing_asset, bitasset.asset_id );
+    auto call_min = price::min( ba.options.short_backing_asset, ba.asset_id );
+    auto call_max = price::max( ba.options.short_backing_asset, ba.asset_id );
 
     auto call_collateral_itr = call_collateral_index.begin();
     auto call_collateral_end = call_collateral_itr;
@@ -805,14 +805,14 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
 
     auto head_num = head_block_num();
 
-    while( !check_for_blackswan( mia, enable_black_swan, &bitasset ) // TODO perhaps improve performance by passing in iterators
+    while( !check_for_blackswan( mia, enable_black_swan, &ba ) // TODO perhaps improve performance by passing in iterators
            && limit_itr != limit_end
            && call_collateral_itr != call_collateral_end )
     {
        const call_order_object& call_order = *call_collateral_itr;
 
        // Feed protected (don't call if CR>MCR)
-       if( bitasset.current_maintenance_collateralization < call_order.collateralization() )
+       if( ba.current_maintenance_collateralization < call_order.collateralization() )
           return margin_called;
 
        const limit_order_object& limit_order = *limit_itr;
@@ -828,14 +828,14 @@ bool database::check_call_orders( const asset_object& mia, bool enable_black_swa
                 ("id",mia.id)("symbol",mia.symbol)("b",head_num) );
           edump((enable_black_swan));
           FC_ASSERT( enable_black_swan );
-          globally_settle_asset(mia, bitasset.current_feed.settlement_price );
+          globally_settle_asset(mia, ba.current_feed.settlement_price );
           return true;
        }
 
        usd_to_buy.amount = call_order.get_max_debt_to_cover( match_price,
-                                                             bitasset.current_feed.settlement_price,
-                                                             bitasset.current_feed.maintenance_collateral_ratio,
-                                                             bitasset.current_maintenance_collateralization );
+                                                             ba.current_feed.settlement_price,
+                                                             ba.current_feed.maintenance_collateral_ratio,
+                                                             ba.current_maintenance_collateralization );
 
        asset usd_for_sale = limit_order.amount_for_sale();
        asset call_pays, call_receives, order_pays, order_receives;

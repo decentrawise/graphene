@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
 
          // TODO:  Change this test when we correct #406
          // n.b. we generate GRAPHENE_MIN_UNDO_HISTORY+1 extra blocks which will be discarded on save
-         for( uint32_t i = 1; ; ++i )
+         while( true )
          {
             BOOST_CHECK( db.head_block_id() == b.id() );
             //validator_id_type prev_validator = b.validator;
@@ -876,7 +876,7 @@ BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
    //Get a sane head block time
    generate_block();
 
-   auto* test = &create_bitasset("MIATEST");
+   auto* test = &create_backed_asset("MIATEST");
    auto* core = &asset_id_type()(db);
    auto* nathan = &create_account("nathan");
    auto* council = &account_id_type()(db);
@@ -1378,7 +1378,7 @@ BOOST_AUTO_TEST_CASE( genesis_reserve_ids )
          usd.precision = 4;
          usd.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
          usd.accumulated_fees = 0;
-         usd.is_bitasset = true;
+         usd.is_backed = true;
          
          genesis_state.immutable_parameters.num_special_accounts = num_special_accounts;
          genesis_state.immutable_parameters.num_special_assets = num_special_assets;
@@ -1794,7 +1794,7 @@ BOOST_FIXTURE_TEST_CASE( temp_account_balance, database_fixture )
 { try {
    ACTORS( (alice) );
    fund( alice );
-   create_user_issued_asset( "UIA" );
+   create_user_asset( "USR" );
 
    generate_block();
    set_expiration( db, trx );

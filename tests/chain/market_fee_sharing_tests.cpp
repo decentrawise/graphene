@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(create_asset_with_additional_options)
       options.value.reward_percent = reward_percent;
       options.value.whitelist_market_fee_sharing = whitelist;
 
-      GRAPHENE_CHECK_THROW(create_user_issued_asset("USD",
+      GRAPHENE_CHECK_THROW(create_user_asset("USD",
                                                     issuer,
                                                     charge_market_fee,
                                                     price,
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(create_asset_with_additional_options)
 
       reward_percent = GRAPHENE_100_PERCENT; // 100%
       options.value.reward_percent = reward_percent;
-      GRAPHENE_CHECK_THROW(create_user_issued_asset("USD",
+      GRAPHENE_CHECK_THROW(create_user_asset("USD",
                                                     issuer,
                                                     charge_market_fee,
                                                     price,
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(create_asset_with_additional_options)
 
       reward_percent = GRAPHENE_100_PERCENT - 1; // 99.99%
       options.value.reward_percent = reward_percent;
-      asset_object usd_asset = create_user_issued_asset("USD",
+      asset_object usd_asset = create_user_asset("USD",
                                                         issuer,
                                                         charge_market_fee,
                                                         price,
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(update_additional_options)
    {
       ACTOR(issuer);
 
-      asset_object usd_asset = create_user_issued_asset("USD", issuer, charge_market_fee);
+      asset_object usd_asset = create_user_asset("USD", issuer, charge_market_fee);
 
       uint16_t reward_percent = GRAPHENE_100_PERCENT + 1; // 100.01%
       flat_set<account_id_type> whitelist = {issuer_id};
@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       constexpr auto izzycoin_market_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_market_percent = 20*GRAPHENE_1_PERCENT;
 
-      asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id, izzycoin_market_percent ).get_id();
-      asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, jillcoin_market_percent ).get_id();
+      asset_id_type izzycoin_id = create_backed_asset( "IZZYCOIN", izzy_id, izzycoin_market_percent ).get_id();
+      asset_id_type jillcoin_id = create_backed_asset( "JILLCOIN", jill_id, jillcoin_market_percent ).get_id();
 
       update_asset(izzy_id, izzy_private_key, izzycoin_id, izzycoin_reward_percent);
       update_asset(jill_id, jill_private_key, jillcoin_id, jillcoin_reward_percent);
@@ -315,13 +315,13 @@ BOOST_AUTO_TEST_CASE(asset_claim_reward_test)
 
       price price(asset(1, asset_id_type(1)), asset(1));
       uint16_t market_fee_percent = 20 * GRAPHENE_1_PERCENT;
-      const asset_object jillcoin = create_user_issued_asset( "JCOIN", jill,  charge_market_fee, price, 2, market_fee_percent );
+      const asset_object jillcoin = create_user_asset( "JCOIN", jill,  charge_market_fee, price, 2, market_fee_percent );
 
       const account_object alice = create_account("alice", izzy, izzy, 50/*0.5%*/);
       const account_object bob   = create_account("bob",   izzy, izzy, 50/*0.5%*/);
 
       // prepare users' balance
-      issue_uia( alice, jillcoin.amount( 20000000 ) );
+      issue_ua( alice, jillcoin.amount( 20000000 ) );
 
       transfer( council_account, alice.get_id(), core_asset(1000) );
       transfer( council_account, bob.get_id(),   core_asset(1000) );
@@ -375,13 +375,13 @@ BOOST_AUTO_TEST_CASE(create_actors)
       price price(asset(1, asset_id_type(1)), asset(1));
       uint16_t market_fee_percent = 20 * GRAPHENE_1_PERCENT;
       auto obj = jill_id(db);
-      const asset_object jillcoin = create_user_issued_asset( "JCOIN", jill,  charge_market_fee, price, 2, market_fee_percent );
+      const asset_object jillcoin = create_user_asset( "JCOIN", jill,  charge_market_fee, price, 2, market_fee_percent );
 
       const account_object alice = create_account("alice", izzyregistrar, izzyreferrer, 50/*0.5%*/);
       const account_object bob   = create_account("bob",   izzyregistrar, izzyreferrer, 50/*0.5%*/);
 
       // prepare users' balance
-      issue_uia( alice, jillcoin.amount( 20000000 ) );
+      issue_ua( alice, jillcoin.amount( 20000000 ) );
 
       transfer( council_account, alice.get_id(), core_asset(1000) );
       transfer( council_account, bob.get_id(),   core_asset(1000) );
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(update_asset_via_proposal_test)
    try
    {
       ACTOR(issuer);
-      asset_object usd_asset = create_user_issued_asset("USD", issuer, charge_market_fee);
+      asset_object usd_asset = create_user_asset("USD", issuer, charge_market_fee);
 
       additional_asset_options_t options;
       options.value.reward_percent = 100;
@@ -614,14 +614,14 @@ BOOST_AUTO_TEST_CASE(issue_asset){
 
       price price(asset(1, asset_id_type(1)), asset(1));
       constexpr auto izzycoin_market_percent = 10*GRAPHENE_1_PERCENT;
-      asset_object izzycoin = create_user_issued_asset( "IZZYCOIN", izzy,  charge_market_fee, price, 2, izzycoin_market_percent );
+      asset_object izzycoin = create_user_asset( "IZZYCOIN", izzy,  charge_market_fee, price, 2, izzycoin_market_percent );
 
       constexpr auto jillcoin_market_percent = 20*GRAPHENE_1_PERCENT;
-      asset_object jillcoin = create_user_issued_asset( "JILLCOIN", jill,  charge_market_fee, price, 2, jillcoin_market_percent );
+      asset_object jillcoin = create_user_asset( "JILLCOIN", jill,  charge_market_fee, price, 2, jillcoin_market_percent );
 
       // Alice and Bob create some coins
-      issue_uia( alice, izzycoin.amount( 100000 ) );
-      issue_uia( bob, jillcoin.amount( 100000 ) );
+      issue_ua( alice, izzycoin.amount( 100000 ) );
+      issue_ua( bob, jillcoin.amount( 100000 ) );
    }
    FC_LOG_AND_RETHROW()
 }
@@ -784,12 +784,12 @@ BOOST_AUTO_TEST_CASE(white_list_asset_rewards_test)
       price price(asset(1, asset_id_type(1)), asset(1));
       constexpr auto izzycoin_market_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_market_percent = 20*GRAPHENE_1_PERCENT;
-      const asset_id_type izzycoin_id = create_user_issued_asset( "IZZYCOIN", izzy, charge_market_fee|white_list, price, 0, izzycoin_market_percent ).get_id();
-      const asset_id_type jillcoin_id = create_user_issued_asset( "JILLCOIN", jill, charge_market_fee|white_list, price, 0, jillcoin_market_percent ).get_id();
+      const asset_id_type izzycoin_id = create_user_asset( "IZZYCOIN", izzy, charge_market_fee|white_list, price, 0, izzycoin_market_percent ).get_id();
+      const asset_id_type jillcoin_id = create_user_asset( "JILLCOIN", jill, charge_market_fee|white_list, price, 0, jillcoin_market_percent ).get_id();
 
       // Alice and Bob create some coins
-      issue_uia( alice, izzycoin_id(db).amount( 200000 ) );
-      issue_uia( bob,   jillcoin_id(db).amount( 200000 ) );
+      issue_ua( alice, izzycoin_id(db).amount( 200000 ) );
+      issue_ua( bob,   jillcoin_id(db).amount( 200000 ) );
 
       constexpr auto izzycoin_reward_percent = 50*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_reward_percent = 50*GRAPHENE_1_PERCENT;

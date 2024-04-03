@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(elasticsearch_account_history) {
       if(delete_account_history) { // all records deleted
 
          //account_id_type() do 3 ops
-         create_bitasset("USD", account_id_type());
+         create_backed_asset("USD", account_id_type());
          auto dan = create_account("dan");
          auto bob = create_account("bob");
 
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(elasticsearch_objects) {
 
       if(delete_objects) { // all records deleted
 
-         // asset and bitasset
-         create_bitasset("USD", account_id_type());
+         // user asset and backed asset
+         create_backed_asset("USD", account_id_type());
          generate_block();
 
          string query = "{ \"query\" : { \"bool\" : { \"must\" : [{\"match_all\": {}}] } } }";
@@ -168,14 +168,14 @@ BOOST_AUTO_TEST_CASE(elasticsearch_objects) {
          auto first_id = j["hits"]["hits"][size_t(0)]["_source"]["symbol"].as_string();
          BOOST_CHECK_EQUAL(first_id, "USD");
 
-         auto bitasset_data_id = j["hits"]["hits"][size_t(0)]["_source"]["bitasset_data_id"].as_string();
-         es.endpoint = es.index_prefix + "bitasset/_search";
+         auto backed_asset_data_id = j["hits"]["hits"][size_t(0)]["_source"]["backed_asset_data_id"].as_string();
+         es.endpoint = es.index_prefix + "backedasset/_search";
          es.query = "{ \"query\" : { \"bool\": { \"must\" : [{ \"term\": { \"object_id\": \""
-                  + bitasset_data_id + "\"}}] } } }";
+                  + backed_asset_data_id + "\"}}] } } }";
          res = graphene::utilities::simpleQuery(es);
          j = fc::json::from_string(res);
-         auto bitasset_object_id = j["hits"]["hits"][size_t(0)]["_source"]["object_id"].as_string();
-         BOOST_CHECK_EQUAL(bitasset_object_id, bitasset_data_id);
+         auto backedasset_object_id = j["hits"]["hits"][size_t(0)]["_source"]["object_id"].as_string();
+         BOOST_CHECK_EQUAL(backedasset_object_id, backed_asset_data_id);
       }
    }
    catch (fc::exception &e) {
@@ -205,13 +205,13 @@ BOOST_AUTO_TEST_CASE(elasticsearch_history_api) {
 
       if(delete_account_history) {
 
-         create_bitasset("USD", account_id_type()); // create op 0
+         create_backed_asset("USD", account_id_type()); // create op 0
          const account_object& dan = create_account("dan"); // create op 1
-         create_bitasset("CNY", dan.get_id()); // create op 2
-         create_bitasset("BTC", account_id_type()); // create op 3
-         create_bitasset("XMR", dan.get_id()); // create op 4
-         create_bitasset("EUR", account_id_type()); // create op 5
-         create_bitasset("OIL", dan.get_id()); // create op 6
+         create_backed_asset("CNY", dan.get_id()); // create op 2
+         create_backed_asset("BTC", account_id_type()); // create op 3
+         create_backed_asset("XMR", dan.get_id()); // create op 4
+         create_backed_asset("EUR", account_id_type()); // create op 5
+         create_backed_asset("OIL", dan.get_id()); // create op 6
 
          generate_block();
 
