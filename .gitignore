@@ -9,11 +9,14 @@ compile_commands.json
 moc_*
 *.moc
 
+.DS_Store
+
 genesis.json
 hardfork.hpp
 
 .vscode
 
+.build
 build
 
 libraries/utilities/git_revision.cpp
