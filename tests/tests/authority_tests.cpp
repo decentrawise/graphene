@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE( council_authority )
    const auto& global_params = db.get_global_properties().parameters;
 
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -498,7 +498,7 @@ BOOST_FIXTURE_TEST_CASE( fired_delegates, database_fixture )
    fc::ecc::private_key delegate_key = fc::ecc::private_key::generate();
 
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -1077,7 +1077,7 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
       op.new_options = nathan_id(db).options;
       op.new_options->voting_account = vikram_id;
       op.new_options->votes = flat_set<vote_id_type>{nathan_delegate(db).vote_id};
-      op.new_options->num_council = 1;
+      op.new_options->num_delegates = 1;
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );
       PUSH_TX( db, trx );
@@ -1088,12 +1088,12 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
       op.account = vikram_id;
       op.new_options = vikram_id(db).options;
       op.new_options->votes.insert(vikram_delegate(db).vote_id);
-      op.new_options->num_council = 11;
+      op.new_options->num_delegates = 11;
       trx.operations.push_back(op);
       sign( trx, vikram_private_key );
-      // Fails because num_council is larger than the cardinality of delegates being voted for
+      // Fails because num_delegates is larger than the cardinality of delegates being voted for
       GRAPHENE_CHECK_THROW(PUSH_TX( db, trx ), fc::exception);
-      op.new_options->num_council = 3;
+      op.new_options->num_delegates = 3;
       trx.operations = {op};
       trx.clear_signatures();
       sign( trx, vikram_private_key );
@@ -1102,12 +1102,12 @@ BOOST_FIXTURE_TEST_CASE( voting_account, database_fixture )
    }
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time + GRAPHENE_DEFAULT_BLOCK_INTERVAL);
-   BOOST_CHECK(std::find(db.get_global_properties().active_delegates.begin(),
-                         db.get_global_properties().active_delegates.end(),
-                         nathan_delegate) == db.get_global_properties().active_delegates.end());
-   BOOST_CHECK(std::find(db.get_global_properties().active_delegates.begin(),
-                         db.get_global_properties().active_delegates.end(),
-                         vikram_delegate) != db.get_global_properties().active_delegates.end());
+   BOOST_CHECK(std::find(db.get_global_properties().council_delegates.begin(),
+                         db.get_global_properties().council_delegates.end(),
+                         nathan_delegate) == db.get_global_properties().council_delegates.end());
+   BOOST_CHECK(std::find(db.get_global_properties().council_delegates.begin(),
+                         db.get_global_properties().council_delegates.end(),
+                         vikram_delegate) != db.get_global_properties().council_delegates.end());
 } FC_LOG_AND_RETHROW() }
 
 /*

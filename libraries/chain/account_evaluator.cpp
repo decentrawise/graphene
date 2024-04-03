@@ -40,9 +40,9 @@ void verify_account_votes( const database& db, const account_options& options )
    const auto& gpo = db.get_global_properties();
    const auto& chain_params = gpo.parameters;
 
-   FC_ASSERT( options.num_validator <= chain_params.maximum_validator_count,
-              "Voted for more validators than currently allowed (${c})", ("c", chain_params.maximum_validator_count) );
-   FC_ASSERT( options.num_council <= chain_params.maximum_council_count,
+   FC_ASSERT( options.num_producers <= chain_params.maximum_producer_count,
+              "Voted for more validators than currently allowed (${c})", ("c", chain_params.maximum_producer_count) );
+   FC_ASSERT( options.num_delegates <= chain_params.maximum_council_count,
               "Voted for more delegates than currently allowed (${c})", ("c", chain_params.maximum_council_count) );
 
    FC_ASSERT( db.find(options.voting_account), "Invalid proxy account specified." );

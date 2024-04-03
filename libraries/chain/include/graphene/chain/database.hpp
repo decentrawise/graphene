@@ -28,7 +28,7 @@ namespace graphene { namespace chain {
    class proposal_object;
    class operation_history_object;
    class chain_property_object;
-   class validator_schedule_object;
+   class producer_schedule_object;
    class validator_object;
    class force_settlement_object;
    class limit_order_object;
@@ -62,7 +62,7 @@ namespace graphene { namespace chain {
             skip_merkle_check           = 1 << 7,  ///< used while reindexing
             skip_assert_evaluation      = 1 << 8,  ///< used while reindexing
             skip_undo_history_check     = 1 << 9,  ///< used while reindexing
-            skip_validator_schedule_check = 1 << 10 ///< used while reindexing
+            skip_producer_schedule_check = 1 << 10 ///< used while reindexing
          };
 
          /**
@@ -101,7 +101,7 @@ namespace graphene { namespace chain {
          void wipe(const fc::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
 
-         //////////////////// db_validator_schedule.cpp ////////////////////
+         //////////////////// db_producer_schedule.cpp ////////////////////
 
          /**
           * @brief Get the validator scheduled for block production in a slot.
@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
           *
           * Passing slot_num == 0 returns GRAPHENE_NULL_VALIDATOR
           */
-         validator_id_type get_scheduled_validator(uint32_t slot_num)const;
+         validator_id_type get_scheduled_producer(uint32_t slot_num)const;
 
          /**
           * Get the time at which the given slot occurs.
@@ -143,12 +143,12 @@ namespace graphene { namespace chain {
           *  Calculate the percent of block production slots that were missed in the
           *  past 128 blocks, not including the current block.
           */
-         uint32_t validator_participation_rate()const;
+         uint32_t producer_participation_rate()const;
 
       private:
-         uint32_t update_validator_missed_blocks( const signed_block& b );
+         uint32_t update_producer_missed_blocks( const signed_block& b );
 
-         void update_validator_schedule();
+         void update_producer_schedule();
 
          //////////////////// db_getter.cpp ////////////////////
 
@@ -162,7 +162,7 @@ namespace graphene { namespace chain {
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
          const account_statistics_object&       get_account_stats_by_owner( account_id_type owner )const;
-         const validator_schedule_object&         get_validator_schedule_object()const;
+         const producer_schedule_object&         get_producer_schedule_object()const;
 
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
@@ -249,7 +249,7 @@ namespace graphene { namespace chain {
          /// helper to handle cashback rewards
          void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
          /// helper to handle validator pay
-         void deposit_validator_pay(const validator_object& wit, share_type amount);
+         void deposit_producer_pay(const validator_object& wit, share_type amount);
 
          string to_pretty_string( const asset& a )const;
 
@@ -575,7 +575,7 @@ namespace graphene { namespace chain {
          void pay_workers( share_type& budget );
          void perform_chain_maintenance(const signed_block& next_block);
          void update_block_producers();
-         void update_active_delegates();
+         void update_council_delegates();
          void update_worker_votes();
          void process_bids( const asset_bitasset_data_object& bad );
          void process_bitassets();
@@ -647,7 +647,7 @@ namespace graphene { namespace chain {
          const global_property_object*          _p_global_prop_obj         = nullptr;
          const dynamic_global_property_object*  _p_dyn_global_prop_obj     = nullptr;
          const chain_property_object*           _p_chain_property_obj      = nullptr;
-         const validator_schedule_object*         _p_validator_schedule_obj    = nullptr;
+         const producer_schedule_object*         _p_producer_schedule_obj    = nullptr;
          ///@}
 
       public:

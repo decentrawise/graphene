@@ -707,21 +707,21 @@ BOOST_AUTO_TEST_CASE( create_account_test )
       REQUIRE_THROW_WITH_VALUE(op, options.voting_account, account_id_type(999999999));
 
       // Not allow voting for non-exist entities.
-      auto save_num_council = op.options.num_council;
-      auto save_num_validator = op.options.num_validator;
-      op.options.num_council = 1;
-      op.options.num_validator = 0;
+      auto save_num_delegates = op.options.num_delegates;
+      auto save_num_producers = op.options.num_producers;
+      op.options.num_delegates = 1;
+      op.options.num_producers = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("0:1")).convert_to_container<flat_set<vote_id_type>>());
-      op.options.num_validator = 1;
-      op.options.num_council = 0;
+      op.options.num_producers = 1;
+      op.options.num_delegates = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("1:19")).convert_to_container<flat_set<vote_id_type>>());
-      op.options.num_validator = 0;
+      op.options.num_producers = 0;
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("2:19")).convert_to_container<flat_set<vote_id_type>>());
       REQUIRE_THROW_WITH_VALUE(op, options.votes, boost::assign::list_of<vote_id_type>(vote_id_type("3:99")).convert_to_container<flat_set<vote_id_type>>());
       GRAPHENE_REQUIRE_THROW( vote_id_type("2:a"), fc::exception );
       GRAPHENE_REQUIRE_THROW( vote_id_type(""), fc::exception );
-      op.options.num_council = save_num_council;
-      op.options.num_validator = save_num_validator;
+      op.options.num_delegates = save_num_delegates;
+      op.options.num_producers = save_num_producers;
 
       auto auth_bak = op.owner;
       op.owner.add_authority(account_id_type(9999999999), 10);
@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE( update_account )
       const account_object& nathan = create_account("nathan", init_account_pub_key);
       const fc::ecc::private_key nathan_new_key = fc::ecc::private_key::generate();
       const public_key_type key_id = nathan_new_key.get_public_key();
-      const auto& active_delegates = db.get_global_properties().active_delegates;
+      const auto& council_delegates = db.get_global_properties().council_delegates;
 
       transfer(account_id_type()(db), nathan, asset(1000000000));
 
@@ -772,8 +772,8 @@ BOOST_AUTO_TEST_CASE( update_account )
       op.owner = authority(2, key_id, 1, init_account_pub_key, 1);
       op.active = authority(2, key_id, 1, init_account_pub_key, 1);
       op.new_options = nathan.options;
-      op.new_options->votes = flat_set<vote_id_type>({active_delegates[0](db).vote_id, active_delegates[5](db).vote_id});
-      op.new_options->num_council = 2;
+      op.new_options->votes = flat_set<vote_id_type>({council_delegates[0](db).vote_id, council_delegates[5](db).vote_id});
+      op.new_options->num_delegates = 2;
       trx.operations.push_back(op);
       BOOST_TEST_MESSAGE( "Updating account" );
       PUSH_TX( db, trx, ~0 );
@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE( update_mia )
 {
    try {
       // Initialize validators by voting for each member and for desired count
-      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
       set_expiration(db, trx);
@@ -1488,7 +1488,7 @@ BOOST_AUTO_TEST_CASE( validator_feeds )
    using namespace graphene::chain;
    try {
       // Initialize council by voting for each member and for desired count
-      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
       set_expiration(db, trx);
@@ -1510,7 +1510,7 @@ BOOST_AUTO_TEST_CASE( validator_feeds )
       vector<account_id_type> block_producers;
       for( const validator_id_type& wit_id : global_props.block_producers )
          block_producers.push_back( wit_id(db).validator_account );
-      BOOST_REQUIRE_EQUAL(block_producers.size(), INITIAL_VALIDATOR_COUNT);
+      BOOST_REQUIRE_EQUAL(block_producers.size(), INITIAL_PRODUCER_COUNT);
 
       asset_publish_feed_operation op;
       op.publisher = block_producers[0];
@@ -1580,7 +1580,7 @@ BOOST_AUTO_TEST_CASE( fill_order )
    //o.calculate_fee(db.current_fee_schedule());
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( validator_pay_test )
+BOOST_AUTO_TEST_CASE( producer_pay_test )
 { try {
 
    const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
@@ -1627,7 +1627,7 @@ BOOST_AUTO_TEST_CASE( validator_pay_test )
 
    db.modify( db.get_global_properties(), [&]( global_property_object& _gpo )
    {
-      _gpo.parameters.validator_pay_per_block = validator_ppb;
+      _gpo.parameters.producer_pay_per_block = validator_ppb;
    } );
 
    BOOST_CHECK_EQUAL(core->dynamic_asset_data_id(db).accumulated_fees.value, 0);

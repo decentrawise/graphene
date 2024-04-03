@@ -318,7 +318,7 @@ block_production_condition::block_production_condition_enum validator_plugin::ma
    //
    assert( now > db.head_block_time() );
 
-   graphene::chain::validator_id_type scheduled_validator = db.get_scheduled_validator( slot );
+   graphene::chain::validator_id_type scheduled_validator = db.get_scheduled_producer( slot );
    // we must control the validator scheduled to produce the next block.
    if( _validators.find( scheduled_validator ) == _validators.end() )
    {
@@ -336,7 +336,7 @@ block_production_condition::block_production_condition_enum validator_plugin::ma
       return block_production_condition::no_private_key;
    }
 
-   uint32_t prate = db.validator_participation_rate();
+   uint32_t prate = db.producer_participation_rate();
    if( prate < _required_validator_participation )
    {
       capture("pct", uint32_t(100*uint64_t(prate) / GRAPHENE_1_PERCENT));

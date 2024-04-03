@@ -11,7 +11,7 @@
 #include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/validator_schedule_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
 
 #include <graphene/protocol/fee_schedule.hpp>
 
@@ -115,7 +115,7 @@ bool database::_push_block(const signed_block& new_block)
       // verify that the block signer is in the current set of block producers.
       shared_ptr<fork_item> prev_block = _fork_db.fetch_block( new_block.previous );
       GRAPHENE_ASSERT( prev_block, unlinkable_block_exception, "block does not link to known chain" );
-      if( prev_block->scheduled_validators && 0 == (skip&(skip_validator_schedule_check|skip_validator_signature)) )
+      if( prev_block->scheduled_validators && 0 == (skip&(skip_producer_schedule_check|skip_validator_signature)) )
          verify_signing_validator( new_block, *prev_block );
    }
 
@@ -223,13 +223,13 @@ void database::update_validators( fork_item& fork_entry )const
    fork_entry.next_block_aslot = dpo.current_aslot + 1;
    fork_entry.next_block_time = get_slot_time( 1 );
 
-   const validator_schedule_object& wso = get_validator_schedule_object();
+   const producer_schedule_object& wso = get_producer_schedule_object();
    fork_entry.scheduled_validators = std::make_shared< vector< pair< validator_id_type, public_key_type > > >();
-   fork_entry.scheduled_validators->reserve( wso.current_shuffled_validators.size() );
-   for( size_t i = 0; i < wso.current_shuffled_validators.size(); ++i )
+   fork_entry.scheduled_validators->reserve( wso.current_shuffled_producers.size() );
+   for( size_t i = 0; i < wso.current_shuffled_producers.size(); ++i )
    {
-       const auto& validator = wso.current_shuffled_validators[i](*this);
-       fork_entry.scheduled_validators->emplace_back( wso.current_shuffled_validators[i], validator.signing_key );
+       const auto& validator = wso.current_shuffled_producers[i](*this);
+       fork_entry.scheduled_validators->emplace_back( wso.current_shuffled_producers[i], validator.signing_key );
    }
 }
 
@@ -364,7 +364,7 @@ signed_block database::_generate_block(
    uint32_t skip = get_node_properties().skip_flags;
    uint32_t slot_num = get_slot_at_time( when );
    FC_ASSERT( slot_num > 0 );
-   validator_id_type scheduled_validator = get_scheduled_validator( slot_num );
+   validator_id_type scheduled_validator = get_scheduled_producer( slot_num );
    FC_ASSERT( scheduled_validator == validator_id );
 
    //
@@ -600,7 +600,7 @@ void database::_apply_block( const signed_block& next_block )
    _current_op_in_trx    = 0;
    _current_virtual_op   = 0;
 
-   const uint32_t missed = update_validator_missed_blocks( next_block );
+   const uint32_t missed = update_producer_missed_blocks( next_block );
    update_global_dynamic_data( next_block, missed );
    update_signing_validator(signing_validator, next_block);
    update_last_irreversible_block();
@@ -625,7 +625,7 @@ void database::_apply_block( const signed_block& next_block )
    // update_global_dynamic_data() as perhaps these methods only need
    // to be called for header validation?
    update_maintenance_flag( maint_needed );
-   update_validator_schedule();
+   update_producer_schedule();
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();
 
@@ -749,12 +749,12 @@ const validator_object& database::validate_block_header( uint32_t skip, const si
    if( 0 == (skip&skip_validator_signature) )
       FC_ASSERT( next_block.validate_signee( validator.signing_key ) );
 
-   if( 0 == (skip&skip_validator_schedule_check) )
+   if( 0 == (skip&skip_producer_schedule_check) )
    {
       uint32_t slot_num = get_slot_at_time( next_block.timestamp );
       FC_ASSERT( slot_num > 0 );
 
-      validator_id_type scheduled_validator = get_scheduled_validator( slot_num );
+      validator_id_type scheduled_validator = get_scheduled_producer( slot_num );
 
       FC_ASSERT( next_block.validator == scheduled_validator, "Witness produced block at wrong time",
                  ("block validator",next_block.validator)("scheduled",scheduled_validator)("slot_num",slot_num) );

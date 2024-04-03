@@ -724,7 +724,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    //Verify that the publisher is authoritative to publish a feed
    if( base.options.flags & validator_fed_asset )
    {
-      FC_ASSERT( d.get(GRAPHENE_VALIDATOR_ACCOUNT).active.account_auths.count(o.publisher),
+      FC_ASSERT( d.get(GRAPHENE_PRODUCERS_ACCOUNT).active.account_auths.count(o.publisher),
                  "Only block producers are allowed to publish price feeds for this asset" );
    }
    else if( base.options.flags & delegate_fed_asset )

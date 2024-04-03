@@ -96,8 +96,8 @@ namespace graphene { namespace wallet { namespace detail {
       participation << fixed << std::setprecision(2) << (100.0*fc::popcount(dynamic_props.recent_slots_filled)) / 128.0;
       result["participation"] = participation.str();
       result["block_producers"] = fc::variant(global_props.block_producers, GRAPHENE_MAX_NESTED_OBJECTS);
-      result["active_delegates"] =
-            fc::variant(global_props.active_delegates, GRAPHENE_MAX_NESTED_OBJECTS);
+      result["council_delegates"] =
+            fc::variant(global_props.council_delegates, GRAPHENE_MAX_NESTED_OBJECTS);
       return result;
    }
 

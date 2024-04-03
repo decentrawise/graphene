@@ -18,7 +18,7 @@ BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
 { try {
    // Check current default council
    // By default chain is configured with INITIAL_COUNCIL_COUNT=9 members
-   const auto &delegates = db.get_global_properties().active_delegates;
+   const auto &delegates = db.get_global_properties().council_delegates;
    const auto &council = council_account(db);
 
    BOOST_CHECK_EQUAL(delegates.size(), INITIAL_COUNCIL_COUNT);
@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
    set_expiration(db, trx);
 
    // Check that council not changed, votes absent
-   const auto &delegates_after_maint = db.get_global_properties().active_delegates;
+   const auto &delegates_after_maint = db.get_global_properties().council_delegates;
    const auto &council_after_maint = council_account(db);
    BOOST_CHECK_EQUAL(delegates_after_maint.size(), INITIAL_COUNCIL_COUNT);
    BOOST_CHECK_EQUAL(council_after_maint.active.num_auths(), 0);
@@ -45,10 +45,10 @@ BOOST_FIXTURE_TEST_CASE( council_account_initialization_test, database_fixture )
    BOOST_CHECK_LT(council_after_maint_with_stake.active.num_auths(), INITIAL_COUNCIL_COUNT);
 
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-   const auto &delegates_after_maint_and_init = db.get_global_properties().active_delegates;
+   const auto &delegates_after_maint_and_init = db.get_global_properties().council_delegates;
    const auto &council_after_maint_and_init = council_account(db);
    BOOST_CHECK_EQUAL(delegates_after_maint_and_init.size(), INITIAL_COUNCIL_COUNT);
    BOOST_CHECK_EQUAL(council_after_maint_and_init.active.num_auths(), INITIAL_COUNCIL_COUNT);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(put_my_validators)
 
       // Check current default validators, default chain is configured with 9 validators
       auto validators = db.get_global_properties().block_producers;
-      BOOST_CHECK_EQUAL(validators.size(), INITIAL_VALIDATOR_COUNT);
+      BOOST_CHECK_EQUAL(validators.size(), INITIAL_PRODUCER_COUNT);
       BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 1u);
       BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 2u);
       BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 3u);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(put_my_validators)
 
       // Check my validators are now in control of the system
       validators = db.get_global_properties().block_producers;
-      BOOST_CHECK_EQUAL(validators.size(), INITIAL_VALIDATOR_COUNT);
+      BOOST_CHECK_EQUAL(validators.size(), INITIAL_PRODUCER_COUNT);
       BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 16u);
       BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 17u);
       BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 18u);
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(put_my_delegates)
       };
 
       // Check current default council, default chain is configured with 9 delegates
-      auto delegates = db.get_global_properties().active_delegates;
+      auto delegates = db.get_global_properties().council_delegates;
 
       BOOST_CHECK_EQUAL(delegates.size(), INITIAL_COUNCIL_COUNT);
       BOOST_CHECK_EQUAL(delegates.begin()[0].instance.value, 0u);
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(put_my_delegates)
 
             op.new_options->votes.clear();
             op.new_options->votes.insert(delegate.second(db).vote_id);
-            op.new_options->num_council = 1;
+            op.new_options->num_delegates = 1;
 
             trx.operations.push_back(op);
             sign(trx, private_keys.at(c));
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(put_my_delegates)
       generate_block();
 
       // Check my validators are now in control of the system
-      delegates = db.get_global_properties().active_delegates;
+      delegates = db.get_global_properties().council_delegates;
       std::sort(delegates.begin(), delegates.end());
 
       BOOST_CHECK_EQUAL(delegates.size(), INITIAL_COUNCIL_COUNT);

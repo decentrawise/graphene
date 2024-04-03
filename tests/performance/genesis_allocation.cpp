@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( genesis_and_persistence_bench )
             BOOST_CHECK(db.get_balance(account_id_type(i), asset_id_type()).amount == 0);
 
          int blocks_out = 0;
-         db.generate_block( db.get_slot_time( 1 ), db.get_scheduled_validator( 1 ), validator_priv_key, ~0 );
+         db.generate_block( db.get_slot_time( 1 ), db.get_scheduled_producer( 1 ), validator_priv_key, ~0 );
 
          start_time = fc::time_point::now();
          transfer_operation top;
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( genesis_and_persistence_bench )
             top.to = account_id_type(i + 11);
             trx.operations.push_back( top );
             db.push_transaction(trx, ~graphene::chain::database::skip_transaction_dupe_check);
-            db.generate_block( db.get_slot_time( 1 ), db.get_scheduled_validator( 1 ), validator_priv_key,
+            db.generate_block( db.get_slot_time( 1 ), db.get_scheduled_producer( 1 ), validator_priv_key,
                                ~graphene::chain::database::skip_transaction_dupe_check );
          }
          ilog("Pushed ${c} blocks (1 op each, no validation) in ${t} milliseconds.",
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE( genesis_and_persistence_bench )
                 graphene::chain::database::skip_transaction_signatures |
                 graphene::chain::database::skip_transaction_dupe_check |
                 graphene::chain::database::skip_tapos_check |
-                graphene::chain::database::skip_validator_schedule_check;
+                graphene::chain::database::skip_producer_schedule_check;
 
          auto start_time = fc::time_point::now();
          wlog( "about to start reindex..." );
