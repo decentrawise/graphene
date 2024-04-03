@@ -205,10 +205,10 @@ public:
 };
 
 ///////////////////////////////
-// Cli Wallet Fixture
+// Wallet Fixture
 ///////////////////////////////
 
-struct cli_fixture
+struct wallet_fixture
 {
    class dummy
    {
@@ -226,14 +226,14 @@ struct cli_fixture
    client_connection con;
    std::vector<std::string> nathan_keys;
 
-   cli_fixture() :
+   wallet_fixture() :
       server_port_number(0),
       app_dir( graphene::utilities::temp_directory_path() ),
       app1( start_application(app_dir, server_port_number) ),
       con( app1, app_dir, server_port_number ),
       nathan_keys( {"5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"} )
    {
-      BOOST_TEST_MESSAGE("Setup cli_wallet::boost_fixture_test_case");
+      BOOST_TEST_MESSAGE("Setup wallet_wallet::boost_fixture_test_case");
 
       using namespace graphene::chain;
       using namespace graphene::app;
@@ -254,9 +254,9 @@ struct cli_fixture
       }
    }
 
-   ~cli_fixture()
+   ~wallet_fixture()
    {
-      BOOST_TEST_MESSAGE("Cleanup cli_wallet::boost_fixture_test_case");
+      BOOST_TEST_MESSAGE("Cleanup wallet_wallet::boost_fixture_test_case");
    }
 };
 
@@ -267,7 +267,7 @@ struct cli_fixture
 ////////////////
 // Start a server and connect using the same calls as the CLI
 ////////////////
-BOOST_FIXTURE_TEST_CASE( cli_connect, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_connect, wallet_fixture )
 {
    BOOST_TEST_MESSAGE("Testing wallet connection.");
 }
@@ -276,13 +276,13 @@ BOOST_FIXTURE_TEST_CASE( cli_connect, cli_fixture )
 // Start a server and connect using the same calls as the CLI
 // Quit wallet and be sure that file was saved correctly
 ////////////////
-BOOST_FIXTURE_TEST_CASE( cli_quit, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_quit, wallet_fixture )
 {
    BOOST_TEST_MESSAGE("Testing wallet connection and quit command.");
    BOOST_CHECK_THROW( con.wallet_api_ptr->quit(), fc::canceled_exception );
 }
 
-BOOST_FIXTURE_TEST_CASE( upgrade_nathan_account, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( upgrade_nathan_account, wallet_fixture )
 {
    try
    {
@@ -314,7 +314,7 @@ BOOST_FIXTURE_TEST_CASE( upgrade_nathan_account, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( create_new_account, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( create_new_account, wallet_fixture )
 {
    try
    {
@@ -346,7 +346,7 @@ BOOST_FIXTURE_TEST_CASE( create_new_account, cli_fixture )
 // Vote for two validators, and make sure they both stay there
 // after a maintenance block
 ///////////////////////
-BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_validators, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_vote_for_2_validators, wallet_fixture )
 {
    try
    {
@@ -392,7 +392,7 @@ BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_validators, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( cli_get_signed_transaction_signers, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_get_signed_transaction_signers, wallet_fixture )
 {
    try
    {
@@ -428,7 +428,7 @@ BOOST_FIXTURE_TEST_CASE( cli_get_signed_transaction_signers, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( cli_get_available_transaction_signers, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_get_available_transaction_signers, wallet_fixture )
 {
    try
    {
@@ -483,7 +483,7 @@ BOOST_FIXTURE_TEST_CASE( cli_get_available_transaction_signers, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( cli_cant_get_signers_from_modified_transaction, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_cant_get_signers_from_modified_transaction, wallet_fixture )
 {
    try
    {
@@ -522,7 +522,7 @@ BOOST_FIXTURE_TEST_CASE( cli_cant_get_signers_from_modified_transaction, cli_fix
 // Start a server and connect using the same calls as the CLI
 // Set a voting proxy and be assured that it sticks
 ///////////////////
-BOOST_FIXTURE_TEST_CASE( cli_set_voting_proxy, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_set_voting_proxy, wallet_fixture )
 {
    try {
       INVOKE(create_new_account);
@@ -544,7 +544,7 @@ BOOST_FIXTURE_TEST_CASE( cli_set_voting_proxy, cli_fixture )
 ///////////////////
 // Test blind transactions and mantissa length of range proofs.
 ///////////////////
-BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_confidential_tx_test, wallet_fixture )
 {
    using namespace graphene::wallet;
    try {
@@ -633,7 +633,7 @@ BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
 /******
  * Check account history pagination
  */
-BOOST_FIXTURE_TEST_CASE( account_history_pagination, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( account_history_pagination, wallet_fixture )
 {
    try
    {
@@ -674,7 +674,7 @@ BOOST_FIXTURE_TEST_CASE( account_history_pagination, cli_fixture )
 // Create a multi-sig account and verify that only when all signatures are
 // signed, the transaction could be broadcast
 ///////////////////////
-BOOST_AUTO_TEST_CASE( cli_multisig_transaction )
+BOOST_AUTO_TEST_CASE( wallet_multisig_transaction )
 {
    using namespace graphene::chain;
    using namespace graphene::app;
@@ -808,7 +808,7 @@ graphene::wallet::plain_keys decrypt_keys( const std::string& password, const ve
 }
 
 BOOST_AUTO_TEST_CASE( saving_keys_wallet_test ) {
-   cli_fixture cli;
+   wallet_fixture cli;
 
    cli.con.wallet_api_ptr->import_balance( "nathan", cli.nathan_keys, true );
    cli.con.wallet_api_ptr->upgrade_account( "nathan", true );
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE( saving_keys_wallet_test ) {
 // Start a server and connect using the same calls as the CLI
 // Create an HTLC
 ///////////////////////
-BOOST_AUTO_TEST_CASE( cli_create_htlc )
+BOOST_AUTO_TEST_CASE( wallet_create_htlc )
 {
    using namespace graphene::chain;
    using namespace graphene::app;
@@ -1046,7 +1046,7 @@ static string encapsulate( const graphene::wallet::signed_message& msg )
 /******
  * Check signing/verifying a message with a memo key
  */
-BOOST_FIXTURE_TEST_CASE( cli_sign_message, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_sign_message, wallet_fixture )
 { try {
    const auto nathan_priv = *wif_to_key( nathan_keys[0] );
    const public_key_type nathan_pub( nathan_priv.get_public_key() );

@@ -84,7 +84,7 @@ void setup_logging(string console_level, bool file_logger, string file_level, st
    // file logger
    if(file_logger) {
       fc::path data_dir;
-      fc::path log_dir = data_dir / "cli_wallet_logs";
+      fc::path log_dir = data_dir / "wallet_logs";
       fc::file_appender::config ac;
       ac.filename             = log_dir / file_name;
       ac.flush                = true;

@@ -121,11 +121,11 @@ You can run the program with `--help` parameter to see more info:
 
 ### Using Command-Line Wallet
 
-Stay on `graphene/build` directory before you run the below `cli_wallet` command
+Stay on `graphene/build` directory before you run the below `wallet` command
 
-    ./programs/cli_wallet/cli_wallet
+    ./programs/wallet/wallet
 
-**IMPORTANT:** The `cli_wallet` or API interfaces to the node wouldn't be fully functional unless the node is fully synchronized with the blockchain. The `cli_wallet` command `info` will show result `head_block_age` which will tell you how far you are from the live current block of the blockchain.
+**IMPORTANT:** The `wallet` or API interfaces to the node wouldn't be fully functional unless the node is fully synchronized with the blockchain. The `wallet` command `info` will show result `head_block_age` which will tell you how far you are from the live current block of the blockchain.
 
 To check your current block:
 
@@ -182,7 +182,7 @@ Corresponding documentation can be found in the [Doxygen documentation](https://
 
 You can run the program with `--help` parameter to see more info:
 
-    ./programs/cli_wallet/cli_wallet --help
+    ./programs/wallet/wallet --help
 
 There is also some info in the [Wiki](https://github.com/decentrawise/graphene/wiki/CLI-Wallet-Cookbook).
 
@@ -237,11 +237,11 @@ Corresponding documentation can be found in Doxygen:
 
 ### Wallet API
 
-The `cli_wallet` program can also be configured to serve **all of its commands** as APIs, known as *wallet API*.
+The `wallet` program can also be configured to serve **all of its commands** as APIs, known as *wallet API*.
 
-Start `cli_wallet` with RPC connection enabled:
+Start `wallet` with RPC connection enabled:
 
-    $ ./programs/cli_wallet/cli_wallet --rpc-http-endpoint=127.0.0.1:8093
+    $ ./programs/wallet/wallet --rpc-http-endpoint=127.0.0.1:8093
 
 Access the wallet API using an HTTP client:
 
@@ -251,7 +251,7 @@ Access the wallet API using an HTTP client:
 Note: The syntax to access wallet API is a bit different than accessing node API.
 
 **Important:**
-* When RPC connection is enabled for `cli_wallet`, sensitive data E.G. private keys which is accessible via commands will be accessible via RPC too. It is recommended that only open network connection to localhost or trusted addresses E.G. configure a firewall.
+* When RPC connection is enabled for `wallet`, sensitive data E.G. private keys which is accessible via commands will be accessible via RPC too. It is recommended that only open network connection to localhost or trusted addresses E.G. configure a firewall.
 * When using wallet API, sensitive data E.G. the wallet password and private keys is transmitted as plain text, thus may be vulnerable to network sniffing. It is recommended that only use wallet API with localhost, or in a clean network, and / or use `--rpc-tls-endpoint` parameter to only serve wallet API via secure connections.
 
 
@@ -325,10 +325,10 @@ FAQ
     output should look like this:
         `signed_transaction transfer(string from, string to, string amount, string asset_symbol, string memo, bool broadcast)`
 
-- Is there a way to allow external program to drive `cli_wallet` via websocket, JSONRPC, or HTTP?
+- Is there a way to allow external program to drive `wallet` via websocket, JSONRPC, or HTTP?
 
     Yes. External programs may connect to the command-line wallet and make its calls over a websockets API. To do this, run the wallet in
-    server mode, i.e. `cli_wallet -H "127.0.0.1:9999"` and then have the external program connect to it over the specified port
+    server mode, i.e. `wallet -H "127.0.0.1:9999"` and then have the external program connect to it over the specified port
     (in this example, port 9999). Please check the ["Using Built-In APIs"](#using-built-in-apis) section for more info.
 
 - Is there a way to access methods which require login over HTTP?
@@ -369,7 +369,7 @@ FAQ
 
     You need to follow the instructions in the ["Accessing restrictable node API sets"](#accessing-restrictable-node-api-sets) section to
     allow a username/password access to the `network_node` API set.  Then you need
-    to pass the username/password to the `cli_wallet` on the command line.
+    to pass the username/password to the `wallet` on the command line.
 
     It's set up this way so that the default configuration is secure even if the RPC port is
     publicly accessible.  It's fine if your `graphened` allows the general public to query

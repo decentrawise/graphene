@@ -447,7 +447,7 @@ namespace graphene { namespace app {
                                                                      const std::vector<char>& proof ) const;
 
          /**
-          * @brief Gets "range proof" info. The cli_wallet includes functionality for sending blind transfers
+          * @brief Gets "range proof" info. The wallet includes functionality for sending blind transfers
           * in which the values of the input and outputs amounts are “blinded.”
           * In the case where a transaction produces two or more outputs, (e.g. an amount to the intended
           * recipient plus “change” back to the sender),
