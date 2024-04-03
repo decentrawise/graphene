@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( genesis_and_persistence_bench )
       {
          auto name = "init"+fc::to_string(i);
          genesis_state.initial_accounts.emplace_back(name, validator_pub_key, validator_pub_key, true);
-         genesis_state.initial_council_candidates.push_back({name});
+         genesis_state.initial_delegate_candidates.push_back({name});
          genesis_state.initial_validator_candidates.push_back({name, validator_pub_key});
       }
 

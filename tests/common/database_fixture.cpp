@@ -136,7 +136,7 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
       auto name = "init"+fc::to_string(i);
       fixture.genesis_state.initial_accounts.emplace_back( name, fixture.init_account_pub_key,
                                                            fixture.init_account_pub_key, true);
-      fixture.genesis_state.initial_council_candidates.push_back({name});
+      fixture.genesis_state.initial_delegate_candidates.push_back({name});
       fixture.genesis_state.initial_validator_candidates.push_back({ name, fixture.init_account_pub_key });
    }
    fixture.genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();

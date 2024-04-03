@@ -350,7 +350,7 @@
       "block_producer_key": "GPH6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
     }
   ],
-  "initial_council_candidates": [{
+  "initial_delegate_candidates": [{
       "owner_name": "init0"
     },{
       "owner_name": "init1"

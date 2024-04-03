@@ -49,7 +49,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_work
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type, BOOST_PP_SEQ_NIL,
            (initial_timestamp)(max_core_supply)(initial_parameters)(initial_accounts)(initial_assets)
            (initial_balances)(initial_vesting_balances)(initial_block_producers)(initial_validator_candidates)
-           (initial_council_candidates)(initial_worker_candidates)
+           (initial_delegate_candidates)(initial_worker_candidates)
            (immutable_parameters))
 
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_account_type )

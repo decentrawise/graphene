@@ -488,8 +488,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    // Create initial delegates
-   std::for_each( genesis_state.initial_council_candidates.begin(),
-                  genesis_state.initial_council_candidates.end(),
+   std::for_each( genesis_state.initial_delegate_candidates.begin(),
+                  genesis_state.initial_delegate_candidates.end(),
                   [this,&get_account_id,&genesis_eval_state](const auto& member) {
       delegate_create_operation op;
       op.delegate_account = get_account_id(member.owner_name);

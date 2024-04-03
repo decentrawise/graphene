@@ -68,7 +68,7 @@ def main():
     for validator in genesis["initial_validator_candidates"]:
         owner_name = validator["owner_name"]
         validator["owner_name"] = name_map.get(owner_name, owner_name)
-    for council in genesis["initial_council_candidates"]:
+    for council in genesis["initial_delegate_candidates"]:
         owner_name = member["owner_name"]
         member["owner_name"] = name_map.get(owner_name, owner_name)
     for worker in genesis["initial_worker_candidates"]:

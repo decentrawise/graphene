@@ -54,7 +54,7 @@ def main():
        "initial_block_producers" : opts.num,
        "initial_worker_candidates" : [],
        "initial_validator_candidates" : wit_wits,
-       "initial_council_candidates" : council,
+       "initial_delegate_candidates" : council,
         }
     }
 

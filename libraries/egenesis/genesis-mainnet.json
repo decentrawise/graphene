@@ -265,7 +265,7 @@
       "amount": "1000000000000000"
     }
   ],
-  "initial_council_candidates": [
+  "initial_delegate_candidates": [
     { "owner_name": "init0" },
     { "owner_name": "init1" },
     { "owner_name": "init2" },

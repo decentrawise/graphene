@@ -39,7 +39,7 @@ genesis_state_type make_genesis() {
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key(),
                                                   true);
-      genesis_state.initial_council_candidates.push_back({name});
+      genesis_state.initial_delegate_candidates.push_back({name});
       genesis_state.initial_validator_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
