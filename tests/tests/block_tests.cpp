@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE( undo_block )
    }
 }
 
-BOOST_AUTO_TEST_CASE( change_signing_key_test )
+BOOST_AUTO_TEST_CASE( change_block_producer_key_test )
 {
    try {
       fc::temp_directory data_dir( graphene::utilities::temp_directory_path() );
@@ -234,11 +234,11 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
       for( uint32_t i = 0; i <= 11; ++i ) // 11 init validators and 0 is reserved
          validators.insert( validator_id_type(i) );
 
-      auto change_signing_key = [&init_account_priv_key]( database& db, validator_id_type wit, public_key_type new_signing_key ) {
+      auto change_block_producer_key = [&init_account_priv_key]( database& db, validator_id_type wit, public_key_type new_block_producer_key ) {
          validator_update_operation wuop;
          wuop.validator_account = wit(db).validator_account;
          wuop.validator = wit;
-         wuop.new_signing_key = new_signing_key;
+         wuop.new_block_producer_key = new_block_producer_key;
          signed_transaction wu_trx;
          wu_trx.operations.push_back( wuop );
          wu_trx.set_reference_block( db.head_block_id() );
@@ -267,8 +267,8 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          {
             auto now = db.get_slot_time(1);
             auto next_validator = db.get_scheduled_producer( 1 );
-            public_key_type current_key = next_validator(db).signing_key;
-            change_signing_key( db, next_validator, new_key.get_public_key() );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            change_block_producer_key( db, next_validator, new_key.get_public_key() );
             idump( (i)(now)(next_validator) );
             auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
@@ -287,8 +287,8 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          {
             auto now = db.get_slot_time(1);
             auto next_validator = db.get_scheduled_producer( 1 );
-            public_key_type current_key = next_validator(db).signing_key;
-            change_signing_key( db, next_validator, new_key.get_public_key() );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            change_block_producer_key( db, next_validator, new_key.get_public_key() );
             idump( (i)(now)(next_validator) );
             auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          {
             auto now = db.get_slot_time(1);
             auto next_validator = db.get_scheduled_producer( 1 );
-            public_key_type current_key = next_validator(db).signing_key;
+            public_key_type current_key = next_validator(db).block_producer_key;
             idump( (i)(now)(next_validator) );
             auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          {
             auto now = db.get_slot_time(1);
             auto next_validator = db.get_scheduled_producer( 1 );
-            public_key_type current_key = next_validator(db).signing_key;
-            change_signing_key( db, next_validator, new_key.get_public_key() );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            change_block_producer_key( db, next_validator, new_key.get_public_key() );
             idump( (i)(now)(next_validator) );
             auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );

@@ -450,7 +450,7 @@ graphene::chain::genesis_state_type application_impl::initialize_genesis_state()
          {
             std::string init_key = _options->at( "dbg-init-key" ).as<string>();
             FC_ASSERT( genesis.initial_validator_candidates.size() >= genesis.initial_block_producers );
-            genesis.override_validator_signing_keys( init_key );
+            genesis.override_validator_producer_keys( init_key );
             modified_genesis = true;
             ilog("Set init validator key to ${init_key}", ("init_key", init_key));
          }

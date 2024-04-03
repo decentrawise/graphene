@@ -207,7 +207,7 @@ struct signed_block_with_info : public signed_block
    explicit signed_block_with_info( const signed_block& block );
 
    block_id_type block_id;
-   public_key_type signing_key;
+   public_key_type block_producer_key;
    vector< transaction_id_type > transaction_ids;
 };
 
@@ -346,7 +346,7 @@ FC_REFLECT( graphene::wallet::worker_vote_delta,
 )
 
 FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::signed_block),
-   (block_id)(signing_key)(transaction_ids) )
+   (block_id)(block_producer_key)(transaction_ids) )
 
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
    (allowed_withdraw)(allowed_withdraw_time) )

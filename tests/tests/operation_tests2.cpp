@@ -898,14 +898,14 @@ BOOST_AUTO_TEST_CASE( validator_create )
                 && *nathan_itr->second == nathan_private_key.get_public_key() );
 
    // generate a new key
-   fc::ecc::private_key new_signing_key = fc::ecc::private_key::regenerate(fc::digest("nathan_new"));
+   fc::ecc::private_key new_block_producer_key = fc::ecc::private_key::regenerate(fc::digest("nathan_new"));
 
    // update nathan's block signing key
    {
       validator_update_operation wuop;
       wuop.validator_account = nathan_id;
       wuop.validator = nathan_validator_id;
-      wuop.new_signing_key = new_signing_key.get_public_key();
+      wuop.new_block_producer_key = new_block_producer_key.get_public_key();
       signed_transaction wu_trx;
       wu_trx.operations.push_back( wuop );
       set_expiration( db, wu_trx );
@@ -923,7 +923,7 @@ BOOST_AUTO_TEST_CASE( validator_create )
    // nathan's key in the cache should have changed to new key
    nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
-                && *nathan_itr->second == new_signing_key.get_public_key() );
+                && *nathan_itr->second == new_block_producer_key.get_public_key() );
 
    // undo the block
    db.pop_block();
@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE( validator_create )
    // nathan's key in the cache should still be new key, since validator plugin doesn't get notified on popped block
    nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
-                && *nathan_itr->second == new_signing_key.get_public_key() );
+                && *nathan_itr->second == new_block_producer_key.get_public_key() );
 
    // generate another block
    generate_block(skip);

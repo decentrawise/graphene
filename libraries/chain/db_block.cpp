@@ -229,7 +229,7 @@ void database::update_validators( fork_item& fork_entry )const
    for( size_t i = 0; i < wso.current_shuffled_producers.size(); ++i )
    {
        const auto& validator = wso.current_shuffled_producers[i](*this);
-       fork_entry.scheduled_validators->emplace_back( wso.current_shuffled_producers[i], validator.signing_key );
+       fork_entry.scheduled_validators->emplace_back( wso.current_shuffled_producers[i], validator.block_producer_key );
    }
 }
 
@@ -390,7 +390,7 @@ signed_block database::_generate_block(
       // _pending_tx_session is the result of applying _pending_tx.
       // In this case, when the node received a new block,
       // the push_block() call will re-create the _pending_tx_session.
-      FC_ASSERT( validator_id(*this).signing_key == block_signing_private_key.get_public_key() );
+      FC_ASSERT( validator_id(*this).block_producer_key == block_signing_private_key.get_public_key() );
    }
 
    static const size_t max_partial_block_header_size = ( fc::raw::pack_size( signed_block_header() )
@@ -747,7 +747,7 @@ const validator_object& database::validate_block_header( uint32_t skip, const si
    const validator_object& validator = next_block.validator(*this);
 
    if( 0 == (skip&skip_validator_signature) )
-      FC_ASSERT( next_block.validate_signee( validator.signing_key ) );
+      FC_ASSERT( next_block.validate_signee( validator.block_producer_key ) );
 
    if( 0 == (skip&skip_producer_schedule_check) )
    {

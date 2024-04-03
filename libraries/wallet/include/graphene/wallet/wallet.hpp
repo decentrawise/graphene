@@ -390,12 +390,12 @@ class wallet_api
        *
        * Sign the transaction in a transaction builder and optionally broadcast to the network.
        * @param transaction_handle handle of the transaction builder
-       * @param signing_keys Keys that must be used when signing the transaction
+       * @param block_producer_keys Keys that must be used when signing the transaction
        * @param broadcast whether to broadcast the signed transaction to the network
        * @return a signed transaction
        */
       signed_transaction sign_builder_transaction2( transaction_handle_type transaction_handle,
-                                            const vector<public_key_type>& signing_keys = vector<public_key_type>(),
+                                            const vector<public_key_type>& block_producer_keys = vector<public_key_type>(),
                                             bool broadcast = true )const;
 
       /** Broadcast signed transaction
@@ -1403,13 +1403,13 @@ class wallet_api
        * @param validator_name The name of the validator's owner account.
        *                     Also accepts the ID of the owner account or the ID of the validator.
        * @param url Same as for create_validator.  The empty string makes it remain the same.
-       * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
+       * @param block_producer_key The new block signing public key.  The empty string makes it remain the same.
        * @param broadcast true if you wish to broadcast the transaction.
        * @return the signed transaction
        */
       signed_transaction update_validator( const string& validator_name,
                                          const string& url,
-                                         const string& block_signing_key,
+                                         const string& block_producer_key,
                                          bool broadcast = false )const;
 
 
@@ -1625,12 +1625,12 @@ class wallet_api
        * the transaction with the inferred necessary keys and the explicitly provided keys,
        * and optionally broadcasts the transaction
        * @param tx the transaction to be signed
-       * @param signing_keys Keys that must be used when signing the transaction
+       * @param block_producer_keys Keys that must be used when signing the transaction
        * @param broadcast true if you wish to broadcast the transaction
        * @return the signed version of the transaction
        */
       signed_transaction sign_transaction2( const signed_transaction& tx,
-                                            const vector<public_key_type>& signing_keys = vector<public_key_type>(),
+                                            const vector<public_key_type>& block_producer_keys = vector<public_key_type>(),
                                             bool broadcast = true )const;
 
 

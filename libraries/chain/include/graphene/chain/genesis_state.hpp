@@ -65,7 +65,7 @@ struct genesis_state_type {
    struct initial_validator_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
-      public_key_type block_signing_key;
+      public_key_type block_producer_key;
    };
    struct initial_delegate_type {
       /// Must correspond to one of the initial accounts
@@ -87,7 +87,7 @@ struct genesis_state_type {
    vector<initial_vesting_balance_type>     initial_vesting_balances;
    uint64_t                                 initial_block_producers = GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT;
    vector<initial_validator_type>           initial_validator_candidates;
-   vector<initial_delegate_type>    initial_council_candidates;
+   vector<initial_delegate_type>            initial_council_candidates;
    vector<initial_worker_type>              initial_worker_candidates;
 
    /**
@@ -102,8 +102,8 @@ struct genesis_state_type {
     */
    chain_id_type compute_chain_id() const;
 
-   /// Method to override initial validator signing keys for debug
-   void override_validator_signing_keys( const std::string& new_key );
+   /// Method to override initial block producer keys for debug
+   void override_validator_producer_keys( const std::string& new_key );
 
 };
 

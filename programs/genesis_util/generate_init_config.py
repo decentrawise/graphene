@@ -38,7 +38,7 @@ def main():
         prod_str = subprocess.check_output(["programs/genesis_util/get_dev_key", opts.secret, istr]).decode("utf-8")
         prod = json.loads(prod_str)
         out_wits.append('validator-id = "1.6.'+str(opts.validator+i)+'"\n')
-        out_keys.append("private-key = "+json.dumps([prod[0]["public_key"], prod[0]["private_key"]])+"\n")
+        out_keys.append("block-producer-keys = "+json.dumps([prod[0]["public_key"], prod[0]["private_key"]])+"\n")
 
     out_data = "".join(out_wits + ["\n"] + out_keys)
 

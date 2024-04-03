@@ -174,7 +174,7 @@ namespace graphene { namespace wallet { namespace detail {
 
       validator_create_operation validator_create_op;
       validator_create_op.validator_account = validator_account.id;
-      validator_create_op.block_signing_key = validator_public_key;
+      validator_create_op.block_producer_key = validator_public_key;
       validator_create_op.url = url;
 
       if (_remote_db->get_validator_by_account(std::string(validator_create_op.validator_account)))
@@ -191,7 +191,7 @@ namespace graphene { namespace wallet { namespace detail {
    } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
 
    signed_transaction wallet_api_impl::update_validator(string validator_name, string url,
-         string block_signing_key, bool broadcast )
+         string block_producer_key, bool broadcast )
    { try {
       validator_object validator = get_validator(validator_name);
       account_object validator_account = get_account( validator.validator_account );
@@ -201,8 +201,8 @@ namespace graphene { namespace wallet { namespace detail {
       validator_update_op.validator_account = validator_account.id;
       if( url != "" )
          validator_update_op.new_url = url;
-      if( block_signing_key != "" )
-         validator_update_op.new_signing_key = public_key_type( block_signing_key );
+      if( block_producer_key != "" )
+         validator_update_op.new_block_producer_key = public_key_type( block_producer_key );
 
       signed_transaction tx;
       tx.operations.push_back( validator_update_op );
@@ -210,7 +210,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (validator_name)(url)(block_signing_key)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (validator_name)(url)(block_producer_key)(broadcast) ) }
 
    signed_transaction wallet_api_impl::create_worker( string owner_account, time_point_sec work_begin_date,
          time_point_sec work_end_date, share_type daily_pay, string name, string url,

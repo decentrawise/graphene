@@ -135,7 +135,7 @@ int main( int argc, char** argv )
             std::cerr << "need " << genesis.initial_block_producers << " init accounts as first entries in initial_block_producers\n";
             return 1;
          }
-         wit.block_signing_key = get_dev_key( "wit-block-signing-", i );
+         wit.block_producer_key = get_dev_key( "wit-block-signing-", i );
          wit_acct.owner_key = get_dev_key( "wit-owner-", i );
          wit_acct.active_key = get_dev_key( "wit-active-", i );
       }

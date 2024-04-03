@@ -309,12 +309,12 @@ namespace graphene { namespace wallet { namespace detail {
    }
 
    signed_transaction wallet_api_impl::sign_transaction2( signed_transaction tx,
-                                                         const vector<public_key_type>& signing_keys, bool broadcast)
+                                                         const vector<public_key_type>& block_producer_keys, bool broadcast)
    {
       set<public_key_type> approving_key_set = get_owned_required_keys(tx);
 
       // Add any explicit keys to the approving_key_set
-      for (const public_key_type& explicit_key : signing_keys) {
+      for (const public_key_type& explicit_key : block_producer_keys) {
          approving_key_set.insert(explicit_key);
       }
 

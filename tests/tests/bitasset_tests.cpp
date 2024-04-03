@@ -29,11 +29,11 @@ BOOST_FIXTURE_TEST_SUITE( bitasset_tests, database_fixture )
 /*****
  * @brief helper method to change a backing asset to a new one
  * @param fixture the database_fixture
- * @param signing_key the signer
+ * @param block_producer_key the signer
  * @param asset_id_to_update asset to update
  * @param new_backing_asset_id the new backing asset
  */
-void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key& signing_key,
+void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key& block_producer_key,
       asset_id_type asset_id_to_update, asset_id_type new_backing_asset_id)
 {
    try
@@ -44,7 +44,7 @@ void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key&
       ba_op.issuer = asset_to_update.issuer;
       ba_op.new_options.short_backing_asset = new_backing_asset_id;
       fixture.trx.operations.push_back(ba_op);
-      fixture.sign(fixture.trx, signing_key);
+      fixture.sign(fixture.trx, block_producer_key);
       PUSH_TX(fixture.db, fixture.trx, ~0);
       fixture.generate_block();
       fixture.trx.clear();
@@ -59,11 +59,11 @@ void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key&
 /******
  * @brief helper method to turn validator_fed_asset on and off
  * @param fixture the database_fixture
- * @param signing_key signer
+ * @param block_producer_key signer
  * @param asset_id asset we want to change
  * @param validator_fed true if you want this to be a validator fed asset
  */
-void change_asset_options(database_fixture& fixture, const fc::ecc::private_key& signing_key,
+void change_asset_options(database_fixture& fixture, const fc::ecc::private_key& block_producer_key,
       asset_id_type asset_id, bool validator_fed)
 {
    asset_update_operation op;
@@ -81,7 +81,7 @@ void change_asset_options(database_fixture& fixture, const fc::ecc::private_key&
       op.new_options.flags &= ~validator_fed_asset; // we don't care about the delegate flag here
    }
    fixture.trx.operations.push_back(op);
-   fixture.sign( fixture.trx, signing_key );
+   fixture.sign( fixture.trx, block_producer_key );
    PUSH_TX( fixture.db, fixture.trx, ~0 );
    fixture.generate_block();
    fixture.trx.clear();
@@ -91,11 +91,11 @@ void change_asset_options(database_fixture& fixture, const fc::ecc::private_key&
 /******
  * @brief helper method to change asset issuer
  * @param fixture the database_fixture
- * @param signing_key signer
+ * @param block_producer_key signer
  * @param asset_id asset we want to change
  * @param new_issuer the new issuer for asset
  */
-void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& signing_key,
+void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& block_producer_key,
       asset_id_type asset_id, account_id_type new_issuer)
 {
    asset_update_issuer_operation op;
@@ -104,7 +104,7 @@ void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& 
    op.issuer = obj.issuer;
    op.new_issuer = new_issuer;
    fixture.trx.operations.push_back(op);
-   fixture.sign( fixture.trx, signing_key );
+   fixture.sign( fixture.trx, block_producer_key );
    PUSH_TX( fixture.db, fixture.trx, ~0 );
    fixture.generate_block();
    fixture.trx.clear();
@@ -115,17 +115,17 @@ void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& 
  * @param fixture the database_fixture
  * @param index added to name of the coin
  * @param backing the backing asset
- * @param signing_key the signing key
+ * @param block_producer_key the signing key
  */
 const graphene::chain::asset_object& create_bitasset_backed(graphene::chain::database_fixture& fixture,
-      int index, graphene::chain::asset_id_type backing, const fc::ecc::private_key& signing_key)
+      int index, graphene::chain::asset_id_type backing, const fc::ecc::private_key& block_producer_key)
 {
    // create the coin
    std::string name = "COIN" + std::to_string(index + 1) + "TEST";
    const graphene::chain::asset_object& obj = fixture.create_bitasset(name);
    asset_id_type asset_id = obj.get_id();
    // adjust the backing asset
-   change_backing_asset(fixture, signing_key, asset_id, backing);
+   change_backing_asset(fixture, block_producer_key, asset_id, backing);
    fixture.trx.set_expiration(fixture.db.get_dynamic_global_properties().next_maintenance_time);
    return obj;
 }

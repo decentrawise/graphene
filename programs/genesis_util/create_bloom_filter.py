@@ -37,7 +37,7 @@ def main():
         keys.add(vb["owner"])
 
     for validator in genesis["initial_validator_candidates"]:
-        keys.add(validator["block_signing_key"])
+        keys.add(validator["block_producer_key"])
 
     sys.stderr.write("got {n} distinct keys\n".format(n=len(keys)))
 

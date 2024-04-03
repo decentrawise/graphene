@@ -998,7 +998,7 @@ const validator_object& database_fixture_base::create_validator( const account_o
 { try {
    validator_create_operation op;
    op.validator_account = owner.id;
-   op.block_signing_key = signing_private_key.get_public_key();
+   op.block_producer_key = signing_private_key.get_public_key();
    trx.operations.clear();
    trx.operations.push_back(op);
    trx.validate();
