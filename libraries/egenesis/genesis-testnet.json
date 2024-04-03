@@ -378,47 +378,47 @@
   "initial_vesting_balances": [],
   "initial_validator_candidates": [
     {
-      "block_signing_key": "GPH6Xz7qEiKeoXpmHR7Ddnyvo6p6n8sJQqTKUhf7w9EWd6j8PzNPA",
+      "block_producer_key": "GPH6Xz7qEiKeoXpmHR7Ddnyvo6p6n8sJQqTKUhf7w9EWd6j8PzNPA",
       "owner_name": "init0"
     },
     {
-      "block_signing_key": "GPH5FEDAEJYFHp7Xrm7pNA9Rfj5NCKgZM2cqFhU2zScDW1BXJZYSn",
+      "block_producer_key": "GPH5FEDAEJYFHp7Xrm7pNA9Rfj5NCKgZM2cqFhU2zScDW1BXJZYSn",
       "owner_name": "init1"
     },
     {
-      "block_signing_key": "GPH6ZiYNeTSfmJQPWjiRSyujVyeSnLQH5bNb6VqNhLm1zGQhKDSsH",
+      "block_producer_key": "GPH6ZiYNeTSfmJQPWjiRSyujVyeSnLQH5bNb6VqNhLm1zGQhKDSsH",
       "owner_name": "init2"
     },
     {
-      "block_signing_key": "GPH7DTdFgdASxEgdnMkqwRix3XsoRRC5YTZePp5qvG4vmzzH1nwEV",
+      "block_producer_key": "GPH7DTdFgdASxEgdnMkqwRix3XsoRRC5YTZePp5qvG4vmzzH1nwEV",
       "owner_name": "init3"
     },
     {
-      "block_signing_key": "GPH81b62rrJZNvEtoQAKMywbmLvj1DdcxBqAsedGeXZcR6kZrN5WT",
+      "block_producer_key": "GPH81b62rrJZNvEtoQAKMywbmLvj1DdcxBqAsedGeXZcR6kZrN5WT",
       "owner_name": "init4"
     },
     {
-      "block_signing_key": "GPH8PRTyKDo1aKnupM3mgnHNvLDZUfg4812Bs8K53Tfv3o1yDBsKj",
+      "block_producer_key": "GPH8PRTyKDo1aKnupM3mgnHNvLDZUfg4812Bs8K53Tfv3o1yDBsKj",
       "owner_name": "init5"
     },
     {
-      "block_signing_key": "GPH7QCjvc7jq1gFxw2eJiQNuGbhY6C9Yw596FTvnqkpwrds6iPp3E",
+      "block_producer_key": "GPH7QCjvc7jq1gFxw2eJiQNuGbhY6C9Yw596FTvnqkpwrds6iPp3E",
       "owner_name": "init6"
     },
     {
-      "block_signing_key": "GPH6ZQEFsPmG6jWspNDdZHkehNmPpG7gkSHkphmRZQWaJ2LrcaVSi",
+      "block_producer_key": "GPH6ZQEFsPmG6jWspNDdZHkehNmPpG7gkSHkphmRZQWaJ2LrcaVSi",
       "owner_name": "init7"
     },
     {
-      "block_signing_key": "GPH5sT3moRFDFru8YANYsx7YMQZAePyjgBfJqjTDRDpZZ2pVsUvb5",
+      "block_producer_key": "GPH5sT3moRFDFru8YANYsx7YMQZAePyjgBfJqjTDRDpZZ2pVsUvb5",
       "owner_name": "init8"
     },
     {
-      "block_signing_key": "GPH6u6yieVvikdWe1Mdx7KtBPVMbr7et5HdcBvGFWfVixgc4PEdvA",
+      "block_producer_key": "GPH6u6yieVvikdWe1Mdx7KtBPVMbr7et5HdcBvGFWfVixgc4PEdvA",
       "owner_name": "init9"
     },
     {
-      "block_signing_key": "GPH8N43rNtA69Ljzhr6ziPzeKbnAvk5g4NFa1iJ8X8gEa4UhPLyng",
+      "block_producer_key": "GPH8N43rNtA69Ljzhr6ziPzeKbnAvk5g4NFa1iJ8X8gEa4UhPLyng",
       "owner_name": "init10"
     }
   ],

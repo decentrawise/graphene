@@ -50,11 +50,11 @@ void validator_plugin::plugin_set_program_options(
          ("validator-id,w", bpo::value<vector<string>>()->composing()->multitoken(),
                ("ID of validator controlled by this node (e.g. " + validator_id_example +
                ", quotes are required, may specify multiple times)").c_str())
-         ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
+         ("block-producer-keys", bpo::value<vector<string>>()->composing()->multitoken()->
           DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()),
                 graphene::utilities::key_to_wif(default_priv_key))),
                 "Tuple of [PublicKey, WIF private key] (may specify multiple times)")
-         ("private-key-file", bpo::value<vector<boost::filesystem::path>>()->composing()->multitoken(),
+         ("block-producer-keys-file", bpo::value<vector<boost::filesystem::path>>()->composing()->multitoken(),
           "Path to a file containing tuples of [PublicKey, WIF private key]."
           " The file has to contain exactly one tuple (i.e. private - public key pair) per line."
           " This option may be specified multiple times, thus multiple files can be provided.")
@@ -99,18 +99,18 @@ void validator_plugin::plugin_initialize(const boost::program_options::variables
    _options = &options;
    LOAD_VALUE_SET(options, "validator-id", _validators, chain::validator_id_type);
 
-   if( options.count("private-key") > 0 )
+   if( options.count("block-producer-keys") > 0 )
    {
-      const std::vector<std::string> key_id_to_wif_pair_strings = options["private-key"].as<std::vector<std::string>>();
+      const std::vector<std::string> key_id_to_wif_pair_strings = options["block-producer-keys"].as<std::vector<std::string>>();
       for (const std::string& key_id_to_wif_pair_string : key_id_to_wif_pair_strings)
       {
          add_private_key(key_id_to_wif_pair_string);
       }
    }
-   if (options.count("private-key-file") > 0)
+   if (options.count("block-producer-keys-file") > 0)
    {
       const std::vector<boost::filesystem::path> key_id_to_wif_pair_files =
-            options["private-key-file"].as<std::vector<boost::filesystem::path>>();
+            options["block-producer-keys-file"].as<std::vector<boost::filesystem::path>>();
       for (const boost::filesystem::path& key_id_to_wif_pair_file : key_id_to_wif_pair_files)
       {
          if (fc::exists(key_id_to_wif_pair_file))
@@ -193,7 +193,7 @@ void validator_plugin::refresh_validator_key_cache()
    {
       const chain::validator_object* wit_obj = db.find( wit_id );
       if( wit_obj )
-         _validator_key_cache[wit_id] = wit_obj->signing_key;
+         _validator_key_cache[wit_id] = wit_obj->block_producer_key;
       else
          _validator_key_cache[wit_id] = fc::optional<chain::public_key_type>();
    }

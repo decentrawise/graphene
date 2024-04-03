@@ -44,7 +44,7 @@ def main():
             })
         wit_wits.append({
             "owner_name" : "init"+str(i),
-            "block_signing_key" : prod[0]["public_key"],
+            "block_producer_key" : prod[0]["public_key"],
             })
         council.append({"owner_name" : "init"+str(i)})
     result = {

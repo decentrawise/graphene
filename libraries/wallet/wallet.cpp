@@ -933,10 +933,10 @@ signed_transaction wallet_api::update_worker_votes(
 signed_transaction wallet_api::update_validator(
    const string& validator_name,
    const string& url,
-   const string& block_signing_key,
+   const string& block_producer_key,
    bool broadcast /* = false */ )const
 {
-   return my->update_validator(validator_name, url, block_signing_key, broadcast);
+   return my->update_validator(validator_name, url, block_producer_key, broadcast);
 }
 
 vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( const string& account_name )const
@@ -996,10 +996,10 @@ signed_transaction wallet_api::sign_transaction( const signed_transaction& tx, b
 } FC_CAPTURE_AND_RETHROW( (tx) ) } // GCOVR_EXCL_LINE
 
 signed_transaction wallet_api::sign_transaction2( const signed_transaction& tx,
-                                                  const vector<public_key_type>& signing_keys,
+                                                  const vector<public_key_type>& block_producer_keys,
                                                   bool broadcast /* = false */ )const
 { try {
-   return my->sign_transaction2( tx, signing_keys, broadcast);
+   return my->sign_transaction2( tx, block_producer_keys, broadcast);
 } FC_CAPTURE_AND_RETHROW( (tx) ) } // GCOVR_EXCL_LINE
 
 flat_set<public_key_type> wallet_api::get_transaction_signers( const signed_transaction& tx ) const
@@ -1918,7 +1918,7 @@ vector<account_storage_object> wallet_api::get_account_storage( const string& ac
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block ),
      block_id { id() },
-     signing_key { signee() }
+     block_producer_key { signee() }
 {
    transaction_ids.reserve( transactions.size() );
    for( const processed_transaction& tx : transactions )

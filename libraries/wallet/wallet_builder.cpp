@@ -67,12 +67,12 @@ namespace graphene { namespace wallet { namespace detail {
    }
 
    signed_transaction wallet_api_impl::sign_builder_transaction2(transaction_handle_type
-         transaction_handle, const vector<public_key_type>& signing_keys, bool broadcast)
+         transaction_handle, const vector<public_key_type>& block_producer_keys, bool broadcast)
    {
       FC_ASSERT(_builder_transactions.count(transaction_handle) > 0);
 
       return _builder_transactions[transaction_handle] =
-            sign_transaction2(_builder_transactions[transaction_handle], signing_keys, broadcast);
+            sign_transaction2(_builder_transactions[transaction_handle], block_producer_keys, broadcast);
    }
 
    signed_transaction wallet_api_impl::propose_builder_transaction( transaction_handle_type handle,

@@ -483,7 +483,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                   [this,&get_account_id,&genesis_eval_state](const auto& validator) {
       validator_create_operation op;
       op.validator_account = get_account_id(validator.owner_name);
-      op.block_signing_key = validator.block_signing_key;
+      op.block_producer_key = validator.block_producer_key;
       this->apply_operation(genesis_eval_state, op);
    });
 

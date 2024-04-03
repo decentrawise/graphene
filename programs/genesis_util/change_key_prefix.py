@@ -49,7 +49,7 @@ def main():
         vb["owner"] = convert(vb["owner"])
 
     for validator in genesis["initial_validator_candidates"]:
-        validator["block_signing_key"] = convert(validator["block_signing_key"])
+        validator["block_producer_key"] = convert(validator["block_producer_key"])
 
     if opts.output == "-":
         dump_json( genesis, sys.stdout, opts.pretty )

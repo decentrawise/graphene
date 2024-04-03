@@ -10,12 +10,12 @@ chain_id_type genesis_state_type::compute_chain_id() const
    return initial_chain_id;
 }
 
-void genesis_state_type::override_validator_signing_keys(const std::string &new_key)
+void genesis_state_type::override_validator_producer_keys(const std::string &new_key)
 {
    public_key_type new_pubkey(new_key);
    for (auto &wit : initial_validator_candidates)
    {
-      wit.block_signing_key = new_pubkey;
+      wit.block_producer_key = new_pubkey;
    }
 }
 
@@ -38,7 +38,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_vest
            (owner)(asset_symbol)(amount)(begin_timestamp)(vesting_duration_seconds)(begin_balance))
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_validator_type, BOOST_PP_SEQ_NIL,
-           (owner_name)(block_signing_key))
+           (owner_name)(block_producer_key))
 
 FC_REFLECT_DERIVED_NO_TYPENAME(graphene::chain::genesis_state_type::initial_delegate_type, BOOST_PP_SEQ_NIL,
            (owner_name))

@@ -23,7 +23,7 @@ object_id_type validator_create_evaluator::do_apply( const validator_create_oper
 
    const auto& new_validator_object = _db.create<validator_object>( [&op,&vote_id]( validator_object& obj ){
          obj.validator_account  = op.validator_account;
-         obj.signing_key      = op.block_signing_key;
+         obj.block_producer_key      = op.block_producer_key;
          obj.vote_id          = vote_id;
          obj.url              = op.url;
    });
@@ -45,8 +45,8 @@ void_result validator_update_evaluator::do_apply( const validator_update_operati
       {
          if( op.new_url.valid() )
             wit.url = *op.new_url;
-         if( op.new_signing_key.valid() )
-            wit.signing_key = *op.new_signing_key;
+         if( op.new_block_producer_key.valid() )
+            wit.block_producer_key = *op.new_block_producer_key;
       });
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE

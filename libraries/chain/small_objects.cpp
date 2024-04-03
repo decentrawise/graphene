@@ -132,7 +132,7 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::withdraw_permission_object, (gr
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::validator_object, (graphene::db::object),
                     (validator_account)
                     (last_aslot)
-                    (signing_key)
+                    (block_producer_key)
                     (pay_vb)
                     (vote_id)
                     (total_votes)
