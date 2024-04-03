@@ -32,7 +32,7 @@ namespace graphene { namespace protocol {
       share_type max_market_fee = GRAPHENE_MAX_SHARE_SUPPLY;
 
       /// The flags which the issuer has permission to update. See @ref asset_issuer_permission_flags
-      uint16_t issuer_permissions = UIA_ASSET_ISSUER_PERMISSION_MASK;
+      uint16_t issuer_permissions = USER_ASSET_ISSUER_PERMISSION_MASK;
       /// The currently active flags on this permission. See @ref asset_issuer_permission_flags
       uint16_t flags = 0;
 

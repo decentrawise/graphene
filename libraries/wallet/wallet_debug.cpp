@@ -2,7 +2,7 @@
 
 namespace graphene { namespace wallet { namespace detail {
 
-   void wallet_api_impl::dbg_make_uia(string creator, string symbol)
+   void wallet_api_impl::dbg_make_ua(string creator, string symbol)
    {
       asset_options opts;
       opts.flags &= (uint16_t)( ~(white_list | disable_force_settle | global_settle) );

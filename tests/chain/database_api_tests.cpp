@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE( get_required_signatures_partially_signed_or_not )
 
 BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
 {
-   object_id_type uia_object_id = create_user_issued_asset( "UIATEST" ).id;
+   object_id_type ua_object_id = create_user_asset( "UATEST" ).id;
 
    uint32_t objects_changed = 0;
    auto callback = [&]( const variant& v )
@@ -709,24 +709,24 @@ BOOST_AUTO_TEST_CASE( subscription_key_collision_test )
    graphene::app::database_api db_api(db);
    db_api.set_subscribe_callback( callback, false );
 
-   // subscribe to an account which has same instance ID as UIATEST
+   // subscribe to an account which has same instance ID as UATEST
    vector<string> collision_ids;
-   collision_ids.push_back( string( object_id_type( account_id_type( uia_object_id.instance() ) ) ) );
+   collision_ids.push_back( string( object_id_type( account_id_type( ua_object_id.instance() ) ) ) );
    db_api.get_accounts( collision_ids );
 
    generate_block();
    fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
 
-   BOOST_CHECK_EQUAL( objects_changed, 0 ); // did not subscribe to UIATEST, so no notification
+   BOOST_CHECK_EQUAL( objects_changed, 0 ); // did not subscribe to UATEST, so no notification
 
    vector<string> asset_names;
-   asset_names.push_back( "UIATEST" );
+   asset_names.push_back( "UATEST" );
    db_api.get_assets( asset_names );
 
    generate_block();
    fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
 
-   BOOST_CHECK_EQUAL( objects_changed, 0 ); // UIATEST did not change in this block, so no notification
+   BOOST_CHECK_EQUAL( objects_changed, 0 ); // UATEST did not change in this block, so no notification
 }
 
 BOOST_AUTO_TEST_CASE( subscription_notification_test )
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
 
       ACTORS( (alice)(bob) );
 
-      create_user_issued_asset( "UIATEST" );
+      create_user_asset( "UATEST" );
 
       // prepare data for get_htlc
       {
@@ -874,13 +874,13 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       db_api56.lookup_accounts( "alice", 3, false ); // db_api56 does not subscribe to Alice
 
       vector<string> asset_names;
-      asset_names.push_back( "UIATEST" );
-      db_api7.get_assets( asset_names );         // db_api7  subscribe to UIA
-      db_api17.get_assets( asset_names, true );  // db_api17 subscribe to UIA
-      db_api27.get_assets( asset_names, false ); // db_api27 doesn't subscribe to UIA
-      db_api37.get_assets( asset_names );        // db_api37 doesn't subscribe to UIA
-      db_api47.get_assets( asset_names, true );  // db_api47 subscribe to UIA
-      db_api57.get_assets( asset_names, false ); // db_api57 doesn't subscribe to UIA
+      asset_names.push_back( "UATEST" );
+      db_api7.get_assets( asset_names );         // db_api7  subscribe to UA
+      db_api17.get_assets( asset_names, true );  // db_api17 subscribe to UA
+      db_api27.get_assets( asset_names, false ); // db_api27 doesn't subscribe to UA
+      db_api37.get_assets( asset_names );        // db_api37 doesn't subscribe to UA
+      db_api47.get_assets( asset_names, true );  // db_api47 subscribe to UA
+      db_api57.get_assets( asset_names, false ); // db_api57 doesn't subscribe to UA
 
       graphene::chain::htlc_id_type alice_htlc_id_bob; // assuming ID of the first htlc object is 0
       db_api8.get_htlc( alice_htlc_id_bob );         // db_api8  subscribe to the HTLC object
@@ -903,9 +903,9 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       ++expected_objects_changed15; // db_api15 subscribed to Alice, notify Alice account creation
       ++expected_objects_changed45; // db_api45 subscribed to Alice, notify Alice account creation
       // db_api*6 didn't subscribe to anything, nothing would be notified
-      ++expected_objects_changed7; // db_api7 subscribed to UIA, notify asset creation
-      ++expected_objects_changed17; // db_api17 subscribed to UIA, notify asset creation
-      ++expected_objects_changed47; // db_api47 subscribed to UIA, notify asset creation
+      ++expected_objects_changed7; // db_api7 subscribed to UA, notify asset creation
+      ++expected_objects_changed17; // db_api17 subscribed to UA, notify asset creation
+      ++expected_objects_changed47; // db_api47 subscribed to UA, notify asset creation
       ++expected_objects_changed8; // db_api8 subscribed to HTLC object, notify object creation
       ++expected_objects_changed18; // db_api18 subscribed to HTLC object, notify object creation
       ++expected_objects_changed48; // db_api48 subscribed to HTLC object, notify object creation
@@ -922,7 +922,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       // db_api4 only subscribed to the account object of Alice, nothing notified
       // db_api5 only subscribed to the account object of Alice, nothing notified
       // db_api6 didn't subscribe to anything, nothing would be notified
-      // db_api7: no change on UIA, nothing would be notified
+      // db_api7: no change on UA, nothing would be notified
 
       fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
       check_results();
@@ -951,7 +951,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       ++expected_objects_changed34; // db_api34 subscribed to full account data of Alice, would be notified
       // db_api5 only subscribed to the account object of Alice, nothing notified
       // db_api6 didn't subscribe to anything, nothing would be notified
-      // db_api7: no change on UIA, nothing would be notified
+      // db_api7: no change on UA, nothing would be notified
 
       fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
       check_results();
@@ -966,7 +966,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       // db_api4 subscribed to full account data of Alice, nothing would be notified
       // db_api5 only subscribed to the account object of Alice, nothing notified
       // db_api6 didn't subscribe to anything, nothing would be notified
-      // db_api7: no change on UIA, nothing would be notified
+      // db_api7: no change on UA, nothing would be notified
 
       fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
       check_results();
@@ -987,7 +987,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       // db_api4 subscribed to full account data of Alice, nothing would be notified
       ++expected_objects_changed5; // db_api5 subscribed to full account data of Bob, would be notified
       // db_api6 didn't subscribe to anything, nothing would be notified
-      // db_api7: no change on UIA, nothing would be notified
+      // db_api7: no change on UA, nothing would be notified
 
       fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
       check_results();
@@ -1002,7 +1002,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       // db_api4 subscribed to full account data of Alice, nothing would be notified
       // db_api5 subscribed to full account data of Bob, nothing notified
       ++expected_objects_changed6; // db_api6 subscribed to dynamic global properties, would be notified
-      // db_api7: no change on UIA, nothing would be notified
+      // db_api7: no change on UA, nothing would be notified
 
       fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
       check_results();
@@ -1023,7 +1023,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
       ++expected_objects_changed34; // db_api34 subscribed to full account data of Alice, would be notified
       // db_api5 subscribed to anything, nothing notified
       // db_api6 subscribed to anything, nothing notified
-      // db_api7: no change on UIA, nothing would be notified
+      // db_api7: no change on UA, nothing would be notified
 
       fc::usleep(fc::milliseconds(200)); // sleep a while to execute callback in another thread
       check_results();

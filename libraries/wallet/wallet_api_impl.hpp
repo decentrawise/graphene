@@ -355,7 +355,7 @@ public:
    signed_transaction approve_proposal( const string& fee_paying_account, const string& proposal_id,
          const approval_delta& delta, bool broadcast = false);
 
-   void dbg_make_uia(string creator, string symbol);
+   void dbg_make_ua(string creator, string symbol);
 
    void dbg_make_mia(string creator, string symbol);
 

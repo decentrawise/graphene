@@ -1188,7 +1188,7 @@ class wallet_api
 
       /** Pay into the fee pool for the given asset.
        *
-       * User-issued assets can optionally have a pool of the core asset which is
+       * User assets can optionally have a pool of the core asset which is
        * automatically used to pay transaction fees for any transaction using that
        * asset (using the asset's core exchange rate).
        *
@@ -1207,7 +1207,7 @@ class wallet_api
 
       /** Claim funds from the fee pool for the given asset.
        *
-       * User-issued assets can optionally have a pool of the core asset which is
+       * User assets can optionally have a pool of the core asset which is
        * automatically used to pay transaction fees for any transaction using that
        * asset (using the asset's core exchange rate).
        *
@@ -1739,7 +1739,7 @@ class wallet_api
       signed_transaction add_transaction_signature( const signed_transaction& tx,
                                                     bool broadcast = false )const;
 
-      void dbg_make_uia( const string& creator, const string& symbol )const;
+      void dbg_make_ua( const string& creator, const string& symbol )const;
       void dbg_make_mia( const string& creator, const string& symbol )const;
       void dbg_push_blocks( const string& src_filename, uint32_t count )const;
       void dbg_generate_blocks( const string& debug_wif_key, uint32_t count )const;
@@ -1914,7 +1914,7 @@ FC_API( graphene::wallet::wallet_api,
         (propose_parameter_change)
         (propose_fee_change)
         (approve_proposal)
-        (dbg_make_uia)
+        (dbg_make_ua)
         (dbg_make_mia)
         (dbg_push_blocks)
         (dbg_generate_blocks)

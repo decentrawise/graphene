@@ -382,7 +382,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.options.max_supply = asst.max_supply;
          a.options.flags = validator_fed_asset;
          a.options.issuer_permissions = ( asst.is_bitasset ? ASSET_ISSUER_PERMISSION_MASK
-                                                           : UIA_ASSET_ISSUER_PERMISSION_MASK );
+                                                           : USER_ASSET_ISSUER_PERMISSION_MASK );
          a.dynamic_asset_data_id = dynamic_data_id;
          a.bitasset_data_id = bitasset_data_id;
          a.creation_block_num = 0;

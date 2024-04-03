@@ -409,7 +409,7 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
          // If we're changing to a backing_asset that is not CORE, we need to look at any
          // asset ( "CHILD" ) that has this one as a backing asset. If CHILD is council-owned,
          // the change is not allowed. If CHILD is user-owned, then this asset's backing
-         // asset must be either CORE or a UIA.
+         // asset must be either CORE or a UA.
          if ( new_backing_asset.get_id() != asset_id_type() ) // not backed by CORE
          {
             check_children_of_bitasset( d, op, new_backing_asset );
@@ -417,7 +417,7 @@ void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bita
 
       }
 
-      // Check if the new backing asset is itself backed by something. It must be CORE or a UIA
+      // Check if the new backing asset is itself backed by something. It must be CORE or a UA
       if ( new_backing_asset.is_market_issued() )
       {
          asset_id_type backing_backing_asset_id = new_backing_asset.bitasset_data(d).options.short_backing_asset;

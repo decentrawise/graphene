@@ -112,7 +112,7 @@ namespace graphene { namespace chain {
 
          void validate() const
          {
-            // UIAs may not be prediction markets, have force settlement, or global settlements
+            // UAs may not be prediction markets, have force settlement, or global settlements
             if( !is_market_issued() )
             {
                FC_ASSERT(!(options.flags & disable_force_settle || options.flags & global_settle));

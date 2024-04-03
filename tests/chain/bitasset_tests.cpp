@@ -530,12 +530,12 @@ assets_bitasset_eval create_assets_bitasset_eval(database_fixture *fixture)
    asset_objs.bit_child_bitasset = fixture->create_bitasset( "CHILDUSER", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_parent ).get_id();
 
-   BOOST_TEST_MESSAGE( "Create user issued USERISSUED" );
-   asset_objs.user_issued = fixture->create_user_issued_asset( "USERISSUED",
+   BOOST_TEST_MESSAGE( "Create user asset USERISSUED" );
+   asset_objs.user_issued = fixture->create_user_asset( "USERISSUED",
          GRAPHENE_PRODUCERS_ACCOUNT(fixture->db), charge_market_fee ).get_id();
 
-   BOOST_TEST_MESSAGE( "Create a user-issued asset with a precision of 6" );
-   asset_objs.six_precision = fixture->create_user_issued_asset( "SIXPRECISION", GRAPHENE_PRODUCERS_ACCOUNT(fixture->db),
+   BOOST_TEST_MESSAGE( "Create a user asset with a precision of 6" );
+   asset_objs.six_precision = fixture->create_user_asset( "SIXPRECISION", GRAPHENE_PRODUCERS_ACCOUNT(fixture->db),
          charge_market_fee, price(asset(1, asset_id_type(1)), asset(1)), 6 ).get_id();
 
    BOOST_TEST_MESSAGE( "Create Prediction market with precision of 6, backed by SIXPRECISION" );
@@ -617,15 +617,15 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
    op.new_options.short_backing_asset = correct_asset_id;
 
    // CHILD is a non-council asset backed by PARENT which is backed by CORE
-   // Cannot change PARENT's backing asset from CORE to something that is not [CORE | UIA]
-   // because that will make CHILD be backed by an asset that is not itself backed by CORE or a UIA.
-   BOOST_TEST_MESSAGE( "Attempting to change PARENT to be backed by a non-core and non-user-issued asset" );
+   // Cannot change PARENT's backing asset from CORE to something that is not [CORE | UA]
+   // because that will make CHILD be backed by an asset that is not itself backed by CORE or a UA.
+   BOOST_TEST_MESSAGE( "Attempting to change PARENT to be backed by a non-core and non-user asset" );
    op.asset_to_update = asset_objs.bit_parent;
    op.issuer = asset_objs.bit_parent(db).issuer;
    op.new_options.short_backing_asset = asset_objs.bit_usdbacked;
    REQUIRE_EXCEPTION_WITH_TEXT( evaluator.evaluate(op), "A non-blockchain controlled BitAsset would be invalidated" );
-   // changing the backing asset to a UIA should work
-   BOOST_TEST_MESSAGE( "Switching to a backing asset that is a UIA should work." );
+   // changing the backing asset to a UA should work
+   BOOST_TEST_MESSAGE( "Switching to a backing asset that is a UA should work." );
    op.new_options.short_backing_asset = asset_objs.user_issued;
    BOOST_CHECK( evaluator.evaluate(op).is_type<void_result>() );
    // A -> B -> C, change B to be backed by A (circular backing)

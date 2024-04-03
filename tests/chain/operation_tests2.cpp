@@ -335,17 +335,17 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_whitelist_asset_test )
 
       ACTORS( (nathan)(dan)(izzy) );
 
-      const asset_id_type uia_id = create_user_issued_asset( "ADVANCED", izzy_id(db), white_list ).get_id();
+      const asset_id_type ua_id = create_user_asset( "ADVANCED", izzy_id(db), white_list ).get_id();
 
-      issue_uia( nathan_id, asset(1000, uia_id) );
+      issue_ua( nathan_id, asset(1000, ua_id) );
 
       // Make a whitelist authority
       {
          BOOST_TEST_MESSAGE( "Changing the whitelist authority" );
          asset_update_operation uop;
          uop.issuer = izzy_id;
-         uop.asset_to_update = uia_id;
-         uop.new_options = uia_id(db).options;
+         uop.asset_to_update = ua_id;
+         uop.new_options = ua_id(db).options;
          uop.new_options.whitelist_authorities.insert(izzy_id);
          trx.operations.push_back(uop);
          PUSH_TX( db, trx, ~0 );
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_whitelist_asset_test )
          withdraw_permission_create_operation op;
          op.authorized_account = dan_id;
          op.withdraw_from_account = nathan_id;
-         op.withdrawal_limit = asset(5, uia_id);
+         op.withdrawal_limit = asset(5, ua_id);
          op.withdrawal_period_sec = fc::hours(1).to_seconds();
          op.periods_until_expiration = 5;
          op.period_start_time = db.head_block_time() + 1;
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_whitelist_asset_test )
          op.withdraw_permission = first_permit_id;
          op.withdraw_from_account = nathan_id;
          op.withdraw_to_account = dan_id;
-         op.amount_to_withdraw = asset(5, uia_id);
+         op.amount_to_withdraw = asset(5, ua_id);
          trx.operations.push_back(op);
          GRAPHENE_CHECK_THROW( PUSH_TX( db, trx, ~0 ), fc::assert_exception );
          trx.operations.clear();
@@ -1891,8 +1891,8 @@ BOOST_AUTO_TEST_CASE( vbo_withdraw_different )
 
       // transfer(account_id_type(), alice_id, asset(1000));
 
-      asset_id_type stuff_id = create_user_issued_asset( "STUFF", izzy_id(db), 0 ).get_id();
-      issue_uia( alice_id, asset( 1000, stuff_id ) );
+      asset_id_type stuff_id = create_user_asset( "STUFF", izzy_id(db), 0 ).get_id();
+      issue_ua( alice_id, asset( 1000, stuff_id ) );
 
       // deposit STUFF with linear vesting policy
       vesting_balance_id_type vbid;
@@ -1970,7 +1970,7 @@ BOOST_AUTO_TEST_CASE( top_n_special )
          // Alice, Bob, Chloe, Dan (ABCD)
          //
 
-         asset_id_type topn_id = create_user_issued_asset( "TOPN", izzy_id(db), 0 ).get_id();
+         asset_id_type topn_id = create_user_asset( "TOPN", izzy_id(db), 0 ).get_id();
          authority stan_owner_auth = stan_id(db).owner;
          authority stan_active_auth = stan_id(db).active;
 
@@ -2013,9 +2013,9 @@ BOOST_AUTO_TEST_CASE( top_n_special )
 
          // issue some to Alice, make sure she gets control of Stan
 
-         // we need to set_expiration() before issue_uia() because the latter doens't call it #11
+         // we need to set_expiration() before issue_ua() because the latter doens't call it #11
          set_expiration( db, trx );  // #11
-         issue_uia( alice_id, asset( 1000, topn_id ) );
+         issue_ua( alice_id, asset( 1000, topn_id ) );
 
          BOOST_CHECK( stan_id(db).owner  == stan_owner_auth );
          BOOST_CHECK( stan_id(db).active == stan_active_auth );
@@ -2045,7 +2045,7 @@ BOOST_AUTO_TEST_CASE( top_n_special )
          BOOST_CHECK( stan_id(db).active == authority(  501, alice_id, 1000 ) );
 
          set_expiration( db, trx );  // #11
-         issue_uia( chloe_id, asset( 131000, topn_id ) );
+         issue_ua( chloe_id, asset( 131000, topn_id ) );
 
          // now Chloe has 131,000 and Stan has 1k.  Make sure change occurs at next maintenance interval.
          // NB, 131072 is a power of 2; the number 131000 was chosen so that we need a bitshift, but
@@ -2073,7 +2073,7 @@ BOOST_AUTO_TEST_CASE( top_n_special )
 
          // issue 200,000 to Dan to cause another bitshift.
          set_expiration( db, trx );  // #11
-         issue_uia( dan_id, asset( 200000, topn_id ) );
+         issue_ua( dan_id, asset( 200000, topn_id ) );
          generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
          // 200000 Dan
@@ -2093,7 +2093,7 @@ BOOST_AUTO_TEST_CASE( top_n_special )
 
          // send 131k to Bob so he's tied with Chloe, verify he displaces Chloe in top2
          set_expiration( db, trx );  // #11
-         issue_uia( bob_id, asset( 131000, topn_id ) );
+         issue_ua( bob_id, asset( 131000, topn_id ) );
          generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
          BOOST_CHECK( stan_id(db).owner  == authority( 41376, bob_id, 32750,                  dan_id, 50000 ) );
@@ -2120,8 +2120,8 @@ BOOST_AUTO_TEST_CASE( buyback )
          // Philbin (registrar)
          //
 
-         asset_id_type nono_id = create_user_issued_asset( "NONO", izzy_id(db), 0 ).get_id();
-         asset_id_type buyme_id = create_user_issued_asset( "BUYME", izzy_id(db), 0 ).get_id();
+         asset_id_type nono_id = create_user_asset( "NONO", izzy_id(db), 0 ).get_id();
+         asset_id_type buyme_id = create_user_asset( "BUYME", izzy_id(db), 0 ).get_id();
 
          // Create a buyback account
          account_id_type rex_id;
@@ -2170,10 +2170,10 @@ BOOST_AUTO_TEST_CASE( buyback )
          }
 
          // issue some BUYME to Alice
-         // we need to set_expiration() before issue_uia() because the latter doesn't call it #11
+         // we need to set_expiration() before issue_ua() because the latter doesn't call it #11
          set_expiration( db, trx );  // #11
-         issue_uia( alice_id, asset( 1000, buyme_id ) );
-         issue_uia( alice_id, asset( 1000, nono_id ) );
+         issue_ua( alice_id, asset( 1000, buyme_id ) );
+         issue_ua( alice_id, asset( 1000, nono_id ) );
 
          // Alice wants to sell 100 BUYME for 1000 CORE, a middle price.
          limit_order_id_type order_id_mid = create_sell_order( alice_id, asset( 100, buyme_id ), asset( 1000, asset_id_type() ) )->get_id();

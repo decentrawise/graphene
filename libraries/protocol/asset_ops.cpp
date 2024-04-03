@@ -84,7 +84,7 @@ void  asset_create_operation::validate()const
       FC_ASSERT( bitasset_opts.valid() );
    if( is_prediction_market )
    {
-      FC_ASSERT( bitasset_opts.valid(), "Cannot have a User-Issued Asset implement a prediction market." );
+      FC_ASSERT( bitasset_opts.valid(), "Cannot have a User Asset implement a prediction market." );
       FC_ASSERT( common_options.issuer_permissions & global_settle );
    }
    if( bitasset_opts ) bitasset_opts->validate();

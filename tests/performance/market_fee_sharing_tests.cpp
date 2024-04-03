@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(mfs_performance_test, database_fixture)
       additional_asset_options_t options;
       options.value.reward_percent = 2 * GRAPHENE_1_PERCENT;
 
-      const auto usd = create_user_issued_asset(
+      const auto usd = create_user_asset(
                   "USD",
                   issuer,
                   charge_market_fee,
@@ -39,7 +39,7 @@ BOOST_FIXTURE_TEST_CASE(mfs_performance_test, database_fixture)
                   20 * GRAPHENE_1_PERCENT,
                   options);
 
-      issue_uia(issuer, usd.amount(iterations * accounts * 2000));
+      issue_ua(issuer, usd.amount(iterations * accounts * 2000));
 
       std::vector<account_object> traders;
       for (unsigned int i = 0; i < accounts; ++i)

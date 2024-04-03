@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
 
          // TODO:  Change this test when we correct #406
          // n.b. we generate GRAPHENE_MIN_UNDO_HISTORY+1 extra blocks which will be discarded on save
-         for( uint32_t i = 1; ; ++i )
+         while( true )
          {
             BOOST_CHECK( db.head_block_id() == b.id() );
             //validator_id_type prev_validator = b.validator;
@@ -1794,7 +1794,7 @@ BOOST_FIXTURE_TEST_CASE( temp_account_balance, database_fixture )
 { try {
    ACTORS( (alice) );
    fund( alice );
-   create_user_issued_asset( "UIA" );
+   create_user_asset( "USR" );
 
    generate_block();
    set_expiration( db, trx );

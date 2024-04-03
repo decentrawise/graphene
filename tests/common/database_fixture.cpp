@@ -150,7 +150,7 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
    init_mpa1.accumulated_fees = 0;
    init_mpa1.is_bitasset = true;
    fixture.genesis_state.initial_assets.push_back( init_mpa1 );
-   // TODO add initial UIA's; add initial short positions; test non-zero accumulated_fees
+   // TODO add initial UA's; add initial short positions; test non-zero accumulated_fees
 }
 
 std::shared_ptr<boost::program_options::variables_map> database_fixture_base::init_options(
@@ -796,7 +796,7 @@ const asset_object& database_fixture_base::create_prediction_market(
 } FC_CAPTURE_AND_RETHROW( (name)(flags) ) } // GCOVR_EXCL_LINE
 
 
-const asset_object& database_fixture_base::create_user_issued_asset( const string& name )
+const asset_object& database_fixture_base::create_user_asset( const string& name )
 {
    asset_create_operation creator;
    creator.issuer = account_id_type();
@@ -816,7 +816,7 @@ const asset_object& database_fixture_base::create_user_issued_asset( const strin
    return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-const asset_object& database_fixture_base::create_user_issued_asset( const string& name, const account_object& issuer,
+const asset_object& database_fixture_base::create_user_asset( const string& name, const account_object& issuer,
                                                                uint16_t flags, const price& core_exchange_rate,
                                                                uint8_t precision, uint16_t market_fee_percent,
                                                                additional_asset_options_t additional_options)
@@ -842,9 +842,9 @@ const asset_object& database_fixture_base::create_user_issued_asset( const strin
    return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-void database_fixture_base::issue_uia( const account_object& recipient, asset amount )
+void database_fixture_base::issue_ua( const account_object& recipient, asset amount )
 {
-   BOOST_TEST_MESSAGE( "Issuing UIA" );
+   BOOST_TEST_MESSAGE( "Issuing UA" );
    asset_issue_operation op;
    op.issuer = amount.asset_id(db).issuer;
    op.asset_to_issue = amount;
@@ -855,9 +855,9 @@ void database_fixture_base::issue_uia( const account_object& recipient, asset am
    trx.operations.clear();
 }
 
-void database_fixture_base::issue_uia( account_id_type recipient_id, asset amount )
+void database_fixture_base::issue_ua( account_id_type recipient_id, asset amount )
 {
-   issue_uia( recipient_id(db), amount );
+   issue_ua( recipient_id(db), amount );
 }
 
 void database_fixture_base::reserve_asset( account_id_type account, asset amount )

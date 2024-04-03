@@ -17,9 +17,9 @@
 using namespace graphene::chain;
 using namespace graphene::chain::test;
 
-BOOST_FIXTURE_TEST_SUITE( uia_tests, database_fixture )
+BOOST_FIXTURE_TEST_SUITE( user_asset_tests, database_fixture )
 
-BOOST_AUTO_TEST_CASE( create_advanced_uia )
+BOOST_AUTO_TEST_CASE( create_advanced_ua )
 {
    try {
       asset_id_type test_asset_id { db.get_index<asset_object>().get_next_id() };
@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_CASE( create_advanced_uia )
 BOOST_AUTO_TEST_CASE( override_transfer_test )
 { try {
    ACTORS( (dan)(eric)(sam) );
-   const asset_object& advanced = create_user_issued_asset( "ADVANCED", sam, override_authority );
+   const asset_object& advanced = create_user_asset( "ADVANCED", sam, override_authority );
    BOOST_TEST_MESSAGE( "Issuing 1000 ADVANCED to dan" );
-   issue_uia( dan, advanced.amount( 1000 ) );
+   issue_ua( dan, advanced.amount( 1000 ) );
    BOOST_TEST_MESSAGE( "Checking dan's balance" );
    BOOST_REQUIRE_EQUAL( get_balance( dan, advanced ), 1000 );
 
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE( override_transfer_test )
 BOOST_AUTO_TEST_CASE( override_transfer_test2 )
 { try {
    ACTORS( (dan)(eric)(sam) );
-   const asset_object& advanced = create_user_issued_asset( "ADVANCED", sam, 0 );
-   issue_uia( dan, advanced.amount( 1000 ) );
+   const asset_object& advanced = create_user_asset( "ADVANCED", sam, 0 );
+   issue_ua( dan, advanced.amount( 1000 ) );
    BOOST_REQUIRE_EQUAL( get_balance( dan, advanced ), 1000 );
 
    trx.operations.clear();
@@ -116,38 +116,38 @@ BOOST_AUTO_TEST_CASE( override_transfer_test2 )
    BOOST_REQUIRE_EQUAL( get_balance( eric, advanced ), 0 );
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( issue_whitelist_uia )
+BOOST_AUTO_TEST_CASE( issue_whitelist_ua )
 {
    try {
       account_id_type izzy_id = create_account("izzy").get_id();
-      const asset_id_type uia_id = create_user_issued_asset(
+      const asset_id_type ua_id = create_user_asset(
          "ADVANCED", izzy_id(db), white_list ).get_id();
       account_id_type nathan_id = create_account("nathan").get_id();
       account_id_type vikram_id = create_account("vikram").get_id();
       trx.clear();
 
       asset_issue_operation op;
-      op.issuer = uia_id(db).issuer;
-      op.asset_to_issue = asset(1000, uia_id);
+      op.issuer = ua_id(db).issuer;
+      op.asset_to_issue = asset(1000, ua_id);
       op.issue_to_account = nathan_id;
       trx.operations.emplace_back(op);
       set_expiration( db, trx );
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK(is_authorized_asset( db, nathan_id(db), uia_id(db) ));
-      BOOST_CHECK_EQUAL(get_balance(nathan_id, uia_id), 1000);
+      BOOST_CHECK(is_authorized_asset( db, nathan_id(db), ua_id(db) ));
+      BOOST_CHECK_EQUAL(get_balance(nathan_id, ua_id), 1000);
 
       // Make a whitelist, now it should fail
       {
          BOOST_TEST_MESSAGE( "Changing the whitelist authority" );
          asset_update_operation uop;
          uop.issuer = izzy_id;
-         uop.asset_to_update = uia_id;
-         uop.new_options = uia_id(db).options;
+         uop.asset_to_update = ua_id;
+         uop.new_options = ua_id(db).options;
          uop.new_options.whitelist_authorities.insert(izzy_id);
          trx.operations.back() = uop;
          PUSH_TX( db, trx, ~0 );
-         BOOST_CHECK( uia_id(db).options.whitelist_authorities.find(izzy_id) != uia_id(db).options.whitelist_authorities.end() );
+         BOOST_CHECK( ua_id(db).options.whitelist_authorities.find(izzy_id) != ua_id(db).options.whitelist_authorities.end() );
       }
 
       // Fail because there is a whitelist authority and I'm not whitelisted
@@ -175,10 +175,10 @@ BOOST_AUTO_TEST_CASE( issue_whitelist_uia )
       trx.operations.back() = wop;
       PUSH_TX( db, trx, ~0 );
       trx.operations.back() = op;
-      BOOST_CHECK_EQUAL(get_balance(nathan_id, uia_id), 1000);
+      BOOST_CHECK_EQUAL(get_balance(nathan_id, ua_id), 1000);
       // Finally succeed when we were whitelisted
       PUSH_TX( db, trx, ~0 );
-      BOOST_CHECK_EQUAL(get_balance(nathan_id, uia_id), 2000);
+      BOOST_CHECK_EQUAL(get_balance(nathan_id, ua_id), 2000);
 
    } catch(fc::exception& e) {
       edump((e.to_detail_string()));
@@ -186,10 +186,10 @@ BOOST_AUTO_TEST_CASE( issue_whitelist_uia )
    }
 }
 
-BOOST_AUTO_TEST_CASE( transfer_whitelist_uia )
+BOOST_AUTO_TEST_CASE( transfer_whitelist_ua )
 {
    try {
-      INVOKE(issue_whitelist_uia);
+      INVOKE(issue_whitelist_ua);
       const asset_object& advanced = get_asset("ADVANCED");
       const account_object& nathan = get_account("nathan");
       const account_object& dan = create_account("dan");
@@ -327,9 +327,9 @@ BOOST_AUTO_TEST_CASE( transfer_restricted_test )
    {
       ACTORS( (sam)(alice)(bob) );
 
-      BOOST_TEST_MESSAGE( "Issuing 1000 UIA to Alice" );
+      BOOST_TEST_MESSAGE( "Issuing 1000 UA to Alice" );
 
-      auto _issue_uia = [&]( const account_object& recipient, asset amount )
+      auto _issue_ua = [&]( const account_object& recipient, asset amount )
       {
          asset_issue_operation op;
          op.issuer = amount.asset_id(db).issuer;
@@ -341,15 +341,15 @@ BOOST_AUTO_TEST_CASE( transfer_restricted_test )
          PUSH_TX( db, tx, database::skip_tapos_check | database::skip_transaction_signatures );
       } ;
 
-      const asset_object& uia = create_user_issued_asset( "TXRX", sam, transfer_restricted );
-      _issue_uia( alice, uia.amount( 1000 ) );
+      const asset_object& ua = create_user_asset( "TXRX", sam, transfer_restricted );
+      _issue_ua( alice, ua.amount( 1000 ) );
 
       auto _restrict_xfer = [&]( bool xfer_flag )
       {
          asset_update_operation op;
          op.issuer = sam_id;
-         op.asset_to_update = uia.id;
-         op.new_options = uia.options;
+         op.asset_to_update = ua.id;
+         op.new_options = ua.options;
          if( xfer_flag )
             op.new_options.flags |= transfer_restricted;
          else
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE( transfer_restricted_test )
       transfer_operation xfer_op;
       xfer_op.from = alice_id;
       xfer_op.to = bob_id;
-      xfer_op.amount = uia.amount(100);
+      xfer_op.amount = ua.amount(100);
       signed_transaction xfer_tx;
       xfer_tx.operations.push_back( xfer_op );
       set_expiration( db, xfer_tx );
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE( transfer_restricted_test )
       _restrict_xfer( false );
       PUSH_TX( db, xfer_tx );
 
-      xfer_op.amount = uia.amount(101);
+      xfer_op.amount = ua.amount(101);
 
    }
    catch(fc::exception& e)
@@ -403,7 +403,7 @@ bool test_asset_name(graphene::chain::database_fixture* db, const graphene::chai
    {
       try
       {
-         db->create_user_issued_asset(asset_name, acct, 0);
+         db->create_user_asset(asset_name, acct, 0);
       } catch (...)
       {
          return false;
@@ -413,7 +413,7 @@ bool test_asset_name(graphene::chain::database_fixture* db, const graphene::chai
    {
       try
       {
-         db->create_user_issued_asset(asset_name, acct, 0);
+         db->create_user_asset(asset_name, acct, 0);
          return false;
       } catch (fc::exception& ex) 
       {
@@ -470,21 +470,21 @@ BOOST_AUTO_TEST_CASE( asset_name_test )
 
       // Alice creates asset "ALPHA"
       BOOST_CHECK( !has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
-      create_user_issued_asset( "ALPHA", alice_id(db), 0 );
+      create_user_asset( "ALPHA", alice_id(db), 0 );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
 
       // Nobody can create another asset named ALPHA
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA",   bob_id(db), 0 ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( create_user_asset( "ALPHA",   bob_id(db), 0 ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA", alice_id(db), 0 ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( create_user_asset( "ALPHA", alice_id(db), 0 ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
 
       // Bob can't create ALPHA.ONE
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA.ONE", bob_id(db), 0 ), fc::exception );
+      GRAPHENE_REQUIRE_THROW( create_user_asset( "ALPHA.ONE", bob_id(db), 0 ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
 
       // Alice can create ALPHA.ONE
-      create_user_issued_asset( "ALPHA.ONE", alice_id(db), 0 );
+      create_user_asset( "ALPHA.ONE", alice_id(db), 0 );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( has_asset("ALPHA.ONE") );
 
       // create a proposal to create asset ending in a number
@@ -513,12 +513,12 @@ BOOST_AUTO_TEST_CASE( asset_name_test )
       generate_block();
 
       // Sam can create asset ending in number
-      create_user_issued_asset( "NIKKEI225", sam_id(db), 0 );
+      create_user_asset( "NIKKEI225", sam_id(db), 0 );
       BOOST_CHECK(  has_asset("NIKKEI225") );
 
       // make sure other assets can still be created
-      create_user_issued_asset( "ALPHA2", alice_id(db), 0 );
-      create_user_issued_asset( "ALPHA2.ONE", alice_id(db), 0 );
+      create_user_asset( "ALPHA2", alice_id(db), 0 );
+      create_user_asset( "ALPHA2.ONE", alice_id(db), 0 );
       BOOST_CHECK(  has_asset("ALPHA2") );
       BOOST_CHECK( has_asset("ALPHA2.ONE") );
 

@@ -38,7 +38,7 @@ namespace graphene { namespace wallet { namespace detail {
          int number_of_accounts = number_of_transactions / 3;
          number_of_transactions -= number_of_accounts;
          try {
-            dbg_make_uia(master.name, "SHILL");
+            dbg_make_ua(master.name, "SHILL");
          } catch(...) {/* Ignore; the asset probably already exists.*/}
 
          fc::time_point start = fc::time_point::now();

@@ -1017,10 +1017,10 @@ operation wallet_api::get_prototype_operation( const string& operation_name )con
    return my->get_prototype_operation( operation_name );
 }
 
-void wallet_api::dbg_make_uia( const string& creator, const string& symbol )const
+void wallet_api::dbg_make_ua( const string& creator, const string& symbol )const
 {
    FC_ASSERT(!is_locked());
-   my->dbg_make_uia(creator, symbol);
+   my->dbg_make_ua(creator, symbol);
 }
 
 void wallet_api::dbg_make_mia( const string& creator, const string& symbol )const

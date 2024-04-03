@@ -146,11 +146,11 @@ namespace graphene { namespace protocol {
       disable_force_settle = 0x10, /**< disable force settling */
       global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
-      validator_fed_asset    = 0x80, /**< allow the asset to be fed by validators */
-      delegate_fed_asset  = 0x100 /**< allow the asset to be fed by the delegates */
+      validator_fed_asset  = 0x80, /**< allow the asset to be fed by validators */
+      delegate_fed_asset   = 0x100 /**< allow the asset to be fed by the delegates */
    };
 
-   /// The bits that can be used in asset issuer permissions for non-UIA assets
+   /// The bits that can be used in asset issuer permissions for non-User Assets
    const static uint16_t ASSET_ISSUER_PERMISSION_MASK =
       charge_market_fee
       | white_list
@@ -162,8 +162,8 @@ namespace graphene { namespace protocol {
       | validator_fed_asset
       | delegate_fed_asset;
 
-   /// The bits that can be used in asset issuer permissions for UIA assets
-   const static uint16_t UIA_ASSET_ISSUER_PERMISSION_MASK =
+   /// The bits that can be used in asset issuer permissions for User Assets
+   const static uint16_t USER_ASSET_ISSUER_PERMISSION_MASK =
       charge_market_fee
       | white_list
       | override_authority

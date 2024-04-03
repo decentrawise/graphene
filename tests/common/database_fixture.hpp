@@ -306,16 +306,16 @@ struct database_fixture_base {
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS,
                                        asset_id_type backing_asset = {});
-   const asset_object& create_user_issued_asset( const string& name );
-   const asset_object& create_user_issued_asset( const string& name,
+   const asset_object& create_user_asset( const string& name );
+   const asset_object& create_user_asset( const string& name,
                                                  const account_object& issuer,
                                                  uint16_t flags,
                                                  const price& core_exchange_rate = price(asset(1, asset_id_type(1)), asset(1)),
                                                  uint8_t precision = 2 /* traditional precision for tests */,
                                                  uint16_t market_fee_percent = 0,
                                                  additional_asset_options_t options = additional_asset_options_t());
-   void issue_uia( const account_object& recipient, asset amount );
-   void issue_uia( account_id_type recipient_id, asset amount );
+   void issue_ua( const account_object& recipient, asset amount );
+   void issue_ua( account_id_type recipient_id, asset amount );
    void reserve_asset( account_id_type account, asset amount );
 
    const account_object& create_account(

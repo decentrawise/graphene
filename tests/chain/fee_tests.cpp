@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(asset_claim_pool_test)
     try
     {
         ACTORS((alice)(bob));
-        // Alice and Bob create some user issued assets
+        // Alice and Bob create some user assets
         // Alice deposits CORE to the fee pool
         // Alice claims fee pool of her asset and can't claim pool of Bob's asset
 
@@ -192,16 +192,16 @@ BOOST_AUTO_TEST_CASE(asset_claim_pool_test)
         auto _core = [&core_prec]( int64_t x ) -> asset
         {  return asset( x*core_prec );    };
 
-        const asset_object& alicecoin = create_user_issued_asset( "ALICECOIN", alice,  0 );
-        const asset_object& aliceusd = create_user_issued_asset( "ALICEUSD", alice, 0 );
+        const asset_object& alicecoin = create_user_asset( "ALICECOIN", alice,  0 );
+        const asset_object& aliceusd = create_user_asset( "ALICEUSD", alice, 0 );
 
         asset_id_type alicecoin_id = alicecoin.get_id();
         asset_id_type aliceusd_id = aliceusd.get_id();
-        asset_id_type bobcoin_id = create_user_issued_asset("BOBCOIN", bob, 0).get_id();
+        asset_id_type bobcoin_id = create_user_asset("BOBCOIN", bob, 0).get_id();
 
         // prepare users' balance
-        issue_uia( alice, aliceusd.amount( 20000000 ) );
-        issue_uia( alice, alicecoin.amount( 10000000 ) );
+        issue_ua( alice, aliceusd.amount( 20000000 ) );
+        issue_ua( alice, alicecoin.amount( 10000000 ) );
 
         transfer( council_account, alice_id, _core(1000) );
         transfer( council_account, bob_id, _core(1000) );
@@ -702,9 +702,9 @@ BOOST_AUTO_TEST_CASE( fee_refund_test )
       transfer( account_id_type(), bob_id, asset(bob_b0) );
 
       asset_id_type core_id = asset_id_type();
-      asset_id_type usd_id = create_user_issued_asset( "IZZYUSD", izzy_id(db), charge_market_fee ).get_id();
-      issue_uia( alice_id, asset( alice_b0, usd_id ) );
-      issue_uia( bob_id, asset( bob_b0, usd_id ) );
+      asset_id_type usd_id = create_user_asset( "IZZYUSD", izzy_id(db), charge_market_fee ).get_id();
+      issue_ua( alice_id, asset( alice_b0, usd_id ) );
+      issue_ua( bob_id, asset( bob_b0, usd_id ) );
 
       int64_t order_create_fee = 537;
       int64_t order_cancel_fee = 129;
@@ -824,10 +824,10 @@ BOOST_AUTO_TEST_CASE( fee_refund_original_asset )
       int64_t cer_core_amount = 1801;
       int64_t cer_usd_amount = 3;
       price tmp_cer( asset( cer_core_amount ), asset( cer_usd_amount, asset_id_type(1) ) );
-      const auto& usd_obj = create_user_issued_asset( "IZZYUSD", izzy_id(db), charge_market_fee, tmp_cer );
+      const auto& usd_obj = create_user_asset( "IZZYUSD", izzy_id(db), charge_market_fee, tmp_cer );
       asset_id_type usd_id = usd_obj.get_id();
-      issue_uia( alice_id, asset( alice_b0, usd_id ) );
-      issue_uia( bob_id, asset( bob_b0, usd_id ) );
+      issue_ua( alice_id, asset( alice_b0, usd_id ) );
+      issue_ua( bob_id, asset( bob_b0, usd_id ) );
 
       fund_fee_pool( council_account( db ), usd_obj, pool_0 );
 
@@ -1311,7 +1311,7 @@ BOOST_AUTO_TEST_CASE( stealth_fba_test )
       // Tom (owner of stealth asset who will be set as top_n authority)
 
       // Izzy creates STEALTH
-      asset_id_type stealth_id = create_user_issued_asset( "STEALTH", izzy_id(db),
+      asset_id_type stealth_id = create_user_asset( "STEALTH", izzy_id(db),
          disable_confidential | transfer_restricted | override_authority | white_list | charge_market_fee ).get_id();
 
       /*
@@ -1418,8 +1418,8 @@ BOOST_AUTO_TEST_CASE( stealth_fba_test )
 
       // Tom issues some asset to Alice and Bob
       set_expiration( db, trx );  // #11
-      issue_uia( alice_id, asset( 1000, stealth_id ) );
-      issue_uia(   bob_id, asset( 1000, stealth_id ) );
+      issue_ua( alice_id, asset( 1000, stealth_id ) );
+      issue_ua(   bob_id, asset( 1000, stealth_id ) );
 
       // Tom sets his authority to the top_n of the asset
       {
@@ -1596,8 +1596,8 @@ BOOST_AUTO_TEST_CASE( issue_433_test )
 
       transfer( council_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
 
-      const auto& myusd = create_user_issued_asset( "MYUSD", alice, 0 );
-      issue_uia( alice, myusd.amount( 2000000000 ) );
+      const auto& myusd = create_user_asset( "MYUSD", alice, 0 );
+      issue_ua( alice, myusd.amount( 2000000000 ) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();
@@ -1637,8 +1637,8 @@ BOOST_AUTO_TEST_CASE( issue_433_indirect_test )
 
       transfer( council_account, alice_id, asset( 1000000 * asset::scaled_precision( core.precision ) ) );
 
-      const auto& myusd = create_user_issued_asset( "MYUSD", alice, 0 );
-      issue_uia( alice, myusd.amount( 2000000000 ) );
+      const auto& myusd = create_user_asset( "MYUSD", alice, 0 );
+      issue_ua( alice, myusd.amount( 2000000000 ) );
 
       // make sure the database requires our fee to be nonzero
       enable_fees();
