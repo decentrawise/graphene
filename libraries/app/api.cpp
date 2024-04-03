@@ -17,7 +17,7 @@ template class fc::api<graphene::app::crypto_api>;
 template class fc::api<graphene::app::asset_api>;
 template class fc::api<graphene::app::orders_api>;
 template class fc::api<graphene::app::custom_operations_api>;
-template class fc::api<graphene::debug_witness::debug_api>;
+template class fc::api<graphene::debug_validator::debug_api>;
 template class fc::api<graphene::app::dummy_api>;
 template class fc::api<graphene::app::login_api>;
 
@@ -306,16 +306,16 @@ namespace graphene { namespace app {
        return *_orders_api;
     }
 
-    fc::api<graphene::debug_witness::debug_api> login_api::debug()
+    fc::api<graphene::debug_validator::debug_api> login_api::debug()
     {
        bool is_allowed = ( _allowed_apis.find("debug_api") != _allowed_apis.end() );
        FC_ASSERT( is_allowed, "Access denied" );
        // can only use this API set if the plugin was loaded
-       bool plugin_enabled = !!_app.get_plugin( "debug_witness" );
-       FC_ASSERT( plugin_enabled, "The debug_witness plugin is not enabled" );
+       bool plugin_enabled = !!_app.get_plugin( "debug_validator" );
+       FC_ASSERT( plugin_enabled, "The debug_validator plugin is not enabled" );
        if( ! _debug_api )
        {
-          _debug_api = std::make_shared< graphene::debug_witness::debug_api >( std::ref(_app) );
+          _debug_api = std::make_shared< graphene::debug_validator::debug_api >( std::ref(_app) );
        }
        return *_debug_api;
     }

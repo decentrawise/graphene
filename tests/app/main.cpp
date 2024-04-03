@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(load_configuration_options_test_config_logging_files_create
    auto node = new app::application();
    bpo::options_description cli, cfg;
    node->set_program_options(cli, cfg);
-   bpo::options_description cfg_options("Graphene Witness Node");
+   bpo::options_description cfg_options("Graphene Validator Node");
    cfg_options.add(cfg);
 
    /// check preconditions
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE( three_node_network )
 
       auto block_1 = db2->generate_block(
          db2->get_slot_time(1),
-         db2->get_scheduled_witness(1),
+         db2->get_scheduled_producer(1),
          council_key,
          database::skip_nothing);
 

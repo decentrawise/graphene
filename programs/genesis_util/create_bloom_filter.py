@@ -36,8 +36,8 @@ def main():
     for vb in genesis["initial_vesting_balances"]:
         keys.add(vb["owner"])
 
-    for witness in genesis["initial_witness_candidates"]:
-        keys.add(witness["block_signing_key"])
+    for validator in genesis["initial_validator_candidates"]:
+        keys.add(validator["block_producer_key"])
 
     sys.stderr.write("got {n} distinct keys\n".format(n=len(keys)))
 

@@ -19,8 +19,8 @@
 #include <graphene/chain/transaction_history_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/witness_object.hpp>
-#include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/validator_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/htlc_object.hpp>
 
@@ -36,7 +36,7 @@
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
-#include <graphene/chain/witness_evaluator.hpp>
+#include <graphene/chain/validator_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/htlc_evaluator.hpp>
 
@@ -80,8 +80,8 @@ void database::initialize_evaluators()
    register_evaluator<proposal_delete_evaluator>();
    register_evaluator<vesting_balance_create_evaluator>();
    register_evaluator<vesting_balance_withdraw_evaluator>();
-   register_evaluator<witness_create_evaluator>();
-   register_evaluator<witness_update_evaluator>();
+   register_evaluator<validator_create_evaluator>();
+   register_evaluator<validator_update_evaluator>();
    register_evaluator<withdraw_permission_create_evaluator>();
    register_evaluator<withdraw_permission_claim_evaluator>();
    register_evaluator<withdraw_permission_update_evaluator>();
@@ -113,7 +113,7 @@ void database::initialize_indexes()
    acnt_index->add_secondary_index<account_referrer_index>();
 
    add_index< primary_index<delegate_index, 8> >(); // 256 members per chunk
-   add_index< primary_index<witness_index, 10> >(); // 1024 witnesses per chunk
+   add_index< primary_index<validator_index, 10> >(); // 1024 validators per chunk
    add_index< primary_index<limit_order_index > >();
    add_index< primary_index<call_order_index > >();
 
@@ -140,7 +140,7 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
    add_index< primary_index<simple_index<block_summary_object            >> >();
    add_index< primary_index<simple_index<chain_property_object          > > >();
-   add_index< primary_index<simple_index<witness_schedule_object        > > >();
+   add_index< primary_index<simple_index<producer_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
    add_index< primary_index< special_authority_index                      > >();
    add_index< primary_index< buyback_index                                > >();

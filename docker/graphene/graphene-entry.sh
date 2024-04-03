@@ -1,5 +1,5 @@
 #!/bin/bash
-GRAPHENED="/usr/local/bin/witness_node"
+GRAPHENED="/usr/local/bin/graphened"
 
 # For blockchain download
 VERSION=`cat /etc/graphene/version`
@@ -12,8 +12,8 @@ VERSION=`cat /etc/graphene/version`
 #   * $GRAPHENED_REPLAY
 #   * $GRAPHENED_RESYNC
 #   * $GRAPHENED_P2P_ENDPOINT
-#   * $GRAPHENED_WITNESS_ID
-#   * $GRAPHENED_PRIVATE_KEY
+#   * $GRAPHENED_VALIDATOR_ID
+#   * $GRAPHENED_BLOCK_PRODUCER_KEYS
 #   * $GRAPHENED_TRACK_ACCOUNTS
 #   * $GRAPHENED_PARTIAL_OPERATIONS
 #   * $GRAPHENED_MAX_OPS_PER_ACCOUNT
@@ -45,12 +45,12 @@ if [[ ! -z "$GRAPHENED_P2P_ENDPOINT" ]]; then
     ARGS+=" --p2p-endpoint=${GRAPHENED_P2P_ENDPOINT}"
 fi
 
-if [[ ! -z "$GRAPHENED_WITNESS_ID" ]]; then
-    ARGS+=" --witness-id=$GRAPHENED_WITNESS_ID"
+if [[ ! -z "$GRAPHENED_VALIDATOR_ID" ]]; then
+    ARGS+=" --validator-id=$GRAPHENED_VALIDATOR_ID"
 fi
 
-if [[ ! -z "$GRAPHENED_PRIVATE_KEY" ]]; then
-    ARGS+=" --private-key=$GRAPHENED_PRIVATE_KEY"
+if [[ ! -z "$GRAPHENED_BLOCK_PRODUCER_KEYS" ]]; then
+    ARGS+=" --block-producer-keys=$GRAPHENED_BLOCK_PRODUCER_KEYS"
 fi
 
 if [[ ! -z "$GRAPHENED_TRACK_ACCOUNTS" ]]; then

@@ -156,8 +156,8 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 #define ACTORS_IMPL(r, data, elem) ACTOR(elem)
 #define ACTORS(names) BOOST_PP_SEQ_FOR_EACH(ACTORS_IMPL, ~, names)
 
-#define INITIAL_WITNESS_COUNT (9u)
-#define INITIAL_COUNCIL_COUNT INITIAL_WITNESS_COUNT
+#define INITIAL_PRODUCER_COUNT (9u)
+#define INITIAL_COUNCIL_COUNT INITIAL_PRODUCER_COUNT
 
 namespace graphene { namespace chain {
 
@@ -207,7 +207,7 @@ struct database_fixture_base {
    static fc::ecc::private_key generate_private_key(string seed);
    string generate_anon_acct_name();
    static void verify_asset_supplies( const database& db );
-   void vote_for_delegates_and_witnesses(uint16_t num_council, uint16_t num_witness);
+   void vote_for_delegates_and_validators(uint16_t num_delegates, uint16_t num_producers);
    signed_block generate_block(uint32_t skip = ~0,
                                const fc::ecc::private_key& key = generate_private_key("null_key"),
                                int miss_blocks = 0);
@@ -283,7 +283,7 @@ struct database_fixture_base {
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
    asset_create_operation make_bitasset( const string& name,
-                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
+                                       account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = 2,
@@ -292,7 +292,7 @@ struct database_fixture_base {
                                        optional<uint16_t> initial_cr = {},
                                        optional<uint16_t> margin_call_fee_ratio = {} );
    const asset_object& create_bitasset(const string& name,
-                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
+                                       account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = 2,
@@ -301,7 +301,7 @@ struct database_fixture_base {
                                        optional<uint16_t> initial_cr = {},
                                        optional<uint16_t> margin_call_fee_ratio = {} );
    const asset_object& create_prediction_market(const string& name,
-                                       account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
+                                       account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS,
@@ -340,10 +340,10 @@ struct database_fixture_base {
       );
 
    const delegate_object& create_delegate( const account_object& owner );
-   const witness_object& create_witness(account_id_type owner,
+   const validator_object& create_validator(account_id_type owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"),
                                         uint32_t skip_flags = ~0);
-   const witness_object& create_witness(const account_object& owner,
+   const validator_object& create_validator(const account_object& owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"),
                                         uint32_t skip_flags = ~0);
    const worker_object& create_worker(account_id_type owner, const share_type daily_pay = 1000, const fc::microseconds& duration = fc::days(2));

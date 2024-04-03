@@ -62,10 +62,10 @@ struct genesis_state_type {
       uint32_t vesting_duration_seconds = 0;
       share_type begin_balance;
    };
-   struct initial_witness_type {
+   struct initial_validator_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
-      public_key_type block_signing_key;
+      public_key_type block_producer_key;
    };
    struct initial_delegate_type {
       /// Must correspond to one of the initial accounts
@@ -85,9 +85,9 @@ struct genesis_state_type {
    vector<initial_asset_type>               initial_assets;
    vector<initial_balance_type>             initial_balances;
    vector<initial_vesting_balance_type>     initial_vesting_balances;
-   uint64_t                                 initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
-   vector<initial_witness_type>             initial_witness_candidates;
-   vector<initial_delegate_type>    initial_council_candidates;
+   uint64_t                                 initial_block_producers = GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT;
+   vector<initial_validator_type>           initial_validator_candidates;
+   vector<initial_delegate_type>            initial_delegate_candidates;
    vector<initial_worker_type>              initial_worker_candidates;
 
    /**
@@ -102,8 +102,8 @@ struct genesis_state_type {
     */
    chain_id_type compute_chain_id() const;
 
-   /// Method to override initial witness signing keys for debug
-   void override_witness_signing_keys( const std::string& new_key );
+   /// Method to override initial block producer keys for debug
+   void override_validator_producer_keys( const std::string& new_key );
 
 };
 
@@ -114,7 +114,7 @@ FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_asset_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_balance_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_vesting_balance_type )
-FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_witness_type )
+FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_validator_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_delegate_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type::initial_worker_type )
 FC_REFLECT_TYPENAME( graphene::chain::genesis_state_type )
@@ -124,7 +124,7 @@ GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::in
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_balance_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_vesting_balance_type )
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_witness_type )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_validator_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_delegate_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type::initial_worker_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::chain::genesis_state_type )

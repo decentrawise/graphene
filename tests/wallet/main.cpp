@@ -5,7 +5,7 @@
 #include <graphene/utilities/tempdir.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-// #include <graphene/witness/witness.hpp>
+// #include <graphene/validator/validator.hpp>
 #include <graphene/api_helper_indexes/api_helper_indexes.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/custom_operations/custom_operations_plugin.hpp>
@@ -69,7 +69,7 @@ std::shared_ptr<graphene::app::application> start_application(fc::temp_directory
 
    app1->register_plugin<graphene::account_history::account_history_plugin>(true);
    app1->register_plugin< graphene::market_history::market_history_plugin >(true);
-   // app1->register_plugin< graphene::witness_plugin::witness_plugin >(true);
+   // app1->register_plugin< graphene::validator_plugin::validator_plugin >(true);
    app1->register_plugin< graphene::grouped_orders::grouped_orders_plugin>(true);
    app1->register_plugin<graphene::api_helper_indexes::api_helper_indexes>(true);
    app1->register_plugin<graphene::custom_operations::custom_operations_plugin>(true);
@@ -106,7 +106,7 @@ bool generate_block(std::shared_ptr<graphene::app::application> app, graphene::c
       fc::ecc::private_key council_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
       auto db = app->chain_database();
       returned_block = db->generate_block( db->get_slot_time(1),
-                                         db->get_scheduled_witness(1),
+                                         db->get_scheduled_producer(1),
                                          council_key,
                                          database::skip_nothing );
       return true;
@@ -134,7 +134,7 @@ bool generate_maintenance_block(std::shared_ptr<graphene::app::application> app)
       auto maint_time = db->get_dynamic_global_properties().next_maintenance_time;
       auto slots_to_miss = db->get_slot_at_time(maint_time);
       db->generate_block(db->get_slot_time(slots_to_miss),
-            db->get_scheduled_witness(slots_to_miss),
+            db->get_scheduled_producer(slots_to_miss),
             council_key,
             skip);
       return true;
@@ -205,10 +205,10 @@ public:
 };
 
 ///////////////////////////////
-// Cli Wallet Fixture
+// Wallet Fixture
 ///////////////////////////////
 
-struct cli_fixture
+struct wallet_fixture
 {
    class dummy
    {
@@ -226,14 +226,14 @@ struct cli_fixture
    client_connection con;
    std::vector<std::string> nathan_keys;
 
-   cli_fixture() :
+   wallet_fixture() :
       server_port_number(0),
       app_dir( graphene::utilities::temp_directory_path() ),
       app1( start_application(app_dir, server_port_number) ),
       con( app1, app_dir, server_port_number ),
       nathan_keys( {"5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"} )
    {
-      BOOST_TEST_MESSAGE("Setup cli_wallet::boost_fixture_test_case");
+      BOOST_TEST_MESSAGE("Setup wallet_wallet::boost_fixture_test_case");
 
       using namespace graphene::chain;
       using namespace graphene::app;
@@ -254,9 +254,9 @@ struct cli_fixture
       }
    }
 
-   ~cli_fixture()
+   ~wallet_fixture()
    {
-      BOOST_TEST_MESSAGE("Cleanup cli_wallet::boost_fixture_test_case");
+      BOOST_TEST_MESSAGE("Cleanup wallet_wallet::boost_fixture_test_case");
    }
 };
 
@@ -267,7 +267,7 @@ struct cli_fixture
 ////////////////
 // Start a server and connect using the same calls as the CLI
 ////////////////
-BOOST_FIXTURE_TEST_CASE( cli_connect, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_connect, wallet_fixture )
 {
    BOOST_TEST_MESSAGE("Testing wallet connection.");
 }
@@ -276,13 +276,13 @@ BOOST_FIXTURE_TEST_CASE( cli_connect, cli_fixture )
 // Start a server and connect using the same calls as the CLI
 // Quit wallet and be sure that file was saved correctly
 ////////////////
-BOOST_FIXTURE_TEST_CASE( cli_quit, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_quit, wallet_fixture )
 {
    BOOST_TEST_MESSAGE("Testing wallet connection and quit command.");
    BOOST_CHECK_THROW( con.wallet_api_ptr->quit(), fc::canceled_exception );
 }
 
-BOOST_FIXTURE_TEST_CASE( upgrade_nathan_account, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( upgrade_nathan_account, wallet_fixture )
 {
    try
    {
@@ -314,7 +314,7 @@ BOOST_FIXTURE_TEST_CASE( upgrade_nathan_account, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( create_new_account, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( create_new_account, wallet_fixture )
 {
    try
    {
@@ -343,22 +343,22 @@ BOOST_FIXTURE_TEST_CASE( create_new_account, cli_fixture )
 
 ///////////////////////
 // Start a server and connect using the same calls as the CLI
-// Vote for two witnesses, and make sure they both stay there
+// Vote for two validators, and make sure they both stay there
 // after a maintenance block
 ///////////////////////
-BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_witnesses, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_vote_for_2_validators, wallet_fixture )
 {
    try
    {
-      BOOST_TEST_MESSAGE("Cli Vote Test for 2 Witnesses");
+      BOOST_TEST_MESSAGE("Cli Vote Test for 2 validators");
 
       INVOKE(create_new_account);
 
       // get the details for init1
-      witness_object init1_obj = con.wallet_api_ptr->get_witness("init1");
+      validator_object init1_obj = con.wallet_api_ptr->get_validator("init1");
       int init1_start_votes = init1_obj.total_votes;
-      // Vote for a witness
-      signed_transaction vote_witness1_tx = con.wallet_api_ptr->vote_for_witness("jmjatlanta", "init1", true, true);
+      // Vote for a validator
+      signed_transaction vote_validator1_tx = con.wallet_api_ptr->vote_for_validator("jmjatlanta", "init1", true, true);
 
       // generate a block to get things started
       BOOST_CHECK(generate_block(app1));
@@ -366,21 +366,21 @@ BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_witnesses, cli_fixture )
       BOOST_CHECK(generate_maintenance_block(app1));
 
       // Verify that the vote is there
-      init1_obj = con.wallet_api_ptr->get_witness("init1");
-      witness_object init2_obj = con.wallet_api_ptr->get_witness("init2");
+      init1_obj = con.wallet_api_ptr->get_validator("init1");
+      validator_object init2_obj = con.wallet_api_ptr->get_validator("init2");
       int init1_middle_votes = init1_obj.total_votes;
       BOOST_CHECK(init1_middle_votes > init1_start_votes);
 
-      // Vote for a 2nd witness
+      // Vote for a 2nd validator
       int init2_start_votes = init2_obj.total_votes;
-      signed_transaction vote_witness2_tx = con.wallet_api_ptr->vote_for_witness("jmjatlanta", "init2", true, true);
+      signed_transaction vote_validator2_tx = con.wallet_api_ptr->vote_for_validator("jmjatlanta", "init2", true, true);
 
       // send another block to trigger maintenance interval
       BOOST_CHECK(generate_maintenance_block(app1));
 
       // Verify that both the first vote and the 2nd are there
-      init2_obj = con.wallet_api_ptr->get_witness("init2");
-      init1_obj = con.wallet_api_ptr->get_witness("init1");
+      init2_obj = con.wallet_api_ptr->get_validator("init2");
+      init1_obj = con.wallet_api_ptr->get_validator("init1");
 
       int init2_middle_votes = init2_obj.total_votes;
       BOOST_CHECK(init2_middle_votes > init2_start_votes);
@@ -392,7 +392,7 @@ BOOST_FIXTURE_TEST_CASE( cli_vote_for_2_witnesses, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( cli_get_signed_transaction_signers, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_get_signed_transaction_signers, wallet_fixture )
 {
    try
    {
@@ -428,7 +428,7 @@ BOOST_FIXTURE_TEST_CASE( cli_get_signed_transaction_signers, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( cli_get_available_transaction_signers, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_get_available_transaction_signers, wallet_fixture )
 {
    try
    {
@@ -483,7 +483,7 @@ BOOST_FIXTURE_TEST_CASE( cli_get_available_transaction_signers, cli_fixture )
    }
 }
 
-BOOST_FIXTURE_TEST_CASE( cli_cant_get_signers_from_modified_transaction, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_cant_get_signers_from_modified_transaction, wallet_fixture )
 {
    try
    {
@@ -522,7 +522,7 @@ BOOST_FIXTURE_TEST_CASE( cli_cant_get_signers_from_modified_transaction, cli_fix
 // Start a server and connect using the same calls as the CLI
 // Set a voting proxy and be assured that it sticks
 ///////////////////
-BOOST_FIXTURE_TEST_CASE( cli_set_voting_proxy, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_set_voting_proxy, wallet_fixture )
 {
    try {
       INVOKE(create_new_account);
@@ -544,7 +544,7 @@ BOOST_FIXTURE_TEST_CASE( cli_set_voting_proxy, cli_fixture )
 ///////////////////
 // Test blind transactions and mantissa length of range proofs.
 ///////////////////
-BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_confidential_tx_test, wallet_fixture )
 {
    using namespace graphene::wallet;
    try {
@@ -633,7 +633,7 @@ BOOST_FIXTURE_TEST_CASE( cli_confidential_tx_test, cli_fixture )
 /******
  * Check account history pagination
  */
-BOOST_FIXTURE_TEST_CASE( account_history_pagination, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( account_history_pagination, wallet_fixture )
 {
    try
    {
@@ -674,7 +674,7 @@ BOOST_FIXTURE_TEST_CASE( account_history_pagination, cli_fixture )
 // Create a multi-sig account and verify that only when all signatures are
 // signed, the transaction could be broadcast
 ///////////////////////
-BOOST_AUTO_TEST_CASE( cli_multisig_transaction )
+BOOST_AUTO_TEST_CASE( wallet_multisig_transaction )
 {
    using namespace graphene::chain;
    using namespace graphene::app;
@@ -808,7 +808,7 @@ graphene::wallet::plain_keys decrypt_keys( const std::string& password, const ve
 }
 
 BOOST_AUTO_TEST_CASE( saving_keys_wallet_test ) {
-   cli_fixture cli;
+   wallet_fixture cli;
 
    cli.con.wallet_api_ptr->import_balance( "nathan", cli.nathan_keys, true );
    cli.con.wallet_api_ptr->upgrade_account( "nathan", true );
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE( saving_keys_wallet_test ) {
 // Start a server and connect using the same calls as the CLI
 // Create an HTLC
 ///////////////////////
-BOOST_AUTO_TEST_CASE( cli_create_htlc )
+BOOST_AUTO_TEST_CASE( wallet_create_htlc )
 {
    using namespace graphene::chain;
    using namespace graphene::app;
@@ -1046,7 +1046,7 @@ static string encapsulate( const graphene::wallet::signed_message& msg )
 /******
  * Check signing/verifying a message with a memo key
  */
-BOOST_FIXTURE_TEST_CASE( cli_sign_message, cli_fixture )
+BOOST_FIXTURE_TEST_CASE( wallet_sign_message, wallet_fixture )
 { try {
    const auto nathan_priv = *wif_to_key( nathan_keys[0] );
    const public_key_type nathan_pub( nathan_priv.get_public_key() );

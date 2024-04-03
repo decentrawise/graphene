@@ -188,7 +188,7 @@ static void load_config_file(const fc::path& config_ini_path, const bpo::options
                              bpo::variables_map& options )
 {
    graphene::app::detail::deduplicator dedup;
-   bpo::options_description unique_options("Graphene Witness Node");
+   bpo::options_description unique_options("Graphene Validator Node");
    for( const boost::shared_ptr<bpo::option_description>& opt : cfg_options.options() )
    {
       const boost::shared_ptr<bpo::option_description> od = dedup.next(opt);
@@ -315,7 +315,7 @@ namespace graphene { namespace app {
          create_logging_config_file(logging_ini_path, data_dir);
       }
 
-      // load witness node configuration
+      // load validator node configuration
       load_config_file(config_ini_path, cfg_options, options);
 
       // load logging configuration

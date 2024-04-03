@@ -1,7 +1,7 @@
 #include <graphene/chain/database.hpp>
 
 #include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 
@@ -187,7 +187,7 @@ void database::open(
          _p_global_prop_obj = &get( global_property_id_type() );
          _p_chain_property_obj = &get( chain_property_id_type() );
          _p_dyn_global_prop_obj = &get( dynamic_global_property_id_type() );
-         _p_witness_schedule_obj = &get( witness_schedule_id_type() );
+         _p_producer_schedule_obj = &get( producer_schedule_id_type() );
       }
 
       fc::optional<block_id_type> last_block = _block_id_to_block.last_id();

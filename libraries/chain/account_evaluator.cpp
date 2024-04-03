@@ -8,7 +8,7 @@
 #include <graphene/chain/internal_exceptions.hpp>
 #include <graphene/chain/special_authority_evaluation.hpp>
 #include <graphene/chain/special_authority_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
 #include <algorithm>
@@ -40,9 +40,9 @@ void verify_account_votes( const database& db, const account_options& options )
    const auto& gpo = db.get_global_properties();
    const auto& chain_params = gpo.parameters;
 
-   FC_ASSERT( options.num_witness <= chain_params.maximum_witness_count,
-              "Voted for more witnesses than currently allowed (${c})", ("c", chain_params.maximum_witness_count) );
-   FC_ASSERT( options.num_council <= chain_params.maximum_council_count,
+   FC_ASSERT( options.num_producers <= chain_params.maximum_producer_count,
+              "Voted for more validators than currently allowed (${c})", ("c", chain_params.maximum_producer_count) );
+   FC_ASSERT( options.num_delegates <= chain_params.maximum_council_count,
               "Voted for more delegates than currently allowed (${c})", ("c", chain_params.maximum_council_count) );
 
    FC_ASSERT( db.find(options.voting_account), "Invalid proxy account specified." );
@@ -55,15 +55,15 @@ void verify_account_votes( const database& db, const account_options& options )
 
    const auto& worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_id>();
    const auto& delegate_idx = db.get_index_type<delegate_index>().indices().get<by_vote_id>();
-   const auto& witness_idx = db.get_index_type<witness_index>().indices().get<by_vote_id>();
+   const auto& validator_idx = db.get_index_type<validator_index>().indices().get<by_vote_id>();
    for ( auto id : options.votes ) {
       switch ( id.type() ) {
          case vote_id_type::delegate:
             FC_ASSERT( delegate_idx.find(id) != delegate_idx.end(),
                         "Can not vote for ${id} which does not exist.", ("id",id) );
             break;
-         case vote_id_type::witness:
-            FC_ASSERT( witness_idx.find(id) != witness_idx.end(),
+         case vote_id_type::validator:
+            FC_ASSERT( validator_idx.find(id) != validator_idx.end(),
                         "Can not vote for ${id} which does not exist.", ("id",id) );
             break;
          case vote_id_type::worker:

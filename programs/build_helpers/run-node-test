@@ -14,18 +14,18 @@ cleanup () {
     exit $1
 }
 
-echo "Starting witness node..." 1>&2
-programs/witness_node/witness_node --data-dir "$DATA_DIR" \
+echo "Starting validator node..." 1>&2
+programs/graphened/graphened --data-dir "$DATA_DIR" \
 			--checkpoint '[131072,"0000000000000000000000000000000000000001"]' \
 			--rpc-endpoint 127.0.0.1:8090 --force-validate >node.log 2>&1 &
 NODE_PID=$!
 
-echo "Waiting for cli_wallet start..." 1>&2 &
+echo "Waiting for wallet start..." 1>&2 &
 CLI_PID=$!
 sleep 5
 _START="`date +%s`"
 while ! ps -p "$CLI_PID" >/dev/null && [ $((`date +%s` - $_START)) -lt 120 ]; do
-    programs/cli_wallet/cli_wallet -sws://127.0.0.1:8090 -d -H127.0.0.1:8091 >cli.log 2>&1 &
+    programs/wallet/wallet -sws://127.0.0.1:8090 -d -H127.0.0.1:8091 >cli.log 2>&1 &
     CLI_PID=$!
     sleep 10
 done

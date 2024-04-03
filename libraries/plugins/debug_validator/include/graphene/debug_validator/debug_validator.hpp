@@ -7,12 +7,12 @@
 #include <fc/thread/future.hpp>
 #include <fc/container/flat.hpp>
 
-namespace graphene { namespace debug_witness_plugin {
+namespace graphene { namespace debug_validator_plugin {
 
-class debug_witness_plugin : public graphene::app::plugin {
+class debug_validator_plugin : public graphene::app::plugin {
 public:
    using graphene::app::plugin::plugin;
-   ~debug_witness_plugin() override;
+   ~debug_validator_plugin() override;
 
    std::string plugin_name()const override;
 
@@ -45,4 +45,4 @@ private:
    boost::signals2::scoped_connection _removed_objects_conn;
 };
 
-} } //graphene::debug_witness_plugin
+} } //graphene::debug_validator_plugin

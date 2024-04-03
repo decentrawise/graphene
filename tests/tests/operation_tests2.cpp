@@ -8,10 +8,10 @@
 #include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
-#include <graphene/witness/witness.hpp>
+#include <graphene/validator/validator.hpp>
 
 #include <graphene/utilities/tempdir.hpp>
 
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_nominal_case )
 BOOST_AUTO_TEST_CASE( withdraw_permission_whitelist_asset_test )
 { try {
 
-   uint32_t skip = database::skip_witness_signature
+   uint32_t skip = database::skip_validator_signature
                  | database::skip_transaction_signatures
                  | database::skip_transaction_dupe_check
                  | database::skip_block_size_check
@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       op.asset_to_update = bit_usd_id;
       op.issuer = obj.issuer;
       op.new_options = obj.options;
-      op.new_options.flags &= ~witness_fed_asset;
+      op.new_options.flags &= ~validator_fed_asset;
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       generate_block();
@@ -801,10 +801,10 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
    BOOST_CHECK(!bitasset.current_feed.settlement_price.is_null());
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( witness_create )
+BOOST_AUTO_TEST_CASE( validator_create )
 { try {
 
-   uint32_t skip = database::skip_witness_signature
+   uint32_t skip = database::skip_validator_signature
                  | database::skip_transaction_signatures
                  | database::skip_transaction_dupe_check
                  | database::skip_block_size_check
@@ -813,60 +813,60 @@ BOOST_AUTO_TEST_CASE( witness_create )
                  ;
    generate_block(skip);
 
-   auto wtplugin = app.register_plugin<graphene::witness_plugin::witness_plugin>();
+   auto wtplugin = app.register_plugin<graphene::validator_plugin::validator_plugin>();
    boost::program_options::variables_map options;
 
-   // init witness key cahce
-   std::set< witness_id_type > caching_witnesses;
-   std::vector< std::string > witness_ids;
+   // init validator key cahce
+   std::set< validator_id_type > caching_validators;
+   std::vector< std::string > validator_ids;
    for( uint64_t i = 1; ; ++i )
    {
-      witness_id_type wid(i);
-      caching_witnesses.insert( wid );
+      validator_id_type wid(i);
+      caching_validators.insert( wid );
       string wid_str = "\"" + std::string(object_id_type(wid)) + "\"";
-      witness_ids.push_back( wid_str );
+      validator_ids.push_back( wid_str );
       if( !db.find(wid) )
          break;
    }
-   options.insert( std::make_pair( "witness-id", boost::program_options::variable_value( witness_ids, false ) ) );
+   options.insert( std::make_pair( "validator-id", boost::program_options::variable_value( validator_ids, false ) ) );
    wtplugin->plugin_initialize(options);
    wtplugin->plugin_startup();
 
-   const auto& wit_key_cache = wtplugin->get_witness_key_cache();
+   const auto& wit_key_cache = wtplugin->get_validator_key_cache();
 
    // setup test account
    ACTOR(nathan);
    upgrade_to_lifetime_member(nathan_id);
    trx.clear();
 
-   // create witness
-   witness_id_type nathan_witness_id = create_witness(nathan_id, nathan_private_key, skip).get_id();
+   // create validator
+   validator_id_type nathan_validator_id = create_validator(nathan_id, nathan_private_key, skip).get_id();
 
    // nathan should be in the cache
-   BOOST_CHECK_EQUAL( caching_witnesses.count(nathan_witness_id), 1u );
+   BOOST_CHECK_EQUAL( caching_validators.count(nathan_validator_id), 1u );
 
    // nathan's key in the cache should still be null before a new block is generated
-   auto nathan_itr = wit_key_cache.find( nathan_witness_id );
+   auto nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && !nathan_itr->second.valid() );
 
    // Give nathan some voting stake
    transfer(council_account, nathan_id, asset(10000000));
    generate_block(skip);
 
-   // nathan should be a witness now
-   BOOST_REQUIRE( db.find( nathan_witness_id ) );
+   // nathan should be a validator now
+   BOOST_REQUIRE( db.find( nathan_validator_id ) );
    // nathan's key in the cache should have been stored now
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
                 && *nathan_itr->second == nathan_private_key.get_public_key() );
 
    // undo the block
    db.pop_block();
 
-   // nathan should not be a witness now
-   BOOST_REQUIRE( !db.find( nathan_witness_id ) );
-   // nathan's key in the cache should still be valid, since witness plugin doesn't get notified on popped block
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   // nathan should not be a validator now
+   BOOST_REQUIRE( !db.find( nathan_validator_id ) );
+   // nathan's key in the cache should still be valid, since validator plugin doesn't get notified on popped block
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
                 && *nathan_itr->second == nathan_private_key.get_public_key() );
 
@@ -876,8 +876,8 @@ BOOST_AUTO_TEST_CASE( witness_create )
    // generate another block
    generate_block(skip);
 
-   // nathan should not be a witness now
-   BOOST_REQUIRE( !db.find( nathan_witness_id ) );
+   // nathan should not be a validator now
+   BOOST_REQUIRE( !db.find( nathan_validator_id ) );
    // nathan's key in the cache should be null now
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && !nathan_itr->second.valid() );
 
@@ -890,22 +890,22 @@ BOOST_AUTO_TEST_CASE( witness_create )
    generate_block(skip);
    set_expiration( db, trx );
 
-   // nathan should be a witness now
-   BOOST_REQUIRE( db.find( nathan_witness_id ) );
+   // nathan should be a validator now
+   BOOST_REQUIRE( db.find( nathan_validator_id ) );
    // nathan's key in the cache should have been stored now
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
                 && *nathan_itr->second == nathan_private_key.get_public_key() );
 
    // generate a new key
-   fc::ecc::private_key new_signing_key = fc::ecc::private_key::regenerate(fc::digest("nathan_new"));
+   fc::ecc::private_key new_block_producer_key = fc::ecc::private_key::regenerate(fc::digest("nathan_new"));
 
    // update nathan's block signing key
    {
-      witness_update_operation wuop;
-      wuop.witness_account = nathan_id;
-      wuop.witness = nathan_witness_id;
-      wuop.new_signing_key = new_signing_key.get_public_key();
+      validator_update_operation wuop;
+      wuop.validator_account = nathan_id;
+      wuop.validator = nathan_validator_id;
+      wuop.new_block_producer_key = new_block_producer_key.get_public_key();
       signed_transaction wu_trx;
       wu_trx.operations.push_back( wuop );
       set_expiration( db, wu_trx );
@@ -913,7 +913,7 @@ BOOST_AUTO_TEST_CASE( witness_create )
    }
 
    // nathan's key in the cache should still be old key
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
                 && *nathan_itr->second == nathan_private_key.get_public_key() );
 
@@ -921,23 +921,23 @@ BOOST_AUTO_TEST_CASE( witness_create )
    generate_block(skip);
 
    // nathan's key in the cache should have changed to new key
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
-                && *nathan_itr->second == new_signing_key.get_public_key() );
+                && *nathan_itr->second == new_block_producer_key.get_public_key() );
 
    // undo the block
    db.pop_block();
 
-   // nathan's key in the cache should still be new key, since witness plugin doesn't get notified on popped block
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   // nathan's key in the cache should still be new key, since validator plugin doesn't get notified on popped block
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
-                && *nathan_itr->second == new_signing_key.get_public_key() );
+                && *nathan_itr->second == new_block_producer_key.get_public_key() );
 
    // generate another block
    generate_block(skip);
 
    // nathan's key in the cache should be old key now
-   nathan_itr = wit_key_cache.find( nathan_witness_id );
+   nathan_itr = wit_key_cache.find( nathan_validator_id );
    BOOST_CHECK( nathan_itr != wit_key_cache.end() && nathan_itr->second.valid()
                 && *nathan_itr->second == nathan_private_key.get_public_key() );
 
@@ -946,10 +946,10 @@ BOOST_AUTO_TEST_CASE( witness_create )
       account_update_operation op;
       op.account = nathan_id;
       op.new_options = nathan_id(db).options;
-      op.new_options->votes.insert(nathan_witness_id(db).vote_id);
-      op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
-                                                  [](vote_id_type id) { return id.type() == vote_id_type::witness; });
-      op.new_options->num_council = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+      op.new_options->votes.insert(nathan_validator_id(db).vote_id);
+      op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+                                                  [](vote_id_type id) { return id.type() == vote_id_type::validator; });
+      op.new_options->num_delegates = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                     [](vote_id_type id) { return id.type() == vote_id_type::delegate; });
       trx.operations.push_back(op);
       sign( trx, nathan_private_key );
@@ -958,24 +958,24 @@ BOOST_AUTO_TEST_CASE( witness_create )
    }
 
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
-   const auto& witnesses = db.get_global_properties().active_witnesses;
+   const auto& validators = db.get_global_properties().block_producers;
 
-   // make sure we're in active_witnesses
-   auto itr = std::find(witnesses.begin(), witnesses.end(), nathan_witness_id);
-   BOOST_CHECK(itr != witnesses.end());
+   // make sure we're in block_producers
+   auto itr = std::find(validators.begin(), validators.end(), nathan_validator_id);
+   BOOST_CHECK(itr != validators.end());
 
    // generate blocks until we are at the beginning of a round
-   while( ((db.get_dynamic_global_properties().current_aslot + 1) % witnesses.size()) != 0 )
+   while( ((db.get_dynamic_global_properties().current_aslot + 1) % validators.size()) != 0 )
       generate_block();
 
    int produced = 0;
-   // Make sure we get scheduled at least once in witnesses.size()*2 blocks
+   // Make sure we get scheduled at least once in validators.size()*2 blocks
    // may take this many unless we measure where in the scheduling round we are
    // TODO:  intense_test that repeats this loop many times
-   for( size_t i=0, n=witnesses.size()*2; i<n; i++ )
+   for( size_t i=0, n=validators.size()*2; i<n; i++ )
    {
       signed_block block = generate_block();
-      if( block.witness == nathan_witness_id )
+      if( block.validator == nathan_validator_id )
          produced++;
    }
    BOOST_CHECK_GE( produced, 1 );
@@ -988,7 +988,7 @@ BOOST_AUTO_TEST_CASE( witness_create )
  */
 BOOST_AUTO_TEST_CASE( global_settle_test )
 { try {
-   uint32_t skip = database::skip_witness_signature
+   uint32_t skip = database::skip_validator_signature
                  | database::skip_transaction_signatures
                  | database::skip_transaction_dupe_check
                  | database::skip_block_size_check
@@ -1348,7 +1348,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
 
 BOOST_AUTO_TEST_CASE( force_settle_test )
 {
-   uint32_t skip = database::skip_witness_signature
+   uint32_t skip = database::skip_validator_signature
                  | database::skip_transaction_signatures
                  | database::skip_transaction_dupe_check
                  | database::skip_block_size_check
@@ -1646,7 +1646,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    BOOST_CHECK(db.find(balance_id_type(1)) != nullptr);
 
    auto slot = db.get_slot_at_time(starting_time);
-   db.generate_block(starting_time, db.get_scheduled_witness(slot), init_account_priv_key, skip_flags);
+   db.generate_block(starting_time, db.get_scheduled_producer(slot), init_account_priv_key, skip_flags);
    set_expiration( db, trx );
 
    const balance_object& vesting_balance_1 = balance_id_type(2)(db);
@@ -1697,9 +1697,9 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    // Attempting to claim twice within a day
    GRAPHENE_CHECK_THROW(PUSH_TX(db, trx), balance_claim_claimed_too_often);
 
-   db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, skip_flags);
+   db.generate_block(db.get_slot_time(1), db.get_scheduled_producer(1), init_account_priv_key, skip_flags);
    slot = db.get_slot_at_time(vesting_balance_1.vesting_policy->begin_timestamp + 60);
-   db.generate_block(db.get_slot_time(slot), db.get_scheduled_witness(slot), init_account_priv_key, skip_flags);
+   db.generate_block(db.get_slot_time(slot), db.get_scheduled_producer(slot), init_account_priv_key, skip_flags);
    set_expiration( db, trx );
 
    op.balance_to_claim = vesting_balance_1.id;
@@ -1723,9 +1723,9 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    // Attempting to claim twice within a day
    GRAPHENE_CHECK_THROW(PUSH_TX(db, trx), balance_claim_claimed_too_often);
 
-   db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, skip_flags);
+   db.generate_block(db.get_slot_time(1), db.get_scheduled_producer(1), init_account_priv_key, skip_flags);
    slot = db.get_slot_at_time(db.head_block_time() + fc::days(1));
-   db.generate_block(db.get_slot_time(slot), db.get_scheduled_witness(slot), init_account_priv_key, skip_flags);
+   db.generate_block(db.get_slot_time(slot), db.get_scheduled_producer(slot), init_account_priv_key, skip_flags);
    set_expiration( db, trx );
 
    op.total_claimed = vesting_balance_2.balance;
@@ -1769,7 +1769,7 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
    try
    {
       ACTOR(alice);
-      // don't pay witnesses so we have some worker budget to work with
+      // don't pay validators so we have some worker budget to work with
 
       transfer(account_id_type(), alice_id, asset(int64_t(100000) * 1100 * 1000 * 1000));
       {
@@ -1786,7 +1786,7 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
       generate_block();
 
       // Wait for a maintenance interval to ensure we have a full day's budget to work with.
-      // Otherwise we may not have enough to feed the witnesses and the worker will end up starved if we start late in the day.
+      // Otherwise we may not have enough to feed the validators and the worker will end up starved if we start late in the day.
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 
@@ -1887,7 +1887,7 @@ BOOST_AUTO_TEST_CASE( vbo_withdraw_different )
    try
    {
       ACTORS((alice)(izzy));
-      // don't pay witnesses so we have some worker budget to work with
+      // don't pay validators so we have some worker budget to work with
 
       // transfer(account_id_type(), alice_id, asset(1000));
 

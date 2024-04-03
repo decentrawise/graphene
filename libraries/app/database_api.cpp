@@ -204,35 +204,35 @@ void database_api_impl::cancel_all_subscriptions( bool reset_callback, bool rese
 //////////////////////////////////////////////////////////////////////
 
 optional<maybe_signed_block_header> database_api::get_block_header(
-            uint32_t block_num, const optional<bool>& with_witness_signature )const
+            uint32_t block_num, const optional<bool>& with_validator_signature )const
 {
-   bool with_signature = ( with_witness_signature.valid() && *with_witness_signature );
+   bool with_signature = ( with_validator_signature.valid() && *with_validator_signature );
    return my->get_block_header( block_num, with_signature );
 }
 
 optional<maybe_signed_block_header> database_api_impl::get_block_header(
-            uint32_t block_num, bool with_witness_signature )const
+            uint32_t block_num, bool with_validator_signature )const
 {
    auto result = _db.fetch_block_by_number(block_num);
    if(result)
-      return maybe_signed_block_header( *result, with_witness_signature );
+      return maybe_signed_block_header( *result, with_validator_signature );
    return {};
 }
 
 map<uint32_t, optional<maybe_signed_block_header>> database_api::get_block_header_batch(
-            const vector<uint32_t>& block_nums, const optional<bool>& with_witness_signatures )const
+            const vector<uint32_t>& block_nums, const optional<bool>& with_validator_signatures )const
 {
-   bool with_signatures = ( with_witness_signatures.valid() && *with_witness_signatures );
+   bool with_signatures = ( with_validator_signatures.valid() && *with_validator_signatures );
    return my->get_block_header_batch( block_nums, with_signatures );
 }
 
 map<uint32_t, optional<maybe_signed_block_header>> database_api_impl::get_block_header_batch(
-            const vector<uint32_t>& block_nums, bool with_witness_signatures )const
+            const vector<uint32_t>& block_nums, bool with_validator_signatures )const
 {
    map<uint32_t, optional<maybe_signed_block_header>> results;
    for (const uint32_t block_num : block_nums)
    {
-      results[block_num] = get_block_header( block_num, with_witness_signatures );
+      results[block_num] = get_block_header( block_num, with_validator_signatures );
    }
    return results;
 }
@@ -1684,20 +1684,20 @@ vector<market_trade> database_api_impl::get_trade_history_by_sequence(
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Witnesses                                                        //
+// Validators                                                        //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<optional<witness_object>> database_api::get_witnesses(const vector<witness_id_type>& witness_ids)const
+vector<optional<validator_object>> database_api::get_validators(const vector<validator_id_type>& validator_ids)const
 {
-   return my->get_witnesses( witness_ids );
+   return my->get_validators( validator_ids );
 }
 
-vector<optional<witness_object>> database_api_impl::get_witnesses(const vector<witness_id_type>& witness_ids)const
+vector<optional<validator_object>> database_api_impl::get_validators(const vector<validator_id_type>& validator_ids)const
 {
-   vector<optional<witness_object>> result; result.reserve(witness_ids.size());
-   std::transform(witness_ids.begin(), witness_ids.end(), std::back_inserter(result),
-                  [this](witness_id_type id) -> optional<witness_object> {
+   vector<optional<validator_object>> result; result.reserve(validator_ids.size());
+   std::transform(validator_ids.begin(), validator_ids.end(), std::back_inserter(result),
+                  [this](validator_id_type id) -> optional<validator_object> {
       if(auto o = _db.find(id))
          return *o;
       return {};
@@ -1705,14 +1705,14 @@ vector<optional<witness_object>> database_api_impl::get_witnesses(const vector<w
    return result;
 }
 
-fc::optional<witness_object> database_api::get_witness_by_account(const std::string& account_id_or_name)const
+fc::optional<validator_object> database_api::get_validator_by_account(const std::string& account_id_or_name)const
 {
-   return my->get_witness_by_account( account_id_or_name );
+   return my->get_validator_by_account( account_id_or_name );
 }
 
-fc::optional<witness_object> database_api_impl::get_witness_by_account(const std::string& account_id_or_name) const
+fc::optional<validator_object> database_api_impl::get_validator_by_account(const std::string& account_id_or_name) const
 {
-   const auto& idx = _db.get_index_type<witness_index>().indices().get<by_account>();
+   const auto& idx = _db.get_index_type<validator_index>().indices().get<by_account>();
    const account_id_type account = get_account_from_string(account_id_or_name)->get_id();
    auto itr = idx.find(account);
    if( itr != idx.end() )
@@ -1720,53 +1720,53 @@ fc::optional<witness_object> database_api_impl::get_witness_by_account(const std
    return {};
 }
 
-map<string, witness_id_type, std::less<>> database_api::lookup_witness_accounts( const string& lower_bound_name,
+map<string, validator_id_type, std::less<>> database_api::lookup_validator_accounts( const string& lower_bound_name,
                                                                                  uint32_t limit )const
 {
-   return my->lookup_witness_accounts( lower_bound_name, limit );
+   return my->lookup_validator_accounts( lower_bound_name, limit );
 }
 
-map<string, witness_id_type, std::less<>> database_api_impl::lookup_witness_accounts( const string& lower_bound_name,
+map<string, validator_id_type, std::less<>> database_api_impl::lookup_validator_accounts( const string& lower_bound_name,
                                                                                       uint32_t limit )const
 {
    FC_ASSERT( _app_options, "Internal error" );
-   const auto configured_limit = _app_options->api_limit_lookup_witness_accounts;
+   const auto configured_limit = _app_options->api_limit_lookup_validator_accounts;
    FC_ASSERT( limit <= configured_limit,
               "limit can not be greater than ${configured_limit}",
               ("configured_limit", configured_limit) );
 
-   const auto& witnesses_by_id = _db.get_index_type<witness_index>().indices().get<by_id>();
+   const auto& validators_by_id = _db.get_index_type<validator_index>().indices().get<by_id>();
 
-   // we want to order witnesses by account name, but that name is in the account object
-   // so the witness_index doesn't have a quick way to access it.
+   // we want to order validators by account name, but that name is in the account object
+   // so the validator_index doesn't have a quick way to access it.
    // get all the names and look them all up, sort them, then figure out what
    // records to return.  This could be optimized, but we expect the
-   // number of witnesses to be few and the frequency of calls to be rare
+   // number of validators to be few and the frequency of calls to be rare
    // TODO optimize
-   std::map<std::string, witness_id_type, std::less<>> witnesses_by_account_name;
-   for (const witness_object& witness : witnesses_by_id)
-       if (auto account_iter = _db.find(witness.witness_account))
+   std::map<std::string, validator_id_type, std::less<>> validators_by_account_name;
+   for (const validator_object& validator : validators_by_id)
+       if (auto account_iter = _db.find(validator.validator_account))
            if (account_iter->name >= lower_bound_name) // we can ignore anything below lower_bound_name
-               witnesses_by_account_name.insert(std::make_pair(account_iter->name, witness.get_id()));
+               validators_by_account_name.insert(std::make_pair(account_iter->name, validator.get_id()));
 
-   auto end_iter = witnesses_by_account_name.begin();
-   while( end_iter != witnesses_by_account_name.end() && limit > 0 )
+   auto end_iter = validators_by_account_name.begin();
+   while( end_iter != validators_by_account_name.end() && limit > 0 )
    {
       ++end_iter;
       --limit;
    }
-   witnesses_by_account_name.erase(end_iter, witnesses_by_account_name.end());
-   return witnesses_by_account_name;
+   validators_by_account_name.erase(end_iter, validators_by_account_name.end());
+   return validators_by_account_name;
 }
 
-uint64_t database_api::get_witness_count()const
+uint64_t database_api::get_validator_count()const
 {
-   return my->get_witness_count();
+   return my->get_validator_count();
 }
 
-uint64_t database_api_impl::get_witness_count()const
+uint64_t database_api_impl::get_validator_count()const
 {
-   return _db.get_index_type<witness_index>().indices().size();
+   return _db.get_index_type<validator_index>().indices().size();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1950,7 +1950,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
               "Number of querying votes can not be greater than ${configured_limit}",
               ("configured_limit", configured_limit) );
 
-   const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
+   const auto& validator_idx = _db.get_index_type<validator_index>().indices().get<by_vote_id>();
    const auto& delegate_idx = _db.get_index_type<delegate_index>().indices().get<by_vote_id>();
    const auto& worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_id>();
 
@@ -1969,11 +1969,11 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
                result.emplace_back( variant() );
             break;
          }
-         case vote_id_type::witness:
+         case vote_id_type::validator:
          {
-            auto itr = witness_idx.find( id );
-            if( itr != witness_idx.end() )
-               result.emplace_back( variant( *itr, 2 ) ); // Depth of witness_object is 1, add 1 here to be safe
+            auto itr = validator_idx.find( id );
+            if( itr != validator_idx.end() )
+               result.emplace_back( variant( *itr, 2 ) ); // Depth of validator_object is 1, add 1 here to be safe
             else
                result.emplace_back( variant() );
             break;

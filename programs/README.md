@@ -2,7 +2,7 @@
 
 The Graphene Protocol programs are a collection of binaries to run the blockchain, interact with it or utilities.
 
-The main program is the `witness_node`, used to run a block producer, API or plugin node. The second in importance is the `cli_wallet`, used to interact with the blockchain. These 2 programs are the most used by the community and updated by the developers, rest of the programs are utilities.
+The main program is the `graphened`, used to run a block producer, API or plugin node. The second in importance is the `wallet`, used to interact with the blockchain. These 2 programs are the most used by the community and updated by the developers, rest of the programs are utilities.
 
 Programs in here are part of the **graphene** project and are maintained by the DecentraWise Team and contributors.
 
@@ -11,8 +11,8 @@ Programs in here are part of the **graphene** project and are maintained by the 
 
 Folder | Name  | Description | Category | Status | Help 
 ---|---|---|---|---|---
-[witness_node](witness_node) | Witness Node | Main software used to sign blocks or provide services. | Node | Active | `./witness_node --help`
-[cli_wallet](cli_wallet) | CLI Wallet | Software to interact with the blockchain by command line.  | Wallet | Active | `./cli_wallet --help` 
+[graphened](graphened) | Validator Node | Main software used to sign blocks or provide services. | Node | Active | `./graphened --help`
+[wallet](wallet) | CLI Wallet | Software to interact with the blockchain by command line.  | Wallet | Active | `./wallet --help` 
 [js_operation_serializer](js_operation_serializer) | Operation Serializer | Dump all blockchain operations and types. Used by the UI. | Tool | Old | `./js_operation_serializer`
 [size_checker](size_checker) | Size Checker | Return wire size average in bytes of all the operations.  | Tool | Old | `./size_checker`
 [cat-parts](build_helpers/cat-parts.cpp) | Cat parts | Used to create `hardfork.hpp` from individual files. | Tool | Active | `./cat-parts`

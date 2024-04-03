@@ -841,8 +841,8 @@ BOOST_AUTO_TEST_CASE( create_vesting_balance_object_test )
       create_vesting_balance_object(actor_id, vesting_balance_type::cashback);
       create_vesting_balance_object(actor_id, vesting_balance_type::cashback);
 
-      create_vesting_balance_object(actor_id, vesting_balance_type::witness);
-      create_vesting_balance_object(actor_id, vesting_balance_type::witness);
+      create_vesting_balance_object(actor_id, vesting_balance_type::validator);
+      create_vesting_balance_object(actor_id, vesting_balance_type::validator);
 
       create_vesting_balance_object(actor_id, vesting_balance_type::worker);
       create_vesting_balance_object(actor_id, vesting_balance_type::worker);

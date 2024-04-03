@@ -19,107 +19,107 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
 {
    try
    {
-      // Create 12 accounts to be witnesses under our control
-      ACTORS( (witness0)(witness1)(witness2)(witness3)(witness4)(witness5)
-                   (witness6)(witness7)(witness8)(witness9)(witness10)(witness11) );
+      // Create 12 accounts to be validators under our control
+      ACTORS( (validator0)(validator1)(validator2)(validator3)(validator4)(validator5)
+                   (validator6)(validator7)(validator8)(validator9)(validator10)(validator11) );
 
       // Upgrade all accounts to LTM
-      upgrade_to_lifetime_member(witness0_id);
-      upgrade_to_lifetime_member(witness1_id);
-      upgrade_to_lifetime_member(witness2_id);
-      upgrade_to_lifetime_member(witness3_id);
-      upgrade_to_lifetime_member(witness4_id);
-      upgrade_to_lifetime_member(witness5_id);
-      upgrade_to_lifetime_member(witness6_id);
-      upgrade_to_lifetime_member(witness7_id);
-      upgrade_to_lifetime_member(witness8_id);
-      upgrade_to_lifetime_member(witness9_id);
-      upgrade_to_lifetime_member(witness10_id);
-      upgrade_to_lifetime_member(witness11_id);
+      upgrade_to_lifetime_member(validator0_id);
+      upgrade_to_lifetime_member(validator1_id);
+      upgrade_to_lifetime_member(validator2_id);
+      upgrade_to_lifetime_member(validator3_id);
+      upgrade_to_lifetime_member(validator4_id);
+      upgrade_to_lifetime_member(validator5_id);
+      upgrade_to_lifetime_member(validator6_id);
+      upgrade_to_lifetime_member(validator7_id);
+      upgrade_to_lifetime_member(validator8_id);
+      upgrade_to_lifetime_member(validator9_id);
+      upgrade_to_lifetime_member(validator10_id);
+      upgrade_to_lifetime_member(validator11_id);
 
-      // Create all the witnesses
-      const witness_id_type witness0_witness_id = create_witness(witness0_id, witness0_private_key).get_id();
-      const witness_id_type witness1_witness_id = create_witness(witness1_id, witness1_private_key).get_id();
-      const witness_id_type witness2_witness_id = create_witness(witness2_id, witness2_private_key).get_id();
-      const witness_id_type witness3_witness_id = create_witness(witness3_id, witness3_private_key).get_id();
-      const witness_id_type witness4_witness_id = create_witness(witness4_id, witness4_private_key).get_id();
-      const witness_id_type witness5_witness_id = create_witness(witness5_id, witness5_private_key).get_id();
-      const witness_id_type witness6_witness_id = create_witness(witness6_id, witness6_private_key).get_id();
-      const witness_id_type witness7_witness_id = create_witness(witness7_id, witness7_private_key).get_id();
-      const witness_id_type witness8_witness_id = create_witness(witness8_id, witness8_private_key).get_id();
-      const witness_id_type witness9_witness_id = create_witness(witness9_id, witness9_private_key).get_id();
-      const witness_id_type witness10_witness_id = create_witness(witness10_id, witness10_private_key).get_id();
-      const witness_id_type witness11_witness_id = create_witness(witness11_id, witness11_private_key).get_id();
+      // Create all the validators
+      const validator_id_type validator0_validator_id = create_validator(validator0_id, validator0_private_key).get_id();
+      const validator_id_type validator1_validator_id = create_validator(validator1_id, validator1_private_key).get_id();
+      const validator_id_type validator2_validator_id = create_validator(validator2_id, validator2_private_key).get_id();
+      const validator_id_type validator3_validator_id = create_validator(validator3_id, validator3_private_key).get_id();
+      const validator_id_type validator4_validator_id = create_validator(validator4_id, validator4_private_key).get_id();
+      const validator_id_type validator5_validator_id = create_validator(validator5_id, validator5_private_key).get_id();
+      const validator_id_type validator6_validator_id = create_validator(validator6_id, validator6_private_key).get_id();
+      const validator_id_type validator7_validator_id = create_validator(validator7_id, validator7_private_key).get_id();
+      const validator_id_type validator8_validator_id = create_validator(validator8_id, validator8_private_key).get_id();
+      const validator_id_type validator9_validator_id = create_validator(validator9_id, validator9_private_key).get_id();
+      const validator_id_type validator10_validator_id = create_validator(validator10_id, validator10_private_key).get_id();
+      const validator_id_type validator11_validator_id = create_validator(validator11_id, validator11_private_key).get_id();
 
-      // Create a vector with private key of all witnesses, will be used to activate 11 witnesses at a time
+      // Create a vector with private key of all validators, will be used to activate 11 validators at a time
       const vector <fc::ecc::private_key> private_keys = {
-            witness0_private_key,
-            witness1_private_key,
-            witness2_private_key,
-            witness3_private_key,
-            witness4_private_key,
-            witness5_private_key,
-            witness6_private_key,
-            witness7_private_key,
-            witness8_private_key,
-            witness9_private_key,
-            witness10_private_key
+            validator0_private_key,
+            validator1_private_key,
+            validator2_private_key,
+            validator3_private_key,
+            validator4_private_key,
+            validator5_private_key,
+            validator6_private_key,
+            validator7_private_key,
+            validator8_private_key,
+            validator9_private_key,
+            validator10_private_key
       };
 
-      // create a map with account id and witness id of the first 11 witnesses
-      const flat_map <account_id_type, witness_id_type> witness_map = {
-         {witness0_id, witness0_witness_id},
-         {witness1_id, witness1_witness_id},
-         {witness2_id, witness2_witness_id},
-         {witness3_id, witness3_witness_id},
-         {witness4_id, witness4_witness_id},
-         {witness5_id, witness5_witness_id},
-         {witness6_id, witness6_witness_id},
-         {witness7_id, witness7_witness_id},
-         {witness8_id, witness8_witness_id},
-         {witness9_id, witness9_witness_id},
-         {witness10_id, witness10_witness_id}
+      // create a map with account id and validator id of the first 11 validators
+      const flat_map <account_id_type, validator_id_type> validator_map = {
+         {validator0_id, validator0_validator_id},
+         {validator1_id, validator1_validator_id},
+         {validator2_id, validator2_validator_id},
+         {validator3_id, validator3_validator_id},
+         {validator4_id, validator4_validator_id},
+         {validator5_id, validator5_validator_id},
+         {validator6_id, validator6_validator_id},
+         {validator7_id, validator7_validator_id},
+         {validator8_id, validator8_validator_id},
+         {validator9_id, validator9_validator_id},
+         {validator10_id, validator10_validator_id}
       };
 
       // Create the asset
       const asset_id_type bit_usd_id = create_bitasset("USDBIT").get_id();
 
-      // Update the asset to be fed by system witnesses
+      // Update the asset to be fed by system validators
       asset_update_operation op;
       const asset_object &asset_obj = bit_usd_id(db);
       op.asset_to_update = bit_usd_id;
       op.issuer = asset_obj.issuer;
       op.new_options = asset_obj.options;
-      op.new_options.flags &= witness_fed_asset;
-      op.new_options.issuer_permissions &= witness_fed_asset;
+      op.new_options.flags &= validator_fed_asset;
+      op.new_options.issuer_permissions &= validator_fed_asset;
       trx.operations.push_back(op);
       PUSH_TX(db, trx, ~0);
       generate_block();
       trx.clear();
 
-      // Check current default witnesses, default chain is configured with 10 witnesses
-      auto witnesses = db.get_global_properties().active_witnesses;
-      BOOST_CHECK_EQUAL(witnesses.size(), INITIAL_WITNESS_COUNT);
-      BOOST_CHECK_EQUAL(witnesses.begin()[0].instance.value, 1u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[1].instance.value, 2u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[2].instance.value, 3u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[3].instance.value, 4u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[4].instance.value, 5u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[5].instance.value, 6u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[6].instance.value, 7u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[7].instance.value, 8u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[8].instance.value, 9u);
+      // Check current default validators, default chain is configured with 10 validators
+      auto validators = db.get_global_properties().block_producers;
+      BOOST_CHECK_EQUAL(validators.size(), INITIAL_PRODUCER_COUNT);
+      BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 1u);
+      BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 2u);
+      BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 3u);
+      BOOST_CHECK_EQUAL(validators.begin()[3].instance.value, 4u);
+      BOOST_CHECK_EQUAL(validators.begin()[4].instance.value, 5u);
+      BOOST_CHECK_EQUAL(validators.begin()[5].instance.value, 6u);
+      BOOST_CHECK_EQUAL(validators.begin()[6].instance.value, 7u);
+      BOOST_CHECK_EQUAL(validators.begin()[7].instance.value, 8u);
+      BOOST_CHECK_EQUAL(validators.begin()[8].instance.value, 9u);
 
-      // We need to activate 11 witnesses by voting for each of them.
-      // Each witness is voted with incremental stake so last witness created will be the ones with more votes
+      // We need to activate 11 validators by voting for each of them.
+      // Each validator is voted with incremental stake so last validator created will be the ones with more votes
 
-      // by default we have 9 witnesses, we need to vote for desired witness count (11) to increase them
-      vote_for_delegates_and_witnesses(9, 11);
+      // by default we have 9 validators, we need to vote for desired validator count (11) to increase them
+      vote_for_delegates_and_validators(9, 11);
 
       int c = 0;
-      for (auto l : witness_map) {
+      for (auto l : validator_map) {
          // voting stake have step of 100
-         // so vote_for_delegates_and_witnesses() with stake=10 does not affect the expected result
+         // so vote_for_delegates_and_validators() with stake=10 does not affect the expected result
          int stake = 100 * (c + 1);
          transfer(council_account, l.first, asset(stake));
          {
@@ -127,9 +127,9 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
             op.account = l.first;
             op.new_options = l.first(db).options;
             op.new_options->votes.insert(l.second(db).vote_id);
-            op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+            op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                         [](vote_id_type id) {
-                                                           return id.type() == vote_id_type::witness;
+                                                           return id.type() == vote_id_type::validator;
                                                         });
             trx.operations.push_back(op);
             sign(trx, private_keys.at(c));
@@ -139,29 +139,29 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
          ++c;
       }
 
-      // Trigger the new witnesses
+      // Trigger the new validators
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-      // Check my witnesses are now in control of the system
-      witnesses = db.get_global_properties().active_witnesses;
-      BOOST_CHECK_EQUAL(witnesses.size(), 11u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[0].instance.value, 11u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[1].instance.value, 12u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[2].instance.value, 13u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[3].instance.value, 14u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[4].instance.value, 15u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[5].instance.value, 16u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[6].instance.value, 17u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[7].instance.value, 18u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[8].instance.value, 19u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[9].instance.value, 20u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[10].instance.value, 21u);
+      // Check my validators are now in control of the system
+      validators = db.get_global_properties().block_producers;
+      BOOST_CHECK_EQUAL(validators.size(), 11u);
+      BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 11u);
+      BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 12u);
+      BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 13u);
+      BOOST_CHECK_EQUAL(validators.begin()[3].instance.value, 14u);
+      BOOST_CHECK_EQUAL(validators.begin()[4].instance.value, 15u);
+      BOOST_CHECK_EQUAL(validators.begin()[5].instance.value, 16u);
+      BOOST_CHECK_EQUAL(validators.begin()[6].instance.value, 17u);
+      BOOST_CHECK_EQUAL(validators.begin()[7].instance.value, 18u);
+      BOOST_CHECK_EQUAL(validators.begin()[8].instance.value, 19u);
+      BOOST_CHECK_EQUAL(validators.begin()[9].instance.value, 20u);
+      BOOST_CHECK_EQUAL(validators.begin()[10].instance.value, 21u);
 
-      // Adding 2 feeds with witnesses 0 and 1, checking if they get inserted
+      // Adding 2 feeds with validators 0 and 1, checking if they get inserted
       const asset_object &core = asset_id_type()(db);
       price_feed feed;
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness0_id(db), feed);
+      publish_feed(bit_usd_id(db), validator0_id(db), feed);
 
       asset_bitasset_data_object bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1u);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 16u);
 
       feed.settlement_price = bit_usd_id(db).amount(2) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness1_id(db), feed);
+      publish_feed(bit_usd_id(db), validator1_id(db), feed);
 
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       itr = bitasset_data.feeds.begin();
@@ -177,42 +177,42 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 16u);
       BOOST_CHECK_EQUAL(itr[1].first.instance.value, 17u);
 
-      // Activate witness11 with voting stake, will kick the witness with less votes(witness0) out of the active list
-      transfer(council_account, witness11_id, asset(1200));
+      // Activate validator11 with voting stake, will kick the validator with less votes(validator0) out of the active list
+      transfer(council_account, validator11_id, asset(1200));
       set_expiration(db, trx);
       {
          account_update_operation op;
-         op.account = witness11_id;
-         op.new_options = witness11_id(db).options;
-         op.new_options->votes.insert(witness11_witness_id(db).vote_id);
-         op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+         op.account = validator11_id;
+         op.new_options = validator11_id(db).options;
+         op.new_options->votes.insert(validator11_validator_id(db).vote_id);
+         op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                      [](vote_id_type id) {
-                                                        return id.type() == vote_id_type::witness;
+                                                        return id.type() == vote_id_type::validator;
                                                      });
          trx.operations.push_back(op);
-         sign(trx, witness11_private_key);
+         sign(trx, validator11_private_key);
          PUSH_TX(db, trx);
          trx.clear();
       }
 
-      // Trigger new witness
+      // Trigger new validator
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-      // Check active witness list now
-      witnesses = db.get_global_properties().active_witnesses;
-      BOOST_CHECK_EQUAL(witnesses.begin()[0].instance.value, 12u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[1].instance.value, 13u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[2].instance.value, 14u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[3].instance.value, 15u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[4].instance.value, 16u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[5].instance.value, 17u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[6].instance.value, 18u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[7].instance.value, 19u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[8].instance.value, 20u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[9].instance.value, 21u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[10].instance.value, 22u);
+      // Check block producer list now
+      validators = db.get_global_properties().block_producers;
+      BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 12u);
+      BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 13u);
+      BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 14u);
+      BOOST_CHECK_EQUAL(validators.begin()[3].instance.value, 15u);
+      BOOST_CHECK_EQUAL(validators.begin()[4].instance.value, 16u);
+      BOOST_CHECK_EQUAL(validators.begin()[5].instance.value, 17u);
+      BOOST_CHECK_EQUAL(validators.begin()[6].instance.value, 18u);
+      BOOST_CHECK_EQUAL(validators.begin()[7].instance.value, 19u);
+      BOOST_CHECK_EQUAL(validators.begin()[8].instance.value, 20u);
+      BOOST_CHECK_EQUAL(validators.begin()[9].instance.value, 21u);
+      BOOST_CHECK_EQUAL(validators.begin()[10].instance.value, 22u);
 
-      // witness0 has been removed but it was a feeder before
+      // validator0 has been removed but it was a feeder before
       // Feed persist in the blockchain
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       itr = bitasset_data.feeds.begin();
@@ -223,11 +223,11 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       const auto feed_lifetime = bit_usd_id(db).bitasset_data(db).options.feed_lifetime_sec;
       generate_blocks(db.head_block_time() + feed_lifetime + 1);
 
-      // Other witnesses add more feeds
+      // Other validators add more feeds
       feed.settlement_price = bit_usd_id(db).amount(4) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness2_id(db), feed);
+      publish_feed(bit_usd_id(db), validator2_id(db), feed);
       feed.settlement_price = bit_usd_id(db).amount(3) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness3_id(db), feed);
+      publish_feed(bit_usd_id(db), validator3_id(db), feed);
 
       // Advancing to next maint
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
@@ -236,9 +236,9 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);
 
-      // witness1 start feed producing again
+      // validator1 start feed producing again
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness1_id(db), feed);
+      publish_feed(bit_usd_id(db), validator1_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 3u);
       itr = bitasset_data.feeds.begin();
@@ -247,9 +247,9 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       // generate some blocks up to expiration but feed will not be deleted yet as need next maint time
       generate_blocks(itr[0].second.first + feed_lifetime + 1);
 
-      // add another feed with witness2
+      // add another feed with validator2
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness2_id(db), feed);
+      publish_feed(bit_usd_id(db), validator2_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);
       itr = bitasset_data.feeds.begin();
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       generate_blocks(itr[0].second.first + feed_lifetime + 1);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
-      // feed from witness0 expires and gets deleted, feed from witness is on time so persist
+      // feed from validator0 expires and gets deleted, feed from validator is on time so persist
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1u);
       itr = bitasset_data.feeds.begin();
@@ -272,55 +272,55 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 0u);
 
-      // add new feed with witness1
+      // add new feed with validator1
       feed.settlement_price = bit_usd_id(db).amount(1) / core.amount(5);
-      publish_feed(bit_usd_id(db), witness1_id(db), feed);
+      publish_feed(bit_usd_id(db), validator1_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1u);
       itr = bitasset_data.feeds.begin();
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 17u);
 
-      // Reactivate witness0
-      transfer(council_account, witness0_id, asset(1000));
+      // Reactivate validator0
+      transfer(council_account, validator0_id, asset(1000));
       set_expiration(db, trx);
       {
          account_update_operation op;
-         op.account = witness0_id;
-         op.new_options = witness0_id(db).options;
-         op.new_options->votes.insert(witness0_witness_id(db).vote_id);
-         op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+         op.account = validator0_id;
+         op.new_options = validator0_id(db).options;
+         op.new_options->votes.insert(validator0_validator_id(db).vote_id);
+         op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                      [](vote_id_type id) {
-                                                        return id.type() == vote_id_type::witness;
+                                                        return id.type() == vote_id_type::validator;
                                                      });
          trx.operations.push_back(op);
-         sign(trx, witness0_private_key);
+         sign(trx, validator0_private_key);
          PUSH_TX(db, trx);
          trx.clear();
       }
 
-      // This will deactivate witness1 as it is the one with less votes
+      // This will deactivate validator1 as it is the one with less votes
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
       // Checking
-      witnesses = db.get_global_properties().active_witnesses;
-      BOOST_CHECK_EQUAL(witnesses.begin()[0].instance.value, 11u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[1].instance.value, 13u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[2].instance.value, 14u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[3].instance.value, 15u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[4].instance.value, 16u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[5].instance.value, 17u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[6].instance.value, 18u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[7].instance.value, 19u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[8].instance.value, 20u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[9].instance.value, 21u);
-      BOOST_CHECK_EQUAL(witnesses.begin()[10].instance.value, 22u);
+      validators = db.get_global_properties().block_producers;
+      BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 11u);
+      BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 13u);
+      BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 14u);
+      BOOST_CHECK_EQUAL(validators.begin()[3].instance.value, 15u);
+      BOOST_CHECK_EQUAL(validators.begin()[4].instance.value, 16u);
+      BOOST_CHECK_EQUAL(validators.begin()[5].instance.value, 17u);
+      BOOST_CHECK_EQUAL(validators.begin()[6].instance.value, 18u);
+      BOOST_CHECK_EQUAL(validators.begin()[7].instance.value, 19u);
+      BOOST_CHECK_EQUAL(validators.begin()[8].instance.value, 20u);
+      BOOST_CHECK_EQUAL(validators.begin()[9].instance.value, 21u);
+      BOOST_CHECK_EQUAL(validators.begin()[10].instance.value, 22u);
 
-      // feed from witness1 is still here as the witness is no longer a producer but the feed is not yet expired
+      // feed from validator1 is still here as the validator is no longer a producer but the feed is not yet expired
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1u);
       itr = bitasset_data.feeds.begin();
       BOOST_CHECK_EQUAL(itr[0].first.instance.value, 17u);
 
-      // make feed from witness1 expire
+      // make feed from validator1 expire
       generate_blocks(itr[0].second.first + feed_lifetime + 1);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(update_feed_producers)
 {
    try
    {
-      /* For MPA fed by non witnesses or non delegates but by feed producers changes should do nothing */
+      /* For MPA fed by non validators or non delegates but by feed producers changes should do nothing */
       ACTORS( (sam)(alice)(paul)(bob) );
 
       // Create the asset
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(update_feed_producers)
          op.asset_to_update = bit_usd_id;
          op.issuer = bob_id;
          op.new_options = bit_usd_id(db).options;
-         op.new_options.flags &= ~witness_fed_asset;
+         op.new_options.flags &= ~validator_fed_asset;
          trx.operations.push_back(op);
          PUSH_TX(db, trx, ~0);
          generate_block();
@@ -438,12 +438,12 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       // get the stuff needed from invoked test
       const asset_id_type bit_usd_id = get_asset("USDBIT").get_id();
       const asset_id_type core_id = asset_id_type();
-      const account_id_type witness5_id= get_account("witness5").get_id();
-      const account_id_type witness6_id= get_account("witness6").get_id();
-      const account_id_type witness7_id= get_account("witness7").get_id();
-      const account_id_type witness8_id= get_account("witness8").get_id();
-      const account_id_type witness9_id= get_account("witness9").get_id();
-      const account_id_type witness10_id= get_account("witness10").get_id();
+      const account_id_type validator5_id= get_account("validator5").get_id();
+      const account_id_type validator6_id= get_account("validator6").get_id();
+      const account_id_type validator7_id= get_account("validator7").get_id();
+      const account_id_type validator8_id= get_account("validator8").get_id();
+      const account_id_type validator9_id= get_account("validator9").get_id();
+      const account_id_type validator10_id= get_account("validator10").get_id();
 
 
       set_expiration( db, trx );
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
 
       price_feed feed;
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness5_id(db), feed);
+      publish_feed(bit_usd_id(db), validator5_id(db), feed);
       auto bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 1u);
       auto itr = bitasset_data.feeds.begin();
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness6_id(db), feed);
+      publish_feed(bit_usd_id(db), validator6_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 2u);
       itr = bitasset_data.feeds.begin();
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness7_id(db), feed);
+      publish_feed(bit_usd_id(db), validator7_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 3u);
       itr = bitasset_data.feeds.begin();
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness8_id(db), feed);
+      publish_feed(bit_usd_id(db), validator8_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 4u);
       itr = bitasset_data.feeds.begin();
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness9_id(db), feed);
+      publish_feed(bit_usd_id(db), validator9_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 5u);
       itr = bitasset_data.feeds.begin();
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       generate_block();
 
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness10_id(db), feed);
+      publish_feed(bit_usd_id(db), validator10_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 6u);
       itr = bitasset_data.feeds.begin();
@@ -561,9 +561,9 @@ BOOST_AUTO_TEST_CASE(maintenance_multiple_feed_cleanup)
       BOOST_CHECK_EQUAL(itr[1].first.instance.value, 25u);
       BOOST_CHECK_EQUAL(itr[2].first.instance.value, 26u);
 
-      // witness5 add new feed, feeds are sorted by witness_id not by feed_time
+      // validator5 add new feed, feeds are sorted by validator_id not by feed_time
       feed.settlement_price = bit_usd_id(db).amount(1) / core_id(db).amount(5);
-      publish_feed(bit_usd_id(db), witness5_id(db), feed);
+      publish_feed(bit_usd_id(db), validator5_id(db), feed);
       bitasset_data = bit_usd_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset_data.feeds.size(), 4u);
       itr = bitasset_data.feeds.begin();

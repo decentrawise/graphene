@@ -48708,7 +48708,7 @@ const const_char_ptr word_list[] = {
 "witlet",
 "witling",
 "witloof",
-"witness",
+"validator",
 "witney",
 "witship",
 "wittal",

@@ -8,10 +8,10 @@
 
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/witness_schedule_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
 
 #include <graphene/protocol/fee_schedule.hpp>
 
@@ -112,11 +112,11 @@ bool database::_push_block(const signed_block& new_block)
    const auto now = fc::time_point::now().sec_since_epoch();
    if( _fork_db.head() && new_block.timestamp.sec_since_epoch() > now - 86400 )
    {
-      // verify that the block signer is in the current set of active witnesses.
+      // verify that the block signer is in the current set of block producers.
       shared_ptr<fork_item> prev_block = _fork_db.fetch_block( new_block.previous );
       GRAPHENE_ASSERT( prev_block, unlinkable_block_exception, "block does not link to known chain" );
-      if( prev_block->scheduled_witnesses && 0 == (skip&(skip_witness_schedule_check|skip_witness_signature)) )
-         verify_signing_witness( new_block, *prev_block );
+      if( prev_block->scheduled_producers && 0 == (skip&(skip_producer_schedule_check|skip_validator_signature)) )
+         verify_signing_validator( new_block, *prev_block );
    }
 
    const shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
@@ -145,7 +145,7 @@ bool database::_push_block(const signed_block& new_block)
                try {
                   undo_database::session session = _undo_db.start_undo_session();
                   apply_block( (*ritr)->data, skip );
-                  update_witnesses( **ritr );
+                  update_validators( **ritr );
                   _block_id_to_block.store( (*ritr)->id, (*ritr)->data );
                   session.commit();
                }
@@ -192,7 +192,7 @@ bool database::_push_block(const signed_block& new_block)
       auto session = _undo_db.start_undo_session();
       apply_block(new_block, skip);
       if( new_block.timestamp.sec_since_epoch() > now - 86400 )
-         update_witnesses( *new_head );
+         update_validators( *new_head );
       _block_id_to_block.store(new_block.id(), new_block);
       session.commit();
    } catch ( const fc::exception& e ) {
@@ -204,32 +204,32 @@ bool database::_push_block(const signed_block& new_block)
    return false;
 } FC_CAPTURE_AND_RETHROW( (new_block) ) } // GCOVR_EXCL_LINE
 
-void database::verify_signing_witness( const signed_block& new_block, const fork_item& fork_entry )const
+void database::verify_signing_validator( const signed_block& new_block, const fork_item& fork_entry )const
 {
    FC_ASSERT( new_block.timestamp >= fork_entry.next_block_time );
    uint32_t slot_num = ( new_block.timestamp - fork_entry.next_block_time ).to_seconds() / block_interval();
-   uint64_t index = ( fork_entry.next_block_aslot + slot_num ) % fork_entry.scheduled_witnesses->size();
-   const auto& scheduled_witness = (*fork_entry.scheduled_witnesses)[index];
-   FC_ASSERT( new_block.witness == scheduled_witness.first, "Witness produced block at wrong time",
-              ("block witness",new_block.witness)("scheduled",scheduled_witness)("slot_num",slot_num) );
-   FC_ASSERT( new_block.validate_signee( scheduled_witness.second ) );
+   uint64_t index = ( fork_entry.next_block_aslot + slot_num ) % fork_entry.scheduled_producers->size();
+   const auto& scheduled_producer = (*fork_entry.scheduled_producers)[index];
+   FC_ASSERT( new_block.validator == scheduled_producer.first, "Validator produced block at wrong time",
+              ("block validator",new_block.validator)("scheduled",scheduled_producer)("slot_num",slot_num) );
+   FC_ASSERT( new_block.validate_signee( scheduled_producer.second ) );
 }
 
-void database::update_witnesses( fork_item& fork_entry )const
+void database::update_validators( fork_item& fork_entry )const
 {
-   if( fork_entry.scheduled_witnesses ) return;
+   if( fork_entry.scheduled_producers ) return;
 
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    fork_entry.next_block_aslot = dpo.current_aslot + 1;
    fork_entry.next_block_time = get_slot_time( 1 );
 
-   const witness_schedule_object& wso = get_witness_schedule_object();
-   fork_entry.scheduled_witnesses = std::make_shared< vector< pair< witness_id_type, public_key_type > > >();
-   fork_entry.scheduled_witnesses->reserve( wso.current_shuffled_witnesses.size() );
-   for( size_t i = 0; i < wso.current_shuffled_witnesses.size(); ++i )
+   const producer_schedule_object& wso = get_producer_schedule_object();
+   fork_entry.scheduled_producers = std::make_shared< vector< pair< validator_id_type, public_key_type > > >();
+   fork_entry.scheduled_producers->reserve( wso.current_shuffled_producers.size() );
+   for( size_t i = 0; i < wso.current_shuffled_producers.size(); ++i )
    {
-       const auto& witness = wso.current_shuffled_witnesses[i](*this);
-       fork_entry.scheduled_witnesses->emplace_back( wso.current_shuffled_witnesses[i], witness.signing_key );
+       const auto& validator = wso.current_shuffled_producers[i](*this);
+       fork_entry.scheduled_producers->emplace_back( wso.current_shuffled_producers[i], validator.block_producer_key );
    }
 }
 
@@ -289,7 +289,7 @@ public:
    undo_session_nesting_guard( uint32_t& nesting_counter, const database& db )
       : orig_value(nesting_counter), counter(nesting_counter)
    {
-      FC_ASSERT( counter < db.get_global_properties().active_witnesses.size() * 2,
+      FC_ASSERT( counter < db.get_global_properties().block_producers.size() * 2,
                  "Max undo session nesting depth exceeded!" );
       ++counter;
    }
@@ -341,7 +341,7 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
 
 signed_block database::generate_block(
    fc::time_point_sec when,
-   witness_id_type witness_id,
+   validator_id_type validator_id,
    const fc::ecc::private_key& block_signing_private_key,
    uint32_t skip /* = 0 */
    )
@@ -349,14 +349,14 @@ signed_block database::generate_block(
    signed_block result;
    detail::with_skip_flags( *this, skip, [&]()
    {
-      result = _generate_block( when, witness_id, block_signing_private_key );
+      result = _generate_block( when, validator_id, block_signing_private_key );
    } );
    return result;
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 signed_block database::_generate_block(
    fc::time_point_sec when,
-   witness_id_type witness_id,
+   validator_id_type validator_id,
    const fc::ecc::private_key& block_signing_private_key
    )
 {
@@ -364,8 +364,8 @@ signed_block database::_generate_block(
    uint32_t skip = get_node_properties().skip_flags;
    uint32_t slot_num = get_slot_at_time( when );
    FC_ASSERT( slot_num > 0 );
-   witness_id_type scheduled_witness = get_scheduled_witness( slot_num );
-   FC_ASSERT( scheduled_witness == witness_id );
+   validator_id_type scheduled_producer = get_scheduled_producer( slot_num );
+   FC_ASSERT( scheduled_producer == validator_id );
 
    //
    // The following code throws away existing pending_tx_session and
@@ -382,23 +382,23 @@ signed_block database::_generate_block(
    // pop pending state (reset to head block state)
    _pending_tx_session.reset();
 
-   // Check witness signing key
-   if( 0 == (skip & skip_witness_signature) )
+   // Check validator signing key
+   if( 0 == (skip & skip_validator_signature) )
    {
       // Note: if this check failed (which won't happen in normal situations),
       // we would have temporarily broken the invariant that
       // _pending_tx_session is the result of applying _pending_tx.
       // In this case, when the node received a new block,
       // the push_block() call will re-create the _pending_tx_session.
-      FC_ASSERT( witness_id(*this).signing_key == block_signing_private_key.get_public_key() );
+      FC_ASSERT( validator_id(*this).block_producer_key == block_signing_private_key.get_public_key() );
    }
 
    static const size_t max_partial_block_header_size = ( fc::raw::pack_size( signed_block_header() )
-                                                       - fc::raw::pack_size( witness_id_type() ) ) // witness_id
+                                                       - fc::raw::pack_size( validator_id_type() ) ) // validator_id
                                                        + 3; // max space to store size of transactions
                                                             // (out of block header),
                                                             // +3 means 3*7=21 bits so it's practically safe
-   const size_t max_block_header_size = max_partial_block_header_size + fc::raw::pack_size( witness_id );
+   const size_t max_block_header_size = max_partial_block_header_size + fc::raw::pack_size( validator_id );
    auto maximum_block_size = get_global_properties().parameters.maximum_block_size;
    size_t total_block_size = max_block_header_size;
 
@@ -465,16 +465,16 @@ signed_block database::_generate_block(
    pending_block.previous = head_block_id();
    pending_block.timestamp = when;
    pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();
-   pending_block.witness = witness_id;
+   pending_block.validator = validator_id;
 
-   if( 0 == (skip & skip_witness_signature) )
+   if( 0 == (skip & skip_validator_signature) )
       pending_block.sign( block_signing_private_key );
 
    push_block( pending_block, skip | skip_transaction_signatures ); // skip authority check when pushing
                                                                     // self-generated blocks
 
    return pending_block;
-} FC_CAPTURE_AND_RETHROW( (witness_id) ) } // GCOVR_EXCL_LINE
+} FC_CAPTURE_AND_RETHROW( (validator_id) ) } // GCOVR_EXCL_LINE
 
 /**
  * Removes the most recent block from the database and
@@ -569,7 +569,7 @@ void database::_apply_block( const signed_block& next_block )
               ("next_block",next_block)
               ("id",next_block.id()) );
 
-   const witness_object& signing_witness = validate_block_header(skip, next_block);
+   const validator_object& signing_validator = validate_block_header(skip, next_block);
    const auto& dynamic_global_props = get_dynamic_global_properties();
    bool maint_needed = (dynamic_global_props.next_maintenance_time <= next_block.timestamp);
 
@@ -600,9 +600,9 @@ void database::_apply_block( const signed_block& next_block )
    _current_op_in_trx    = 0;
    _current_virtual_op   = 0;
 
-   const uint32_t missed = update_witness_missed_blocks( next_block );
+   const uint32_t missed = update_producer_missed_blocks( next_block );
    update_global_dynamic_data( next_block, missed );
-   update_signing_witness(signing_witness, next_block);
+   update_signing_validator(signing_validator, next_block);
    update_last_irreversible_block();
 
    // Are we at the maintenance interval?
@@ -625,7 +625,7 @@ void database::_apply_block( const signed_block& next_block )
    // update_global_dynamic_data() as perhaps these methods only need
    // to be called for header validation?
    update_maintenance_flag( maint_needed );
-   update_witness_schedule();
+   update_producer_schedule();
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();
 
@@ -740,27 +740,27 @@ operation_result database::apply_operation( transaction_evaluation_state& eval_s
    return result;
 } FC_CAPTURE_AND_RETHROW( (op) ) } // GCOVR_EXCL_LINE
 
-const witness_object& database::validate_block_header( uint32_t skip, const signed_block& next_block )const
+const validator_object& database::validate_block_header( uint32_t skip, const signed_block& next_block )const
 {
    FC_ASSERT( head_block_id() == next_block.previous, "", ("head_block_id",head_block_id())("next.prev",next_block.previous) );
    FC_ASSERT( head_block_time() < next_block.timestamp, "", ("head_block_time",head_block_time())("next",next_block.timestamp)("blocknum",next_block.block_num()) );
-   const witness_object& witness = next_block.witness(*this);
+   const validator_object& validator = next_block.validator(*this);
 
-   if( 0 == (skip&skip_witness_signature) )
-      FC_ASSERT( next_block.validate_signee( witness.signing_key ) );
+   if( 0 == (skip&skip_validator_signature) )
+      FC_ASSERT( next_block.validate_signee( validator.block_producer_key ) );
 
-   if( 0 == (skip&skip_witness_schedule_check) )
+   if( 0 == (skip&skip_producer_schedule_check) )
    {
       uint32_t slot_num = get_slot_at_time( next_block.timestamp );
       FC_ASSERT( slot_num > 0 );
 
-      witness_id_type scheduled_witness = get_scheduled_witness( slot_num );
+      validator_id_type scheduled_producer = get_scheduled_producer( slot_num );
 
-      FC_ASSERT( next_block.witness == scheduled_witness, "Witness produced block at wrong time",
-                 ("block witness",next_block.witness)("scheduled",scheduled_witness)("slot_num",slot_num) );
+      FC_ASSERT( next_block.validator == scheduled_producer, "Validator produced block at wrong time",
+                 ("block validator",next_block.validator)("scheduled",scheduled_producer)("slot_num",slot_num) );
    }
 
-   return witness;
+   return validator;
 }
 
 void database::create_block_summary(const signed_block& next_block)
@@ -783,7 +783,7 @@ bool database::before_last_checkpoint()const
 }
 
 
-static const uint32_t skip_expensive = database::skip_transaction_signatures | database::skip_witness_signature
+static const uint32_t skip_expensive = database::skip_transaction_signatures | database::skip_validator_signature
                                        | database::skip_merkle_check | database::skip_transaction_dupe_check;
 
 template<typename Trx>
@@ -823,7 +823,7 @@ fc::future<void> database::precompute_parallel( const signed_block& block, const
       }
    }
 
-   if( 0 == (skip&skip_witness_signature) )
+   if( 0 == (skip&skip_validator_signature) )
       workers.push_back( fc::do_parallel( [&block] () { block.signee(); } ) );
    if( 0 == (skip&skip_merkle_check) )
       block.calculate_merkle_root();

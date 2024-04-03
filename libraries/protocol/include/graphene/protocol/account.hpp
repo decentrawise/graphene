@@ -24,12 +24,12 @@ namespace graphene { namespace protocol {
       /// will be counted as voting for the referenced account's selected votes instead.
       account_id_type voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-      /// The number of active witnesses this account votes the blockchain should appoint
-      /// Must not exceed the actual number of witnesses voted for in @ref votes
-      uint16_t num_witness = 0;
+      /// The number of block producers this account votes the blockchain should appoint
+      /// Must not exceed the actual number of validators voted for in @ref votes
+      uint16_t num_producers = 0;
       /// The number of active delegates this account votes the blockchain should appoint
       /// Must not exceed the actual number of delegates voted for in @ref votes
-      uint16_t num_council = 0;
+      uint16_t num_delegates = 0;
       /// This is the list of vote IDs this account votes for. The weight of these votes is determined by this
       /// account's balance of core asset.
       flat_set<vote_id_type> votes;
@@ -247,7 +247,7 @@ namespace graphene { namespace protocol {
 
 } } // graphene::protocol
 
-FC_REFLECT(graphene::protocol::account_options, (memo_key)(voting_account)(num_witness)(num_council)(votes)(extensions))
+FC_REFLECT(graphene::protocol::account_options, (memo_key)(voting_account)(num_producers)(num_delegates)(votes)(extensions))
 FC_REFLECT_ENUM( graphene::protocol::account_whitelist_operation::account_listing,
                 (no_listing)(white_listed)(black_listed)(white_and_black_listed))
 

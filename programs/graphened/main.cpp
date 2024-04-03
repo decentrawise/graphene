@@ -1,8 +1,8 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/config_util.hpp>
 
-#include <graphene/witness/witness.hpp>
-#include <graphene/debug_witness/debug_witness.hpp>
+#include <graphene/validator/validator.hpp>
+#include <graphene/debug_validator/debug_validator.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/elasticsearch/elasticsearch_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
@@ -60,13 +60,13 @@ int main(int argc, char** argv) {
    auto node = std::make_unique<graphene::app::application>();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("Graphene Witness Node");
-      bpo::options_description cfg_options("Graphene Witness Node");
-      std::string default_plugins = "witness account_history market_history grouped_orders "
+      bpo::options_description app_options("Graphene Validator Node");
+      bpo::options_description cfg_options("Graphene Validator Node");
+      std::string default_plugins = "validator account_history market_history grouped_orders "
                                     "api_helper_indexes custom_operations";
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
-            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"),
+            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("graphened_data_dir"),
                     "Directory containing databases, configuration file, etc.")
             ("version,v", "Display version information")
             ("plugins", bpo::value<std::string>()->default_value(default_plugins),
@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
                     "Space-separated list of plugins to activate")
             ("ignore-api-helper-indexes-warning", "Do not exit if api_helper_indexes plugin is not enabled.");
 
-      node->register_plugin<graphene::witness_plugin::witness_plugin>();
-      node->register_plugin<graphene::debug_witness_plugin::debug_witness_plugin>();
+      node->register_plugin<graphene::validator_plugin::validator_plugin>();
+      node->register_plugin<graphene::debug_validator_plugin::debug_validator_plugin>();
       node->register_plugin<graphene::account_history::account_history_plugin>();
       node->register_plugin<graphene::elasticsearch::elasticsearch_plugin>();
       node->register_plugin<graphene::market_history::market_history_plugin>();

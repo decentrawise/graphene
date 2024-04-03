@@ -8,14 +8,14 @@
 #include <graphene/api_helper_indexes/api_helper_indexes.hpp>
 #include <graphene/es_objects/es_objects.hpp>
 #include <graphene/custom_operations/custom_operations_plugin.hpp>
-#include <graphene/debug_witness/debug_witness.hpp>
+#include <graphene/debug_validator/debug_validator.hpp>
 
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/htlc_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
@@ -127,17 +127,17 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
 {
    fixture.genesis_state.initial_timestamp = fc::time_point_sec(GRAPHENE_TESTING_GENESIS_TIMESTAMP);
 
-   fixture.genesis_state.initial_active_witnesses = 10;
-   fixture.genesis_state.immutable_parameters.min_delegate_count = INITIAL_COUNCIL_COUNT;
-   fixture.genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
+   fixture.genesis_state.initial_block_producers = 10;
+   fixture.genesis_state.immutable_parameters.min_council_count = INITIAL_COUNCIL_COUNT;
+   fixture.genesis_state.immutable_parameters.min_producer_count = INITIAL_PRODUCER_COUNT;
 
-   for( unsigned int i = 0; i < fixture.genesis_state.initial_active_witnesses; ++i )
+   for( unsigned int i = 0; i < fixture.genesis_state.initial_block_producers; ++i )
    {
       auto name = "init"+fc::to_string(i);
       fixture.genesis_state.initial_accounts.emplace_back( name, fixture.init_account_pub_key,
                                                            fixture.init_account_pub_key, true);
-      fixture.genesis_state.initial_council_candidates.push_back({name});
-      fixture.genesis_state.initial_witness_candidates.push_back({ name, fixture.init_account_pub_key });
+      fixture.genesis_state.initial_delegate_candidates.push_back({name});
+      fixture.genesis_state.initial_validator_candidates.push_back({ name, fixture.init_account_pub_key });
    }
    fixture.genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
 
@@ -251,9 +251,9 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
    {
       set_option( options, "api-limit-lookup-accounts", (uint32_t)200 );
    }
-   if(fixture.current_test_name =="api_limit_lookup_witness_accounts")
+   if(fixture.current_test_name =="api_limit_lookup_validator_accounts")
    {
-      set_option( options, "api-limit-lookup-witness-accounts", (uint32_t)200 );
+      set_option( options, "api-limit-lookup-validator-accounts", (uint32_t)200 );
    }
    if(fixture.current_test_name =="api_limit_lookup_delegate_accounts")
    {
@@ -350,7 +350,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
          set_option( options, "api-access",
                          boost::filesystem::path(fixture.data_dir.path() / "api-access.json") );
 
-         fixture.app.register_plugin<graphene::debug_witness_plugin::debug_witness_plugin>(true);
+         fixture.app.register_plugin<graphene::debug_validator_plugin::debug_validator_plugin>(true);
          fixture.app.register_plugin<graphene::custom_operations::custom_operations_plugin>(true);
          set_option( options, "custom-operations-start-block", uint32_t(1) );
       }
@@ -374,7 +374,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
       set_option( options, "track-account", track_account );
    }
    // standby votes tracking
-   if( fixture.current_test_name == "track_votes_witnesses_disabled"
+   if( fixture.current_test_name == "track_votes_validators_disabled"
           || fixture.current_test_name == "track_votes_council_disabled") {
       fixture.app.chain_database()->enable_standby_votes_tracking( false );
    }
@@ -444,7 +444,7 @@ std::shared_ptr<boost::program_options::variables_map> database_fixture_base::in
    return sharable_options;
 }
 
-void database_fixture_base::vote_for_delegates_and_witnesses(uint16_t num_council, uint16_t num_witness)
+void database_fixture_base::vote_for_delegates_and_validators(uint16_t num_delegates, uint16_t num_producers)
 { try {
 
    auto &init0 = get_account("init0");
@@ -452,18 +452,18 @@ void database_fixture_base::vote_for_delegates_and_witnesses(uint16_t num_counci
 
    flat_set<vote_id_type> votes;
 
-   const auto& wits = db.get_index_type<witness_index>().indices().get<by_id>();
-   num_witness = std::min(num_witness, (uint16_t) wits.size());
+   const auto& wits = db.get_index_type<validator_index>().indices().get<by_id>();
+   num_producers = std::min(num_producers, (uint16_t) wits.size());
    auto wit_end = wits.begin();
-   std::advance(wit_end, num_witness);
+   std::advance(wit_end, num_producers);
    std::transform(wits.begin(), wit_end,
                   std::inserter(votes, votes.end()),
-                  [](const witness_object& w) { return w.vote_id; });
+                  [](const validator_object& w) { return w.vote_id; });
 
    const auto& comms = db.get_index_type<delegate_index>().indices().get<by_id>();
-   num_council = std::min(num_council, (uint16_t) comms.size());
+   num_delegates = std::min(num_delegates, (uint16_t) comms.size());
    auto comm_end = comms.begin();
-   std::advance(comm_end, num_council);
+   std::advance(comm_end, num_delegates);
    std::transform(comms.begin(), comm_end,
                   std::inserter(votes, votes.end()),
                   [](const delegate_object& cm) { return cm.vote_id; });
@@ -472,8 +472,8 @@ void database_fixture_base::vote_for_delegates_and_witnesses(uint16_t num_counci
    op.account = init0.get_id();
    op.new_options = init0.options;
    op.new_options->votes = votes;
-   op.new_options->num_witness = num_witness;
-   op.new_options->num_council = num_council;
+   op.new_options->num_producers = num_producers;
+   op.new_options->num_delegates = num_delegates;
 
    op.fee = db.current_fee_schedule().calculate_fee( op );
 
@@ -561,7 +561,7 @@ void database_fixture_base::verify_asset_supplies( const database& db )
    for (const balance_object &bo : db.get_index_type<balance_index>().indices())
       total_balances[bo.balance.asset_id] += bo.balance.amount;
 
-   total_balances[asset_id_type()] += db.get_dynamic_global_properties().witness_budget;
+   total_balances[asset_id_type()] += db.get_dynamic_global_properties().validator_budget;
 
    for (const auto &item : total_debts)
    {
@@ -589,7 +589,7 @@ signed_block database_fixture_base::generate_block(uint32_t skip, const fc::ecc:
    skip |= database::skip_undo_history_check;
    // skip == ~0 will skip checks specified in database::validation_steps
    auto block = db.generate_block(db.get_slot_time(miss_blocks + 1),
-                            db.get_scheduled_witness(miss_blocks + 1),
+                            db.get_scheduled_producer(miss_blocks + 1),
                             key, skip);
    db.clear_pending();
    verify_asset_supplies(db);
@@ -637,18 +637,18 @@ account_create_operation database_fixture_base::make_account(
    create_account.options.memo_key = key;
    create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-   auto& active_delegates = db.get_global_properties().active_delegates;
-   if( active_delegates.size() > 0 )
+   auto& council_delegates = db.get_global_properties().council_delegates;
+   if( council_delegates.size() > 0 )
    {
       set<vote_id_type> votes;
-      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-      votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+      votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+      votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+      votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+      votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+      votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
       create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
    }
-   create_account.options.num_council = create_account.options.votes.size();
+   create_account.options.num_delegates = create_account.options.votes.size();
 
    create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
    return create_account;
@@ -676,18 +676,18 @@ account_create_operation database_fixture_base::make_account(
       create_account.options.memo_key = key;
       create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-      const vector<delegate_id_type>& active_delegates = db.get_global_properties().active_delegates;
-      if( active_delegates.size() > 0 )
+      const vector<delegate_id_type>& council_delegates = db.get_global_properties().council_delegates;
+      if( council_delegates.size() > 0 )
       {
          set<vote_id_type> votes;
-         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
-         votes.insert(active_delegates[rand() % active_delegates.size()](db).vote_id);
+         votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+         votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+         votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+         votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
+         votes.insert(council_delegates[rand() % council_delegates.size()](db).vote_id);
          create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
       }
-      create_account.options.num_council = create_account.options.votes.size();
+      create_account.options.num_delegates = create_account.options.votes.size();
 
       create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
       return create_account;
@@ -713,7 +713,7 @@ const account_object& database_fixture_base::get_account( const string& name )co
 
 asset_create_operation database_fixture_base::make_bitasset(
    const string& name,
-   account_id_type issuer /* = GRAPHENE_WITNESS_ACCOUNT */,
+   account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
    uint16_t flags /* = charge_market_fee */,
    uint16_t precision /* = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS */,
@@ -730,8 +730,8 @@ asset_create_operation database_fixture_base::make_bitasset(
    creator.common_options.max_supply = max_supply;
    creator.precision = precision;
    creator.common_options.market_fee_percent = market_fee_percent;
-   if( issuer == GRAPHENE_WITNESS_ACCOUNT )
-      flags |= witness_fed_asset;
+   if( issuer == GRAPHENE_PRODUCERS_ACCOUNT )
+      flags |= validator_fed_asset;
    creator.common_options.issuer_permissions = flags;
    creator.common_options.flags = flags & ~global_settle;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
@@ -742,7 +742,7 @@ asset_create_operation database_fixture_base::make_bitasset(
 
 const asset_object& database_fixture_base::create_bitasset(
    const string& name,
-   account_id_type issuer /* = GRAPHENE_WITNESS_ACCOUNT */,
+   account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
    uint16_t flags /* = charge_market_fee */,
    uint16_t precision /* = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS */,
@@ -765,7 +765,7 @@ const asset_object& database_fixture_base::create_bitasset(
 
 const asset_object& database_fixture_base::create_prediction_market(
    const string& name,
-   account_id_type issuer /* = GRAPHENE_WITNESS_ACCOUNT */,
+   account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
    uint16_t flags /* = charge_market_fee */,
    uint16_t precision /* = 2, which seems arbitrary, but historically chosen */,
@@ -781,8 +781,8 @@ const asset_object& database_fixture_base::create_prediction_market(
    creator.common_options.market_fee_percent = market_fee_percent;
    creator.common_options.issuer_permissions = flags | global_settle;
    creator.common_options.flags = flags & ~global_settle;
-   if( issuer == GRAPHENE_WITNESS_ACCOUNT )
-      creator.common_options.flags |= witness_fed_asset;
+   if( issuer == GRAPHENE_PRODUCERS_ACCOUNT )
+      creator.common_options.flags |= validator_fed_asset;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
    creator.bitasset_opts = bitasset_options();
    creator.bitasset_opts->short_backing_asset = backing_asset;
@@ -985,26 +985,26 @@ const delegate_object& database_fixture_base::create_delegate( const account_obj
    return db.get<delegate_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-const witness_object& database_fixture_base::create_witness(account_id_type owner,
+const validator_object& database_fixture_base::create_validator(account_id_type owner,
                                                         const fc::ecc::private_key& signing_private_key,
                                                         uint32_t skip_flags )
 {
-   return create_witness(owner(db), signing_private_key, skip_flags );
+   return create_validator(owner(db), signing_private_key, skip_flags );
 }
 
-const witness_object& database_fixture_base::create_witness( const account_object& owner,
+const validator_object& database_fixture_base::create_validator( const account_object& owner,
                                                         const fc::ecc::private_key& signing_private_key,
                                                         uint32_t skip_flags )
 { try {
-   witness_create_operation op;
-   op.witness_account = owner.id;
-   op.block_signing_key = signing_private_key.get_public_key();
+   validator_create_operation op;
+   op.validator_account = owner.id;
+   op.block_producer_key = signing_private_key.get_public_key();
    trx.operations.clear();
    trx.operations.push_back(op);
    trx.validate();
    processed_transaction ptx = PUSH_TX(db, trx, skip_flags );
    trx.clear();
-   return db.get<witness_object>(ptx.operation_results[0].get<object_id_type>());
+   return db.get<validator_object>(ptx.operation_results[0].get<object_id_type>());
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
 const worker_object& database_fixture_base::create_worker( const account_id_type owner, const share_type daily_pay, const fc::microseconds& duration )

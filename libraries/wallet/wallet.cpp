@@ -50,7 +50,7 @@
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/wallet/api_documentation.hpp>
 #include "wallet_api_impl.hpp"
-#include <graphene/debug_witness/debug_api.hpp>
+#include <graphene/debug_validator/debug_api.hpp>
 
 #include "operation_printer.hpp"
 #include <graphene/wallet/reflect_util.hpp>
@@ -880,9 +880,9 @@ signed_transaction wallet_api::create_delegate( const string& owner_account, con
    return my->create_delegate(owner_account, url, broadcast);
 }
 
-map<string, witness_id_type, std::less<>> wallet_api::list_witnesses( const string& lowerbound, uint32_t limit )const
+map<string, validator_id_type, std::less<>> wallet_api::list_validators( const string& lowerbound, uint32_t limit )const
 {
-   return my->_remote_db->lookup_witness_accounts(lowerbound, limit);
+   return my->_remote_db->lookup_validator_accounts(lowerbound, limit);
 }
 
 map<string,delegate_id_type, std::less<>> wallet_api::list_delegates(
@@ -891,9 +891,9 @@ map<string,delegate_id_type, std::less<>> wallet_api::list_delegates(
    return my->_remote_db->lookup_delegate_accounts(lowerbound, limit);
 }
 
-witness_object wallet_api::get_witness( const string& owner_account )const
+validator_object wallet_api::get_validator( const string& owner_account )const
 {
-   return my->get_witness(owner_account);
+   return my->get_validator(owner_account);
 }
 
 delegate_object wallet_api::get_delegate( const string& owner_account )const
@@ -901,11 +901,11 @@ delegate_object wallet_api::get_delegate( const string& owner_account )const
    return my->get_delegate(owner_account);
 }
 
-signed_transaction wallet_api::create_witness( const string& owner_account,
+signed_transaction wallet_api::create_validator( const string& owner_account,
                                                const string& url,
                                                bool broadcast /* = false */ )const
 {
-   return my->create_witness(owner_account, url, broadcast);
+   return my->create_validator(owner_account, url, broadcast);
 }
 
 signed_transaction wallet_api::create_worker(
@@ -930,13 +930,13 @@ signed_transaction wallet_api::update_worker_votes(
    return my->update_worker_votes( owner_account, delta, broadcast );
 }
 
-signed_transaction wallet_api::update_witness(
-   const string& witness_name,
+signed_transaction wallet_api::update_validator(
+   const string& validator_name,
    const string& url,
-   const string& block_signing_key,
+   const string& block_producer_key,
    bool broadcast /* = false */ )const
 {
-   return my->update_witness(witness_name, url, block_signing_key, broadcast);
+   return my->update_validator(validator_name, url, block_producer_key, broadcast);
 }
 
 vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( const string& account_name )const
@@ -945,28 +945,28 @@ vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( con
 }
 
 signed_transaction wallet_api::withdraw_vesting(
-   const string& witness_name,
+   const string& validator_name,
    const string& amount,
    const string& asset_symbol,
    bool broadcast /* = false */ )const
 {
-   return my->withdraw_vesting( witness_name, amount, asset_symbol, broadcast );
+   return my->withdraw_vesting( validator_name, amount, asset_symbol, broadcast );
 }
 
 signed_transaction wallet_api::vote_for_delegate( const string& voting_account,
-                                                          const string& witness,
+                                                          const string& validator,
                                                           bool approve,
                                                           bool broadcast /* = false */ )const
 {
-   return my->vote_for_delegate(voting_account, witness, approve, broadcast);
+   return my->vote_for_delegate(voting_account, validator, approve, broadcast);
 }
 
-signed_transaction wallet_api::vote_for_witness( const string& voting_account,
-                                                 const string& witness,
+signed_transaction wallet_api::vote_for_validator( const string& voting_account,
+                                                 const string& validator,
                                                  bool approve,
                                                  bool broadcast /* = false */ )const
 {
-   return my->vote_for_witness(voting_account, witness, approve, broadcast);
+   return my->vote_for_validator(voting_account, validator, approve, broadcast);
 }
 
 signed_transaction wallet_api::set_voting_proxy( const string& account_to_modify,
@@ -976,12 +976,12 @@ signed_transaction wallet_api::set_voting_proxy( const string& account_to_modify
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
-signed_transaction wallet_api::set_desired_witness_and_delegate_count( const string& account_to_modify,
-                                                                      uint16_t desired_number_of_witnesses,
+signed_transaction wallet_api::set_desired_validator_and_delegate_count( const string& account_to_modify,
+                                                                      uint16_t desired_number_of_validators,
                                                                       uint16_t desired_number_of_delegates,
                                                                       bool broadcast /* = false */ )const
 {
-   return my->set_desired_witness_and_delegate_count(account_to_modify, desired_number_of_witnesses,
+   return my->set_desired_validator_and_delegate_count(account_to_modify, desired_number_of_validators,
                                                      desired_number_of_delegates, broadcast);
 }
 
@@ -996,10 +996,10 @@ signed_transaction wallet_api::sign_transaction( const signed_transaction& tx, b
 } FC_CAPTURE_AND_RETHROW( (tx) ) } // GCOVR_EXCL_LINE
 
 signed_transaction wallet_api::sign_transaction2( const signed_transaction& tx,
-                                                  const vector<public_key_type>& signing_keys,
+                                                  const vector<public_key_type>& block_producer_keys,
                                                   bool broadcast /* = false */ )const
 { try {
-   return my->sign_transaction2( tx, signing_keys, broadcast);
+   return my->sign_transaction2( tx, block_producer_keys, broadcast);
 } FC_CAPTURE_AND_RETHROW( (tx) ) } // GCOVR_EXCL_LINE
 
 flat_set<public_key_type> wallet_api::get_transaction_signers( const signed_transaction& tx ) const
@@ -1918,7 +1918,7 @@ vector<account_storage_object> wallet_api::get_account_storage( const string& ac
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block ),
      block_id { id() },
-     signing_key { signee() }
+     block_producer_key { signee() }
 {
    transaction_ids.reserve( transactions.size() );
    for( const processed_transaction& tx : transactions )

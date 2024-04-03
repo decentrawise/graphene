@@ -10,7 +10,7 @@
 #include <graphene/chain/delegate_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
 
@@ -29,11 +29,11 @@ BOOST_FIXTURE_TEST_SUITE( bitasset_tests, database_fixture )
 /*****
  * @brief helper method to change a backing asset to a new one
  * @param fixture the database_fixture
- * @param signing_key the signer
+ * @param block_producer_key the signer
  * @param asset_id_to_update asset to update
  * @param new_backing_asset_id the new backing asset
  */
-void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key& signing_key,
+void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key& block_producer_key,
       asset_id_type asset_id_to_update, asset_id_type new_backing_asset_id)
 {
    try
@@ -44,7 +44,7 @@ void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key&
       ba_op.issuer = asset_to_update.issuer;
       ba_op.new_options.short_backing_asset = new_backing_asset_id;
       fixture.trx.operations.push_back(ba_op);
-      fixture.sign(fixture.trx, signing_key);
+      fixture.sign(fixture.trx, block_producer_key);
       PUSH_TX(fixture.db, fixture.trx, ~0);
       fixture.generate_block();
       fixture.trx.clear();
@@ -57,31 +57,31 @@ void change_backing_asset(database_fixture& fixture, const fc::ecc::private_key&
 }
 
 /******
- * @brief helper method to turn witness_fed_asset on and off
+ * @brief helper method to turn validator_fed_asset on and off
  * @param fixture the database_fixture
- * @param signing_key signer
+ * @param block_producer_key signer
  * @param asset_id asset we want to change
- * @param witness_fed true if you want this to be a witness fed asset
+ * @param validator_fed true if you want this to be a validator fed asset
  */
-void change_asset_options(database_fixture& fixture, const fc::ecc::private_key& signing_key,
-      asset_id_type asset_id, bool witness_fed)
+void change_asset_options(database_fixture& fixture, const fc::ecc::private_key& block_producer_key,
+      asset_id_type asset_id, bool validator_fed)
 {
    asset_update_operation op;
    const asset_object& obj = asset_id(fixture.db);
    op.asset_to_update = asset_id;
    op.issuer = obj.issuer;
    op.new_options = obj.options;
-   if (witness_fed)
+   if (validator_fed)
    {
-      op.new_options.flags |= witness_fed_asset;
+      op.new_options.flags |= validator_fed_asset;
       op.new_options.flags &= ~delegate_fed_asset;
    }
    else
    {
-      op.new_options.flags &= ~witness_fed_asset; // we don't care about the delegate flag here
+      op.new_options.flags &= ~validator_fed_asset; // we don't care about the delegate flag here
    }
    fixture.trx.operations.push_back(op);
-   fixture.sign( fixture.trx, signing_key );
+   fixture.sign( fixture.trx, block_producer_key );
    PUSH_TX( fixture.db, fixture.trx, ~0 );
    fixture.generate_block();
    fixture.trx.clear();
@@ -91,11 +91,11 @@ void change_asset_options(database_fixture& fixture, const fc::ecc::private_key&
 /******
  * @brief helper method to change asset issuer
  * @param fixture the database_fixture
- * @param signing_key signer
+ * @param block_producer_key signer
  * @param asset_id asset we want to change
  * @param new_issuer the new issuer for asset
  */
-void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& signing_key,
+void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& block_producer_key,
       asset_id_type asset_id, account_id_type new_issuer)
 {
    asset_update_issuer_operation op;
@@ -104,7 +104,7 @@ void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& 
    op.issuer = obj.issuer;
    op.new_issuer = new_issuer;
    fixture.trx.operations.push_back(op);
-   fixture.sign( fixture.trx, signing_key );
+   fixture.sign( fixture.trx, block_producer_key );
    PUSH_TX( fixture.db, fixture.trx, ~0 );
    fixture.generate_block();
    fixture.trx.clear();
@@ -115,31 +115,31 @@ void change_asset_issuer(database_fixture& fixture, const fc::ecc::private_key& 
  * @param fixture the database_fixture
  * @param index added to name of the coin
  * @param backing the backing asset
- * @param signing_key the signing key
+ * @param block_producer_key the signing key
  */
 const graphene::chain::asset_object& create_bitasset_backed(graphene::chain::database_fixture& fixture,
-      int index, graphene::chain::asset_id_type backing, const fc::ecc::private_key& signing_key)
+      int index, graphene::chain::asset_id_type backing, const fc::ecc::private_key& block_producer_key)
 {
    // create the coin
    std::string name = "COIN" + std::to_string(index + 1) + "TEST";
    const graphene::chain::asset_object& obj = fixture.create_bitasset(name);
    asset_id_type asset_id = obj.get_id();
    // adjust the backing asset
-   change_backing_asset(fixture, signing_key, asset_id, backing);
+   change_backing_asset(fixture, block_producer_key, asset_id, backing);
    fixture.trx.set_expiration(fixture.db.get_dynamic_global_properties().next_maintenance_time);
    return obj;
 }
 
 
 /*********
- * @brief make sure feeds still work after changing backing asset on a witness-fed asset
+ * @brief make sure feeds still work after changing backing asset on a validator-fed asset
  */
-BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
+BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 {
    ACTORS((nathan));
 
-   // Initialize witnesses by voting for each member and for desired count
-   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+   // Initialize validators by voting for each member and for desired count
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
 
@@ -178,16 +178,16 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
       trx.clear();
    }
 
-   BOOST_TEST_MESSAGE("Grab active witnesses");
+   BOOST_TEST_MESSAGE("Grab block producers");
    auto& global_props = db.get_global_properties();
-   std::vector<account_id_type> active_witnesses;
-   for(const witness_id_type& wit_id : global_props.active_witnesses)
-      active_witnesses.push_back(wit_id(db).witness_account);
-   BOOST_REQUIRE_EQUAL(active_witnesses.size(), INITIAL_WITNESS_COUNT);
+   std::vector<account_id_type> block_producers;
+   for(const validator_id_type& wit_id : global_props.block_producers)
+      block_producers.push_back(wit_id(db).validator_account);
+   BOOST_REQUIRE_EQUAL(block_producers.size(), INITIAL_PRODUCER_COUNT);
 
    {
       BOOST_TEST_MESSAGE("Adding price feed 1");
-      publish_feed(active_witnesses[0], bit_usd_id, 1, bit_jmj_id, 300, core_id);
+      publish_feed(block_producers[0], bit_usd_id, 1, bit_jmj_id, 300, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 300.0);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
    }
    {
       BOOST_TEST_MESSAGE("Adding price feed 2");
-      publish_feed(active_witnesses[1], bit_usd_id, 1, bit_jmj_id, 100, core_id);
+      publish_feed(block_producers[1], bit_usd_id, 1, bit_jmj_id, 100, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 300.0);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
    }
    {
       BOOST_TEST_MESSAGE("Adding price feed 3");
-      publish_feed(active_witnesses[2], bit_usd_id, 1, bit_jmj_id, 1, core_id);
+      publish_feed(block_producers[2], bit_usd_id, 1, bit_jmj_id, 1, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 100.0);
@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
    }
    {
       BOOST_TEST_MESSAGE("With underlying bitasset changed from one to another, price feeds should still be publish-able");
-      BOOST_TEST_MESSAGE("Re-Adding Witness 1 price feed");
-      publish_feed(active_witnesses[0], core_id, 1, bit_jmj_id, 30, core_id);
+      BOOST_TEST_MESSAGE("Re-Adding Validator 1 price feed");
+      publish_feed(block_producers[0], core_id, 1, bit_jmj_id, 30, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30);
@@ -229,8 +229,8 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
       BOOST_CHECK(bitasset.current_feed.core_exchange_rate.base.asset_id != bitasset.current_feed.core_exchange_rate.quote.asset_id);
    }
    {
-      BOOST_TEST_MESSAGE("Re-Adding Witness 2 price feed");
-      publish_feed(active_witnesses[1], core_id, 1, bit_jmj_id, 100, core_id);
+      BOOST_TEST_MESSAGE("Re-Adding Validator 2 price feed");
+      publish_feed(block_producers[1], core_id, 1, bit_jmj_id, 100, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 100);
@@ -246,8 +246,8 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
    }
    {
       BOOST_TEST_MESSAGE("With underlying bitasset changed from one to another, price feeds should still be publish-able");
-      BOOST_TEST_MESSAGE("Re-Adding Witness 1 price feed");
-      publish_feed(active_witnesses[0], bit_usd_id, 1, bit_jmj_id, 30, core_id);
+      BOOST_TEST_MESSAGE("Re-Adding Validator 1 price feed");
+      publish_feed(block_producers[0], bit_usd_id, 1, bit_jmj_id, 30, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
       BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30);
@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_witness_asset )
 }
 
 /****
- * @brief make sure feeds work correctly after changing the backing asset on a non-witness-fed asset
+ * @brief make sure feeds work correctly after changing the backing asset on a non-validator-fed asset
  */
-BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_witness_asset )
+BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_validator_asset )
 {
    ACTORS((nathan)(dan)(ben)(vikram));
 
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_witness_asset )
  */
 BOOST_AUTO_TEST_CASE( lifetime_update_median_feeds )
 {
-   uint32_t skip = database::skip_witness_signature
+   uint32_t skip = database::skip_validator_signature
                  | database::skip_transaction_signatures
                  | database::skip_transaction_dupe_check
                  | database::skip_block_size_check
@@ -520,26 +520,26 @@ assets_bitasset_eval create_assets_bitasset_eval(database_fixture *fixture)
          100, charge_market_fee, 2, asset_objs.bit_usd ).get_id();
 
    BOOST_TEST_MESSAGE( "Create USDBACKEDII" );
-   asset_objs.bit_usdbacked2 = fixture->create_bitasset( "USDBACKEDII", GRAPHENE_WITNESS_ACCOUNT,
+   asset_objs.bit_usdbacked2 = fixture->create_bitasset( "USDBACKEDII", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_usd ).get_id();
 
    BOOST_TEST_MESSAGE( "Create PARENT" );
-   asset_objs.bit_parent = fixture->create_bitasset( "PARENT", GRAPHENE_WITNESS_ACCOUNT).get_id();
+   asset_objs.bit_parent = fixture->create_bitasset( "PARENT", GRAPHENE_PRODUCERS_ACCOUNT).get_id();
 
    BOOST_TEST_MESSAGE( "Create CHILDUSER" );
-   asset_objs.bit_child_bitasset = fixture->create_bitasset( "CHILDUSER", GRAPHENE_WITNESS_ACCOUNT,
+   asset_objs.bit_child_bitasset = fixture->create_bitasset( "CHILDUSER", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_parent ).get_id();
 
    BOOST_TEST_MESSAGE( "Create user issued USERISSUED" );
    asset_objs.user_issued = fixture->create_user_issued_asset( "USERISSUED",
-         GRAPHENE_WITNESS_ACCOUNT(fixture->db), charge_market_fee ).get_id();
+         GRAPHENE_PRODUCERS_ACCOUNT(fixture->db), charge_market_fee ).get_id();
 
    BOOST_TEST_MESSAGE( "Create a user-issued asset with a precision of 6" );
-   asset_objs.six_precision = fixture->create_user_issued_asset( "SIXPRECISION", GRAPHENE_WITNESS_ACCOUNT(fixture->db),
+   asset_objs.six_precision = fixture->create_user_issued_asset( "SIXPRECISION", GRAPHENE_PRODUCERS_ACCOUNT(fixture->db),
          charge_market_fee, price(asset(1, asset_id_type(1)), asset(1)), 6 ).get_id();
 
    BOOST_TEST_MESSAGE( "Create Prediction market with precision of 6, backed by SIXPRECISION" );
-   asset_objs.prediction = fixture->create_prediction_market( "PREDICTION", GRAPHENE_WITNESS_ACCOUNT,
+   asset_objs.prediction = fixture->create_prediction_market( "PREDICTION", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 6, asset_objs.six_precision ).get_id();
 
    return asset_objs;
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE( bitasset_evaluator_test )
  */
 BOOST_AUTO_TEST_CASE( bitasset_feeds_test )
 { try {
-   uint32_t skip = database::skip_witness_signature
+   uint32_t skip = database::skip_validator_signature
                  | database::skip_transaction_signatures
                  | database::skip_transaction_dupe_check
                  | database::skip_block_size_check

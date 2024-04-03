@@ -98,7 +98,7 @@ namespace graphene { namespace chain {
    //GRAPHENE_IMPLEMENT_OP_BASE_EXCEPTIONS( asset_global_settle );
    //GRAPHENE_IMPLEMENT_OP_BASE_EXCEPTIONS( asset_publish_feed );
    //GRAPHENE_IMPLEMENT_OP_BASE_EXCEPTIONS( delegate_create );
-   //GRAPHENE_IMPLEMENT_OP_BASE_EXCEPTIONS( witness_create );
+   //GRAPHENE_IMPLEMENT_OP_BASE_EXCEPTIONS( validator_create );
 
    GRAPHENE_IMPLEMENT_OP_BASE_EXCEPTIONS( proposal_create );
    GRAPHENE_IMPLEMENT_OP_EVALUATE_EXCEPTION( review_period_required, proposal_create, 1, "review_period required" )

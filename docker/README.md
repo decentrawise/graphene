@@ -22,7 +22,7 @@ The `Dockerfile` performs the following steps:
 12. Add an entry point script
 13. Run the entry point script by default
 
-The entry point simplifies the use of parameters for the `witness_node`
+The entry point simplifies the use of parameters for the `graphened`
 (which is run by default when spinning up the container).
 
 ### Supported Environmental Variables
@@ -33,8 +33,8 @@ The entry point simplifies the use of parameters for the `witness_node`
 * `$GRAPHENED_REPLAY`
 * `$GRAPHENED_RESYNC`
 * `$GRAPHENED_P2P_ENDPOINT`
-* `$GRAPHENED_WITNESS_ID`
-* `$GRAPHENED_PRIVATE_KEY`
+* `$GRAPHENED_VALIDATOR_ID`
+* `$GRAPHENED_BLOCK_PRODUCER_KEYS`
 * `$GRAPHENED_TRACK_ACCOUNTS`
 * `$GRAPHENED_PARTIAL_OPERATIONS`
 * `$GRAPHENED_MAX_OPS_PER_ACCOUNT`
@@ -104,7 +104,7 @@ services:
  delayed_node:
   image: decentrawise/graphene:latest
   environment:
-   - 'GRAPHENED_PLUGINS=delayed_node witness'
+   - 'GRAPHENED_PLUGINS=delayed_node validator'
    - 'GRAPHENED_TRUSTED_NODE=ws://fullnode:8090'
   ports:
    - "0.0.0.0:8091:8090"

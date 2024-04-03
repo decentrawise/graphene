@@ -10,7 +10,7 @@
 
 #include <graphene/elasticsearch/elasticsearch_plugin.hpp>
 
-#include <graphene/debug_witness/debug_api.hpp>
+#include <graphene/debug_validator/debug_api.hpp>
 
 #include <graphene/net/node.hpp>
 
@@ -447,7 +447,7 @@ namespace graphene { namespace app {
                                                                      const std::vector<char>& proof ) const;
 
          /**
-          * @brief Gets "range proof" info. The cli_wallet includes functionality for sending blind transfers
+          * @brief Gets "range proof" info. The wallet includes functionality for sending blind transfers
           * in which the values of the input and outputs amounts are “blinded.”
           * In the case where a transaction produces two or more outputs, (e.g. an amount to the intended
           * recipient plus “change” back to the sender),
@@ -623,7 +623,7 @@ extern template class fc::api<graphene::app::history_api>;
 extern template class fc::api<graphene::app::crypto_api>;
 extern template class fc::api<graphene::app::asset_api>;
 extern template class fc::api<graphene::app::orders_api>;
-extern template class fc::api<graphene::debug_witness::debug_api>;
+extern template class fc::api<graphene::debug_validator::debug_api>;
 extern template class fc::api<graphene::app::custom_operations_api>;
 extern template class fc::api<graphene::app::dummy_api>;
 
@@ -688,7 +688,7 @@ namespace graphene { namespace app {
          /// @brief Retrieve the orders API set
          fc::api<orders_api> orders();
          /// @brief Retrieve the debug API set
-         fc::api<graphene::debug_witness::debug_api> debug();
+         fc::api<graphene::debug_validator::debug_api> debug();
          /// @brief Retrieve the custom operations API set
          fc::api<custom_operations_api> custom_operations();
 
@@ -712,7 +712,7 @@ namespace graphene { namespace app {
          optional< fc::api<crypto_api> >                         _crypto_api;
          optional< fc::api<asset_api> >                          _asset_api;
          optional< fc::api<orders_api> >                         _orders_api;
-         optional< fc::api<graphene::debug_witness::debug_api> > _debug_api;
+         optional< fc::api<graphene::debug_validator::debug_api> > _debug_api;
          optional< fc::api<custom_operations_api> >              _custom_operations_api;
          optional< fc::api<dummy_api> >                          _dummy_api;
    };

@@ -27,9 +27,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void cancel_all_subscriptions(bool reset_callback, bool reset_market_subscriptions);
 
       // Blocks and transactions
-      optional<maybe_signed_block_header> get_block_header( uint32_t block_num, bool with_witness_signature )const;
+      optional<maybe_signed_block_header> get_block_header( uint32_t block_num, bool with_validator_signature )const;
       map<uint32_t, optional<maybe_signed_block_header>> get_block_header_batch(
-            const vector<uint32_t>& block_nums, bool with_witness_signatures )const;
+            const vector<uint32_t>& block_nums, bool with_validator_signatures )const;
       optional<signed_block> get_block(uint32_t block_num)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
@@ -113,12 +113,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
                                                                         int64_t start, fc::time_point_sec stop,
                                                                         uint32_t limit )const;
 
-      // Witnesses
-      vector<optional<witness_object>> get_witnesses(const vector<witness_id_type>& witness_ids)const;
-      fc::optional<witness_object> get_witness_by_account(const std::string& account_id_or_name)const;
-      map<string, witness_id_type, std::less<>> lookup_witness_accounts(
+      // validators
+      vector<optional<validator_object>> get_validators(const vector<validator_id_type>& validator_ids)const;
+      fc::optional<validator_object> get_validator_by_account(const std::string& account_id_or_name)const;
+      map<string, validator_id_type, std::less<>> lookup_validator_accounts(
             const string& lower_bound_name, uint32_t limit )const;
-      uint64_t get_witness_count()const;
+      uint64_t get_validator_count()const;
 
       // Delegates
       vector<optional<delegate_object>> get_delegates(

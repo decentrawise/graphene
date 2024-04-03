@@ -10,7 +10,7 @@ namespace graphene { namespace app {
 class application;
 } }
 
-namespace graphene { namespace debug_witness {
+namespace graphene { namespace debug_validator {
 
 namespace detail {
 class debug_api_impl;
@@ -64,7 +64,7 @@ class debug_api
 
 } }
 
-FC_API(graphene::debug_witness::debug_api,
+FC_API(graphene::debug_validator::debug_api,
        (debug_push_blocks)
        (debug_generate_blocks)
        (debug_update_object)

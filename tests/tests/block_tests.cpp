@@ -9,8 +9,8 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/witness_schedule_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 
 #include <graphene/utilities/tempdir.hpp>
 
@@ -28,19 +28,19 @@ genesis_state_type make_genesis() {
    genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
 
    auto init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
-   genesis_state.initial_active_witnesses = 10;
-   genesis_state.immutable_parameters.min_delegate_count = INITIAL_COUNCIL_COUNT;
-   genesis_state.immutable_parameters.min_witness_count = INITIAL_WITNESS_COUNT;
+   genesis_state.initial_block_producers = 10;
+   genesis_state.immutable_parameters.min_council_count = INITIAL_COUNCIL_COUNT;
+   genesis_state.immutable_parameters.min_producer_count = INITIAL_PRODUCER_COUNT;
 
-   for( unsigned int i = 0; i < genesis_state.initial_active_witnesses; ++i )
+   for( unsigned int i = 0; i < genesis_state.initial_block_producers; ++i )
    {
       auto name = "init"+fc::to_string(i);
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key(),
                                                   true);
-      genesis_state.initial_council_candidates.push_back({name});
-      genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
+      genesis_state.initial_delegate_candidates.push_back({name});
+      genesis_state.initial_validator_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.get_mutable_fees().zero_all_fees();
    return genesis_state;
@@ -64,26 +64,26 @@ BOOST_AUTO_TEST_CASE( block_database_test )
       for( uint32_t i = 0; i < 5; ++i )
       {
          if( i > 0 ) b.previous = b.id();
-         b.witness = witness_id_type(i+1);
+         b.validator = validator_id_type(i+1);
          b.clear();
          bdb.store( b.id(), b );
 
          auto fetch = bdb.fetch_by_number( b.block_num() );
          FC_ASSERT( fetch.valid() );
-         FC_ASSERT( fetch->witness ==  b.witness );
+         FC_ASSERT( fetch->validator ==  b.validator );
          fetch = bdb.fetch_by_number( i+1 );
          FC_ASSERT( fetch.valid() );
-         FC_ASSERT( fetch->witness ==  b.witness );
+         FC_ASSERT( fetch->validator ==  b.validator );
          fetch = bdb.fetch_optional( b.id() );
          FC_ASSERT( fetch.valid() );
-         FC_ASSERT( fetch->witness ==  b.witness );
+         FC_ASSERT( fetch->validator ==  b.validator );
       }
 
       for( uint32_t i = 1; i < 5; ++i )
       {
          auto blk = bdb.fetch_by_number( i );
          FC_ASSERT( blk.valid() );
-         FC_ASSERT( blk->witness == witness_id_type(blk->block_num()) );
+         FC_ASSERT( blk->validator == validator_id_type(blk->block_num()) );
       }
 
       auto last = bdb.last();
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE( block_database_test )
       {
          auto blk = bdb.fetch_by_number( i+1 );
          FC_ASSERT( blk.valid() );
-         FC_ASSERT( blk->witness == witness_id_type(blk->block_num()) );
+         FC_ASSERT( blk->validator == validator_id_type(blk->block_num()) );
       }
 
    } catch (fc::exception& e) {
@@ -123,18 +123,18 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
       {
          database db;
          db.open(data_dir.path(), make_genesis, "TEST" );
-         b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+         b = db.generate_block(db.get_slot_time(1), db.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
 
          // TODO:  Change this test when we correct #406
          // n.b. we generate GRAPHENE_MIN_UNDO_HISTORY+1 extra blocks which will be discarded on save
          for( uint32_t i = 1; ; ++i )
          {
             BOOST_CHECK( db.head_block_id() == b.id() );
-            //witness_id_type prev_witness = b.witness;
-            witness_id_type cur_witness = db.get_scheduled_witness(1);
-            //BOOST_CHECK( cur_witness != prev_witness );
-            b = db.generate_block(db.get_slot_time(1), cur_witness, init_account_priv_key, database::skip_nothing);
-            BOOST_CHECK( b.witness == cur_witness );
+            //validator_id_type prev_validator = b.validator;
+            validator_id_type cur_validator = db.get_scheduled_producer(1);
+            //BOOST_CHECK( cur_validator != prev_validator );
+            b = db.generate_block(db.get_slot_time(1), cur_validator, init_account_priv_key, database::skip_nothing);
+            BOOST_CHECK( b.validator == cur_validator );
             uint32_t cutoff_height = db.get_dynamic_global_properties().last_irreversible_block_num;
             if( cutoff_height >= 200 )
             {
@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
          for( uint32_t i = 0; i < 200; ++i )
          {
             BOOST_CHECK( db.head_block_id() == b.id() );
-            //witness_id_type prev_witness = b.witness;
-            witness_id_type cur_witness = db.get_scheduled_witness(1);
-            //BOOST_CHECK( cur_witness != prev_witness );
-            b = db.generate_block(db.get_slot_time(1), cur_witness, init_account_priv_key, database::skip_nothing);
+            //validator_id_type prev_validator = b.validator;
+            validator_id_type cur_validator = db.get_scheduled_producer(1);
+            //BOOST_CHECK( cur_validator != prev_validator );
+            b = db.generate_block(db.get_slot_time(1), cur_validator, init_account_priv_key, database::skip_nothing);
          }
          BOOST_CHECK_EQUAL( db.head_block_num(), cutoff_block.block_num()+200 );
       }
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( undo_block )
          {
             now = db.get_slot_time(1);
             time_stack.push_back( now );
-            auto b = db.generate_block( now, db.get_scheduled_witness( 1 ), init_account_priv_key, database::skip_nothing );
+            auto b = db.generate_block( now, db.get_scheduled_producer( 1 ), init_account_priv_key, database::skip_nothing );
          }
          BOOST_CHECK( db.head_block_num() == 5 );
          BOOST_CHECK( db.head_block_time() == now );
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE( undo_block )
          {
             now = db.get_slot_time(1);
             time_stack.push_back( now );
-            auto b = db.generate_block( now, db.get_scheduled_witness( 1 ), init_account_priv_key, database::skip_nothing );
+            auto b = db.generate_block( now, db.get_scheduled_producer( 1 ), init_account_priv_key, database::skip_nothing );
          }
          BOOST_CHECK( db.head_block_num() == 7 );
       }
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE( undo_block )
    }
 }
 
-BOOST_AUTO_TEST_CASE( change_signing_key_test )
+BOOST_AUTO_TEST_CASE( change_block_producer_key_test )
 {
    try {
       fc::temp_directory data_dir( graphene::utilities::temp_directory_path() );
@@ -230,15 +230,15 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
       key_map[init_pub_key] = init_account_priv_key;
       key_map[new_pub_key] = new_key;
 
-      std::set< witness_id_type > witnesses;
-      for( uint32_t i = 0; i <= 11; ++i ) // 11 init witnesses and 0 is reserved
-         witnesses.insert( witness_id_type(i) );
+      std::set< validator_id_type > validators;
+      for( uint32_t i = 0; i <= 11; ++i ) // 11 init validators and 0 is reserved
+         validators.insert( validator_id_type(i) );
 
-      auto change_signing_key = [&init_account_priv_key]( database& db, witness_id_type wit, public_key_type new_signing_key ) {
-         witness_update_operation wuop;
-         wuop.witness_account = wit(db).witness_account;
-         wuop.witness = wit;
-         wuop.new_signing_key = new_signing_key;
+      auto change_block_producer_key = [&init_account_priv_key]( database& db, validator_id_type wit, public_key_type new_block_producer_key ) {
+         validator_update_operation wuop;
+         wuop.validator_account = wit(db).validator_account;
+         wuop.validator = wit;
+         wuop.new_block_producer_key = new_block_producer_key;
          signed_transaction wu_trx;
          wu_trx.operations.push_back( wuop );
          wu_trx.set_reference_block( db.head_block_id() );
@@ -258,19 +258,19 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          for( uint32_t i = 0; i < 30; ++i )
          {
             auto now = db.get_slot_time(1);
-            auto next_witness = db.get_scheduled_witness( 1 );
-            db.generate_block( now, next_witness, init_account_priv_key, database::skip_nothing );
+            auto next_validator = db.get_scheduled_producer( 1 );
+            db.generate_block( now, next_validator, init_account_priv_key, database::skip_nothing );
          }
 
          // generate some blocks and change keys in same block
          for( uint32_t i = 0; i < 9; ++i )
          {
             auto now = db.get_slot_time(1);
-            auto next_witness = db.get_scheduled_witness( 1 );
-            public_key_type current_key = next_witness(db).signing_key;
-            change_signing_key( db, next_witness, new_key.get_public_key() );
-            idump( (i)(now)(next_witness) );
-            auto b = db.generate_block( now, next_witness, key_map[current_key], database::skip_nothing );
+            auto next_validator = db.get_scheduled_producer( 1 );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            change_block_producer_key( db, next_validator, new_key.get_public_key() );
+            idump( (i)(now)(next_validator) );
+            auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
          }
 
@@ -286,11 +286,11 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          for( uint32_t i = 0; i < 2; ++i )
          {
             auto now = db.get_slot_time(1);
-            auto next_witness = db.get_scheduled_witness( 1 );
-            public_key_type current_key = next_witness(db).signing_key;
-            change_signing_key( db, next_witness, new_key.get_public_key() );
-            idump( (i)(now)(next_witness) );
-            auto b = db.generate_block( now, next_witness, key_map[current_key], database::skip_nothing );
+            auto next_validator = db.get_scheduled_producer( 1 );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            change_block_producer_key( db, next_validator, new_key.get_public_key() );
+            idump( (i)(now)(next_validator) );
+            auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
          }
 
@@ -298,10 +298,10 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          for( uint32_t i = 0; i < 25; ++i )
          {
             auto now = db.get_slot_time(1);
-            auto next_witness = db.get_scheduled_witness( 1 );
-            public_key_type current_key = next_witness(db).signing_key;
-            idump( (i)(now)(next_witness) );
-            auto b = db.generate_block( now, next_witness, key_map[current_key], database::skip_nothing );
+            auto next_validator = db.get_scheduled_producer( 1 );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            idump( (i)(now)(next_validator) );
+            auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
          }
 
@@ -318,11 +318,11 @@ BOOST_AUTO_TEST_CASE( change_signing_key_test )
          for( uint32_t i = 0; i < 25; ++i )
          {
             auto now = db.get_slot_time(1);
-            auto next_witness = db.get_scheduled_witness( 1 );
-            public_key_type current_key = next_witness(db).signing_key;
-            change_signing_key( db, next_witness, new_key.get_public_key() );
-            idump( (i)(now)(next_witness) );
-            auto b = db.generate_block( now, next_witness, key_map[current_key], database::skip_nothing );
+            auto next_validator = db.get_scheduled_producer( 1 );
+            public_key_type current_key = next_validator(db).block_producer_key;
+            change_block_producer_key( db, next_validator, new_key.get_public_key() );
+            idump( (i)(now)(next_validator) );
+            auto b = db.generate_block( now, next_validator, key_map[current_key], database::skip_nothing );
             idump( (b) );
          }
 
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
       BOOST_TEST_MESSAGE( "Adding blocks 1 through 10" );
       for( uint32_t i = 1; i <= 10; ++i )
       {
-         auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+         auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
          try {
             PUSH_BLOCK( db2, b );
          } FC_CAPTURE_AND_RETHROW( ("db2") );
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
          for( uint32_t i = 11 + j; i <= 13 + j; ++i )
          {
             BOOST_TEST_MESSAGE( i );
-            auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+            auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
          }
          string db1_tip = db1.head_block_id().str();
 
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
          for( uint32_t i = 11 + j; i <= 13 + j; ++i )
          {
             BOOST_TEST_MESSAGE( i );
-            auto b =  db2.generate_block(db2.get_slot_time(next_slot), db2.get_scheduled_witness(next_slot), init_account_priv_key, database::skip_nothing);
+            auto b =  db2.generate_block(db2.get_slot_time(next_slot), db2.get_scheduled_producer(next_slot), init_account_priv_key, database::skip_nothing);
             next_slot = 1;
             // notify both databases of the new block.
             // only db2 should switch to the new fork, db1 should not
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
          //pass it to db1 and assert that db1 doesn't switch to the new fork.
          signed_block good_block;
          {
-            auto b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+            auto b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
             good_block = b;
             b.transactions.emplace_back(signed_transaction());
             b.transactions.back().operations.emplace_back(transfer_operation());
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
       BOOST_TEST_MESSAGE( "Adding more blocks to db1, push the forked blocks out of fork_db" );
       for( uint32_t i = 1; i <= 50; ++i )
       {
-         db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+         db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
       }
 
       {
@@ -491,18 +491,18 @@ BOOST_AUTO_TEST_CASE( out_of_order_blocks )
       BOOST_CHECK( db1.get_chain_id() == db2.get_chain_id() );
 
       auto init_account_priv_key  = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
-      auto b1 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b2 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b3 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b4 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b5 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b6 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b7 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b8 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b9 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b10 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b11 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
-      auto b12 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+      auto b1 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b2 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b3 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b4 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b5 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b6 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b7 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b8 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b9 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b10 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b11 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
+      auto b12 = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
       BOOST_CHECK_EQUAL(db1.head_block_num(), 12);
       BOOST_CHECK_EQUAL(db2.head_block_num(), 0);
       PUSH_BLOCK( db2, b1 );
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE( undo_pending )
             trx.operations.push_back(t);
             PUSH_TX( db, trx, ~0 );
 
-            auto b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, ~0);
+            auto b = db.generate_block(db.get_slot_time(1), db.get_scheduled_producer(1), init_account_priv_key, ~0);
          }
 
          signed_transaction trx;
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE( undo_pending )
          //sign( trx,  init_account_priv_key  );
          PUSH_TX( db, trx );
 
-         auto b = db.generate_block(db.get_slot_time(1), db.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+         auto b = db.generate_block(db.get_slot_time(1), db.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
 
          BOOST_CHECK(nathan_id(db).name == "nathan");
 
@@ -626,15 +626,15 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
       // db1 : A
       // db2 : B C D
 
-      auto aw = db1.get_global_properties().active_witnesses;
-      auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+      auto aw = db1.get_global_properties().block_producers;
+      auto b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
 
       BOOST_CHECK(nathan_id(db1).name == "nathan");
 
-      b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+      b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
       db1.push_block(b);
-      aw = db2.get_global_properties().active_witnesses;
-      b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+      aw = db2.get_global_properties().block_producers;
+      b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
       db1.push_block(b);
       GRAPHENE_REQUIRE_THROW(nathan_id(db2), fc::exception);
       nathan_id(db1); /// it should be included in the pending state
@@ -643,8 +643,8 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
 
       PUSH_TX( db2, trx );
 
-      aw = db2.get_global_properties().active_witnesses;
-      b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+      aw = db2.get_global_properties().block_producers;
+      b = db2.generate_block(db2.get_slot_time(1), db2.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
       db1.push_block(b);
 
       BOOST_CHECK(nathan_id(db1).name == "nathan");
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE( duplicate_transactions )
 
       GRAPHENE_CHECK_THROW(PUSH_TX( db1, trx, skip_sigs ), fc::exception);
 
-      auto b = db1.generate_block( db1.get_slot_time(1), db1.get_scheduled_witness( 1 ), init_account_priv_key, skip_sigs );
+      auto b = db1.generate_block( db1.get_slot_time(1), db1.get_scheduled_producer( 1 ), init_account_priv_key, skip_sigs );
       PUSH_BLOCK( db2, b, skip_sigs );
 
       GRAPHENE_CHECK_THROW(PUSH_TX( db1, trx, skip_sigs ), fc::exception);
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE( tapos )
       public_key_type init_account_pub_key  = init_account_priv_key.get_public_key();
       const graphene::db::index& account_idx = db1.get_index(protocol_ids, account_object_type);
 
-      auto b = db1.generate_block( db1.get_slot_time(1), db1.get_scheduled_witness( 1 ), init_account_priv_key, database::skip_nothing);
+      auto b = db1.generate_block( db1.get_slot_time(1), db1.get_scheduled_producer( 1 ), init_account_priv_key, database::skip_nothing);
 
       signed_transaction trx;
       //This transaction must be in the next block after its reference, or it is invalid.
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE( tapos )
       trx.operations.push_back(cop);
       trx.sign( init_account_priv_key, db1.get_chain_id() );
       PUSH_TX(db1, trx);
-      b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_witness(1), init_account_priv_key, database::skip_nothing);
+      b = db1.generate_block(db1.get_slot_time(1), db1.get_scheduled_producer(1), init_account_priv_key, database::skip_nothing);
       trx.clear();
 
       transfer_operation t;
@@ -849,16 +849,16 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
                         initial_properties.parameters.maximum_transaction_size);
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         db.head_block_time().sec_since_epoch() + db.get_global_properties().parameters.block_interval);
-      BOOST_CHECK(db.get_global_properties().active_witnesses == initial_properties.active_witnesses);
-      BOOST_CHECK(db.get_global_properties().active_delegates == initial_properties.active_delegates);
+      BOOST_CHECK(db.get_global_properties().block_producers == initial_properties.block_producers);
+      BOOST_CHECK(db.get_global_properties().council_delegates == initial_properties.council_delegates);
 
       generate_block();
 
       auto new_properties = db.get_global_properties();
-      BOOST_CHECK(new_properties.active_delegates != initial_properties.active_delegates);
-      BOOST_CHECK(std::find(new_properties.active_delegates.begin(),
-                            new_properties.active_delegates.end(), nathans_delegate.id) !=
-                  new_properties.active_delegates.end());
+      BOOST_CHECK(new_properties.council_delegates != initial_properties.council_delegates);
+      BOOST_CHECK(std::find(new_properties.council_delegates.begin(),
+                            new_properties.council_delegates.end(), nathans_delegate.id) !=
+                  new_properties.council_delegates.end());
       BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().next_maintenance_time.sec_since_epoch(),
                         maintenence_time.sec_since_epoch() + new_properties.parameters.maintenance_interval);
       maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
@@ -962,7 +962,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
 { try {
    // Initialize council by voting for each member and for desired count
-   vote_for_delegates_and_witnesses(INITIAL_COUNCIL_COUNT, INITIAL_WITNESS_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
    set_expiration(db, trx);
@@ -1036,7 +1036,7 @@ BOOST_FIXTURE_TEST_CASE( pop_block_twice, database_fixture )
    try
    {
       uint32_t skip_flags = (
-           database::skip_witness_signature
+           database::skip_validator_signature
          | database::skip_transaction_signatures
          );
 
@@ -1104,98 +1104,98 @@ BOOST_FIXTURE_TEST_CASE( rsf_missed_blocks, database_fixture )
          "1111111111111111111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), (uint32_t)GRAPHENE_100_PERCENT );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), (uint32_t)GRAPHENE_100_PERCENT );
 
       generate_block( ~0, init_account_priv_key, 1 );
       BOOST_CHECK_EQUAL( rsf(),
          "0111111111111111111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(127) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(127) );
 
       generate_block( ~0, init_account_priv_key, 1 );
       BOOST_CHECK_EQUAL( rsf(),
          "0101111111111111111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(126) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(126) );
 
       generate_block( ~0, init_account_priv_key, 2 );
       BOOST_CHECK_EQUAL( rsf(),
          "0010101111111111111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(124) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(124) );
 
       generate_block( ~0, init_account_priv_key, 3 );
       BOOST_CHECK_EQUAL( rsf(),
          "0001001010111111111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(121) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(121) );
 
       generate_block( ~0, init_account_priv_key, 5 );
       BOOST_CHECK_EQUAL( rsf(),
          "0000010001001010111111111111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(116) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(116) );
 
       generate_block( ~0, init_account_priv_key, 8 );
       BOOST_CHECK_EQUAL( rsf(),
          "0000000010000010001001010111111111111111111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(108) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(108) );
 
       generate_block( ~0, init_account_priv_key, 13 );
       BOOST_CHECK_EQUAL( rsf(),
          "0000000000000100000000100000100010010101111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(95) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(95) );
 
       generate_block();
       BOOST_CHECK_EQUAL( rsf(),
          "1000000000000010000000010000010001001010111111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(95) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(95) );
 
       generate_block();
       BOOST_CHECK_EQUAL( rsf(),
          "1100000000000001000000001000001000100101011111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(95) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(95) );
 
       generate_block();
       BOOST_CHECK_EQUAL( rsf(),
          "1110000000000000100000000100000100010010101111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(95) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(95) );
 
       generate_block();
       BOOST_CHECK_EQUAL( rsf(),
          "1111000000000000010000000010000010001001010111111111111111111111"
          "1111111111111111111111111111111111111111111111111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(95) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(95) );
 
       generate_block( ~0, init_account_priv_key, 64 );
       BOOST_CHECK_EQUAL( rsf(),
          "0000000000000000000000000000000000000000000000000000000000000000"
          "1111100000000000001000000001000001000100101011111111111111111111"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(31) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(31) );
 
       generate_block( ~0, init_account_priv_key, 32 );
       BOOST_CHECK_EQUAL( rsf(),
          "0000000000000000000000000000000010000000000000000000000000000000"
          "0000000000000000000000000000000001111100000000000001000000001000"
       );
-      BOOST_CHECK_EQUAL( db.witness_participation_rate(), pct(8) );
+      BOOST_CHECK_EQUAL( db.producer_participation_rate(), pct(8) );
    }
    FC_LOG_AND_RETHROW()
 }
@@ -1208,7 +1208,7 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
 
       auto generate_block = [&]( database& d, uint32_t skip ) -> signed_block
       {
-         return d.generate_block(d.get_slot_time(1), d.get_scheduled_witness(1), init_account_priv_key, skip);
+         return d.generate_block(d.get_slot_time(1), d.get_scheduled_producer(1), init_account_priv_key, skip);
       };
 
       // tx's created by ACTORS() have bogus authority, so we need to
@@ -1230,7 +1230,7 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
       while( db2.head_block_num() < db.head_block_num() )
       {
          optional< signed_block > b = db.fetch_block_by_number( db2.head_block_num()+1 );
-         db2.push_block(*b, database::skip_witness_signature
+         db2.push_block(*b, database::skip_validator_signature
                            |database::skip_transaction_signatures );
       }
       BOOST_CHECK( db2.get( alice_id ).name == "alice" );
@@ -1406,37 +1406,37 @@ BOOST_AUTO_TEST_CASE( genesis_reserve_ids )
 
 BOOST_FIXTURE_TEST_CASE( miss_some_blocks, database_fixture )
 { try {
-   // Witnesses scheduled incorrectly in genesis block - reschedule
-   generate_blocks( witness_schedule_id_type()(db).current_shuffled_witnesses.size() );
+   // validators scheduled incorrectly in genesis block - reschedule
+   generate_blocks( producer_schedule_id_type()(db).current_shuffled_producers.size() );
    generate_blocks( db.get_dynamic_global_properties().next_maintenance_time );
 
-   std::vector<witness_id_type> witnesses = witness_schedule_id_type()(db).current_shuffled_witnesses;
-   BOOST_CHECK_EQUAL( INITIAL_WITNESS_COUNT, witnesses.size() );
-   // database_fixture constructor calls generate_block once, signed by witnesses[0]
-   generate_block(); // witnesses[1]
-   generate_block(); // witnesses[2]
-   for( const auto& id : witnesses )
+   std::vector<validator_id_type> validators = producer_schedule_id_type()(db).current_shuffled_producers;
+   BOOST_CHECK_EQUAL( INITIAL_PRODUCER_COUNT, validators.size() );
+   // database_fixture constructor calls generate_block once, signed by validators[0]
+   generate_block(); // validators[1]
+   generate_block(); // validators[2]
+   for( const auto& id : validators )
       BOOST_CHECK_EQUAL( 0, id(db).total_missed );
-   // generate_blocks generates another block *now* (witnesses[3])
-   // and one at now+9 blocks (witnesses[12%9])
+   // generate_blocks generates another block *now* (validators[3])
+   // and one at now+9 blocks (validators[12%9])
    generate_blocks( db.head_block_time() + db.get_global_properties().parameters.block_interval * 9, true );
-   // i. e. 7 blocks are missed in between by witness[4..11%9]
-   for( uint32_t i = 0; i < witnesses.size(); i++ )
-      BOOST_CHECK_EQUAL( (i+6) % 9 < 2 ? 0 : 1, witnesses[i](db).total_missed );
+   // i. e. 7 blocks are missed in between by validator[4..11%9]
+   for( uint32_t i = 0; i < validators.size(); i++ )
+      BOOST_CHECK_EQUAL( (i+6) % 9 < 2 ? 0 : 1, validators[i](db).total_missed );
 } FC_LOG_AND_RETHROW() }
 
 BOOST_FIXTURE_TEST_CASE( miss_many_blocks, database_fixture )
 {
    try
    {
-      // Witnesses scheduled incorrectly in genesis block - reschedule
-      generate_blocks( witness_schedule_id_type()(db).current_shuffled_witnesses.size() );
+      // validators scheduled incorrectly in genesis block - reschedule
+      generate_blocks( producer_schedule_id_type()(db).current_shuffled_producers.size() );
       generate_blocks( db.get_dynamic_global_properties().next_maintenance_time );
 
       auto get_misses = []( database& db ) {
-         std::map< witness_id_type, uint32_t > misses;
-         for( const auto& witness_id : witness_schedule_id_type()(db).current_shuffled_witnesses )
-            misses[witness_id] = witness_id(db).total_missed;
+         std::map< validator_id_type, uint32_t > misses;
+         for( const auto& validator_id : producer_schedule_id_type()(db).current_shuffled_producers )
+            misses[validator_id] = validator_id(db).total_missed;
          return misses;
       };
       generate_block();
@@ -1472,7 +1472,7 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
       const asset_object& core = asset_id_type()(db);
       uint32_t skip_flags =
           database::skip_transaction_dupe_check
-        | database::skip_witness_signature
+        | database::skip_validator_signature
         | database::skip_transaction_signatures
         ;
 
@@ -1660,45 +1660,45 @@ BOOST_FIXTURE_TEST_CASE( update_account_keys, database_fixture )
 }
 
 // The next test is commented out as it will fail in current implementation
-// where "witnesses should never sign 2 consecutive blocks" is not enforced.
+// where "validators should never sign 2 consecutive blocks" is not enforced.
 // Leaving it here to use it if we implement later.
 
 /**
  *  To have a secure random number we need to ensure that the same
- *  witness does not get to produce two blocks in a row.  There is
- *  always a chance that the last witness of one round will be the
- *  first witness of the next round.
+ *  validator does not get to produce two blocks in a row.  There is
+ *  always a chance that the last validator of one round will be the
+ *  first validator of the next round.
  *
- *  This means that when we shuffle witness we need to make sure
- *  that there is at least N/2 witness between consecutive turns
- *  of the same witness.    This means that durring the random
- *  shuffle we need to restrict the placement of witness to maintain
+ *  This means that when we shuffle validator we need to make sure
+ *  that there is at least N/2 validator between consecutive turns
+ *  of the same validator.    This means that durring the random
+ *  shuffle we need to restrict the placement of validator to maintain
  *  this invariant.
  *
  *  This test checks the requirement using Monte Carlo approach
  *  (produce lots of blocks and check the invariant holds).
  */
 /*
-BOOST_FIXTURE_TEST_CASE( witness_order_mc_test, database_fixture )
+BOOST_FIXTURE_TEST_CASE( validator_order_mc_test, database_fixture )
 {
    try {
-      size_t num_witnesses = db.get_global_properties().active_witnesses.size();
-      size_t dmin = num_witnesses >> 1;
+      size_t num_producers = db.get_global_properties().block_producers.size();
+      size_t dmin = num_producers >> 1;
 
-      vector< witness_id_type > cur_round;
-      vector< witness_id_type > full_schedule;
-      // if we make the maximum witness count testable,
+      vector< validator_id_type > cur_round;
+      vector< validator_id_type > full_schedule;
+      // if we make the maximum validator count testable,
       // we'll need to enlarge this.
-      std::bitset< 0x40 > witness_seen;
+      std::bitset< 0x40 > validator_seen;
       size_t total_blocks = 1000000;
 
-      cur_round.reserve( num_witnesses );
+      cur_round.reserve( num_producers );
       full_schedule.reserve( total_blocks );
-      cur_round.push_back( db.get_dynamic_global_properties().current_witness );
+      cur_round.push_back( db.get_dynamic_global_properties().current_producer );
 
       // we assert so the test doesn't continue, which would
       // corrupt memory
-      assert( num_witnesses <= witness_seen.size() );
+      assert( num_producers <= validator_seen.size() );
 
       while( full_schedule.size() < total_blocks )
       {
@@ -1706,20 +1706,20 @@ BOOST_FIXTURE_TEST_CASE( witness_order_mc_test, database_fixture )
          {
              wdump( (db.head_block_num()) );
          }
-         witness_id_type wid = db.get_scheduled_witness( 1 );
+         validator_id_type wid = db.get_scheduled_producer( 1 );
          full_schedule.push_back( wid );
          cur_round.push_back( wid );
-         if( cur_round.size() == num_witnesses )
+         if( cur_round.size() == num_producers )
          {
             // check that the current round contains exactly 1 copy
-            // of each witness
-            witness_seen.reset();
-            for( const witness_id_type& w : cur_round )
+            // of each validator
+            validator_seen.reset();
+            for( const validator_id_type& w : cur_round )
             {
                uint64_t inst = w.instance.value;
-               BOOST_CHECK( !witness_seen.test( inst ) );
-               assert( !witness_seen.test( inst ) );
-               witness_seen.set( inst );
+               BOOST_CHECK( !validator_seen.test( inst ) );
+               assert( !validator_seen.test( inst ) );
+               validator_seen.set( inst );
             }
             cur_round.clear();
          }
@@ -1890,7 +1890,7 @@ BOOST_FIXTURE_TEST_CASE( block_size_test, database_fixture )
          maybe_large_block.previous = db.head_block_id();
          maybe_large_block.timestamp = db.get_slot_time(1);
          maybe_large_block.transaction_merkle_root = maybe_large_block.calculate_merkle_root();
-         maybe_large_block.witness = db.get_scheduled_witness(1);
+         maybe_large_block.validator = db.get_scheduled_producer(1);
          maybe_large_block.sign(key);
          auto maybe_large_block_size = fc::raw::pack_size(maybe_large_block);
          idump( (maybe_large_block_size) );
@@ -1903,7 +1903,7 @@ BOOST_FIXTURE_TEST_CASE( block_size_test, database_fixture )
          }
 
          // generate a block normally
-         auto good_block = db.generate_block( db.get_slot_time(1), db.get_scheduled_witness(1), key, database::skip_nothing );
+         auto good_block = db.generate_block( db.get_slot_time(1), db.get_scheduled_producer(1), key, database::skip_nothing );
          idump( (fc::raw::pack_size(good_block)) );
       }
       // make sure we have tested at least once pushing a large block

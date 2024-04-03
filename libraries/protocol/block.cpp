@@ -30,13 +30,13 @@ namespace graphene { namespace protocol {
    const fc::ecc::public_key& signed_block_header::signee()const
    {
       if( !_signee.valid() )
-         _signee = fc::ecc::public_key( witness_signature, digest(), true/*enforce canonical*/ );
+         _signee = fc::ecc::public_key( validator_signature, digest(), true/*enforce canonical*/ );
       return _signee;
    }
 
    void signed_block_header::sign( const fc::ecc::private_key& signer )
    {
-      witness_signature = signer.sign_compact( digest() );
+      validator_signature = signer.sign_compact( digest() );
    }
 
    bool signed_block_header::validate_signee( const fc::ecc::public_key& expected_signee )const

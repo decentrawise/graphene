@@ -15,7 +15,7 @@ def dump_json(obj, out, pretty):
 def main():
     parser = argparse.ArgumentParser(description="Generate a patch file that adds init accounts")
     parser.add_argument("-o", "--output", metavar="OUT", default="-", help="output filename (default: stdout)")
-    parser.add_argument("-n", "--num", metavar="N", default=11, type=int, help="number of init witnesses")
+    parser.add_argument("-n", "--num", metavar="N", default=11, type=int, help="number of init validators")
     parser.add_argument("-p", "--pretty", action="store_true", default=False, help="pretty print output")
     parser.add_argument("-s", "--secret", metavar="SECRET", default=None, help="private key generation secret")
     opts = parser.parse_args()
@@ -44,17 +44,17 @@ def main():
             })
         wit_wits.append({
             "owner_name" : "init"+str(i),
-            "block_signing_key" : prod[0]["public_key"],
+            "block_producer_key" : prod[0]["public_key"],
             })
         council.append({"owner_name" : "init"+str(i)})
     result = {
        "append" : {
        "initial_accounts" : wit_accounts },
        "replace" : {
-       "initial_active_witnesses" : opts.num,
+       "initial_block_producers" : opts.num,
        "initial_worker_candidates" : [],
-       "initial_witness_candidates" : wit_wits,
-       "initial_council_candidates" : council,
+       "initial_validator_candidates" : wit_wits,
+       "initial_delegate_candidates" : council,
         }
     }
 

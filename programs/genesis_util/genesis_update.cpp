@@ -126,16 +126,16 @@ int main( int argc, char** argv )
       for( size_t i=0; i<num_accounts; i++ )
          name2index[ genesis.initial_accounts[i].name ] = i;
 
-      for( uint32_t i=0; i<genesis.initial_active_witnesses; i++ )
+      for( uint32_t i=0; i<genesis.initial_block_producers; i++ )
       {
-         genesis_state_type::initial_witness_type& wit = genesis.initial_witness_candidates[ i ];
+         genesis_state_type::initial_validator_type& wit = genesis.initial_validator_candidates[ i ];
          genesis_state_type::initial_account_type& wit_acct = genesis.initial_accounts[ name2index[ wit.owner_name ] ];
          if( wit.owner_name.substr(0, 4) != "init" )
          {
-            std::cerr << "need " << genesis.initial_active_witnesses << " init accounts as first entries in initial_active_witnesses\n";
+            std::cerr << "need " << genesis.initial_block_producers << " init accounts as first entries in initial_block_producers\n";
             return 1;
          }
-         wit.block_signing_key = get_dev_key( "wit-block-signing-", i );
+         wit.block_producer_key = get_dev_key( "wit-block-signing-", i );
          wit_acct.owner_key = get_dev_key( "wit-owner-", i );
          wit_acct.active_key = get_dev_key( "wit-active-", i );
       }

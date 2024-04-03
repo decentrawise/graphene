@@ -18,7 +18,7 @@ endif()
 file(GLOB UNIT_TESTS "tests/*.cpp")
 add_executable( chain_test ${UNIT_TESTS} )
 target_link_libraries( chain_test database_fixture
-                       graphene_witness graphene_wallet graphene_app ${PLATFORM_SPECIFIC_LIBS} )
+                       graphene_validator graphene_wallet graphene_app ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
   set_source_files_properties( tests/common/database_fixture.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
@@ -33,12 +33,12 @@ add_executable( app_test ${APP_SOURCES} )
 target_link_libraries( app_test graphene_app graphene_egenesis_none
                        ${PLATFORM_SPECIFIC_LIBS} )
 
-file(GLOB CLI_SOURCES "cli/*.cpp")
-add_executable( cli_test ${CLI_SOURCES} )
+file(GLOB WALLET_SOURCES "wallet/*.cpp")
+add_executable( wallet_test ${WALLET_SOURCES} )
 if(WIN32)
    list(APPEND PLATFORM_SPECIFIC_LIBS ws2_32)
 endif()
-target_link_libraries( cli_test graphene_wallet graphene_app graphene_egenesis_none
+target_link_libraries( wallet_test graphene_wallet graphene_app graphene_egenesis_none
                        ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( cli/main.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

@@ -87,9 +87,9 @@ const account_statistics_object& database::get_account_stats_by_owner( account_i
    return account_statistics_id_type(owner.instance)(*this);
 }
 
-const witness_schedule_object& database::get_witness_schedule_object()const
+const producer_schedule_object& database::get_producer_schedule_object()const
 {
-   return *_p_witness_schedule_obj;
+   return *_p_producer_schedule_obj;
 }
 
 } }

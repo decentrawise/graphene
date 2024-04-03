@@ -40,7 +40,7 @@ namespace graphene { namespace protocol {
       to.maximum_proposal_lifetime = from.maximum_proposal_lifetime;
       to.maximum_asset_whitelist_authorities = from.maximum_asset_whitelist_authorities;
       to.maximum_asset_feed_publishers = from.maximum_asset_feed_publishers;
-      to.maximum_witness_count = from.maximum_witness_count;
+      to.maximum_producer_count = from.maximum_producer_count;
       to.maximum_council_count = from.maximum_council_count;
       to.maximum_authority_membership = from.maximum_authority_membership;
       to.reserve_percent_of_fee = from.reserve_percent_of_fee;
@@ -50,8 +50,8 @@ namespace graphene { namespace protocol {
       to.cashback_vesting_threshold = from.cashback_vesting_threshold;
       to.count_non_member_votes = from.count_non_member_votes;
       to.allow_non_member_whitelists = from.allow_non_member_whitelists;
-      to.witness_pay_per_block = from.witness_pay_per_block;
-      to.witness_pay_vesting_seconds = from.witness_pay_vesting_seconds;
+      to.producer_pay_per_block = from.producer_pay_per_block;
+      to.producer_pay_vesting_seconds = from.producer_pay_vesting_seconds;
       to.worker_budget_per_day = from.worker_budget_per_day;
       to.max_predicate_opcode = from.max_predicate_opcode;
       to.fee_liquidation_threshold = from.fee_liquidation_threshold;

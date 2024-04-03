@@ -1,6 +1,6 @@
 #include <graphene/app/application.hpp>
 
-#include <graphene/debug_witness/debug_witness.hpp>
+#include <graphene/debug_validator/debug_validator.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -39,16 +39,16 @@ int main(int argc, char** argv) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("Graphene Witness Node");
-      bpo::options_description cfg_options("Graphene Witness Node");
+      bpo::options_description app_options("Graphene Validator Node");
+      bpo::options_description cfg_options("Graphene Validator Node");
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
-            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
+            ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("graphened_data_dir"), "Directory containing databases, configuration file, etc.")
             ;
 
       bpo::variables_map options;
 
-      auto witness_plug = node->register_plugin<debug_witness_plugin::debug_witness_plugin>();
+      auto validator_plug = node->register_plugin<debug_validator_plugin::debug_validator_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
 
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
          exit_promise->set_value(signal);
       }, SIGTERM);
 
-      ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
+      ilog("Started validator node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
       int signal = exit_promise->wait();

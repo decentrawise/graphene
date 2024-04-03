@@ -15,8 +15,8 @@ def dump_json(obj, out, pretty):
 def main():
     parser = argparse.ArgumentParser(description="Generate a patch file that adds init accounts")
     parser.add_argument("-o", "--output", metavar="OUT", default="-", help="output filename (default: stdout)")
-    parser.add_argument("-n", "--num", metavar="N", default=11, type=int, help="number of init witnesses")
-    parser.add_argument("-w", "--witness", metavar="N", default=1, type=int, help="starting witness ID")
+    parser.add_argument("-n", "--num", metavar="N", default=11, type=int, help="number of init validators")
+    parser.add_argument("-w", "--validator", metavar="N", default=1, type=int, help="starting validator ID")
     parser.add_argument("-p", "--pretty", action="store_true", default=False, help="pretty print output")
     parser.add_argument("-m", "--mname", metavar="HOSTNAME", default="", help="machine name of target machine")
     parser.add_argument("-s", "--secret", metavar="SECRET", default=None, help="private key generation secret")
@@ -37,8 +37,8 @@ def main():
            istr = "wit-block-signing-"+str(i)
         prod_str = subprocess.check_output(["programs/genesis_util/get_dev_key", opts.secret, istr]).decode("utf-8")
         prod = json.loads(prod_str)
-        out_wits.append('witness-id = "1.6.'+str(opts.witness+i)+'"\n')
-        out_keys.append("private-key = "+json.dumps([prod[0]["public_key"], prod[0]["private_key"]])+"\n")
+        out_wits.append('validator-id = "1.6.'+str(opts.validator+i)+'"\n')
+        out_keys.append("block-producer-keys = "+json.dumps([prod[0]["public_key"], prod[0]["private_key"]])+"\n")
 
     out_data = "".join(out_wits + ["\n"] + out_keys)
 

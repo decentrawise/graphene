@@ -44,7 +44,7 @@ Steps to reproduce the behavior (example outlined below):
 A clear and concise description of what you expected to happen.
 
 **Environment**
-Please provide details about the host environment. Much of this information can be found running: `witness_node --version`. 
+Please provide details about the host environment. Much of this information can be found running: `graphened --version`. 
  - Graphene Version:    [e.g. 2.0.180425]
  - Host OS:             [e.g. Ubuntu 18.04 LTS]
  - Host Physical RAM:   [e.g. 4GB]

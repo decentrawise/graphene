@@ -220,14 +220,14 @@ namespace graphene { namespace wallet { namespace detail {
          return sign_transaction(trx, broadcast);
    } FC_CAPTURE_AND_RETHROW((order_id)) }
 
-   signed_transaction wallet_api_impl::withdraw_vesting( string witness_name, string amount, string asset_symbol,
+   signed_transaction wallet_api_impl::withdraw_vesting( string validator_name, string amount, string asset_symbol,
          bool broadcast )
    { try {
       auto asset_obj = get_asset( asset_symbol );
-      fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>(witness_name);
+      fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>(validator_name);
       if( !vbid )
       {
-         witness_object wit = get_witness( witness_name );
+         validator_object wit = get_validator( validator_name );
          FC_ASSERT( wit.pay_vb );
          vbid = wit.pay_vb;
       }
@@ -245,7 +245,7 @@ namespace graphene { namespace wallet { namespace detail {
       tx.validate();
 
       return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (witness_name)(amount) )
+   } FC_CAPTURE_AND_RETHROW( (validator_name)(amount) )
    }
 
 }}} // namespace graphene::wallet::detail

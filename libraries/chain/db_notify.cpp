@@ -11,7 +11,7 @@
 #include <graphene/chain/htlc_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/delegate_object.hpp>
-#include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/validator_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
@@ -141,13 +141,13 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.fee_payer() ); // publisher
    }
-   void operator()( const witness_create_operation& op )
+   void operator()( const validator_create_operation& op )
    {
-      _impacted.insert( op.fee_payer() ); // witness_account
+      _impacted.insert( op.fee_payer() ); // validator_account
    }
-   void operator()( const witness_update_operation& op )
+   void operator()( const validator_update_operation& op )
    {
-      _impacted.insert( op.fee_payer() ); // witness_account
+      _impacted.insert( op.fee_payer() ); // validator_account
    }
    void operator()( const proposal_create_operation& op )
    {
@@ -327,10 +327,10 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
            FC_ASSERT( aobj != nullptr );
            accounts.insert( aobj->delegate_account );
            break;
-        } case witness_object_type:{
-           const auto& aobj = dynamic_cast<const witness_object*>(obj);
+        } case validator_object_type:{
+           const auto& aobj = dynamic_cast<const validator_object*>(obj);
            FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->witness_account );
+           accounts.insert( aobj->validator_account );
            break;
         } case limit_order_object_type:{
            const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
@@ -426,7 +426,7 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
               break;
            } case impl_chain_property_object_type:
               break;
-             case impl_witness_schedule_object_type:
+             case impl_producer_schedule_object_type:
               break;
              case impl_budget_record_object_type:
               break;
