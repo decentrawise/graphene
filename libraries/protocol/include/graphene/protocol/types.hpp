@@ -122,7 +122,7 @@ namespace graphene { namespace protocol {
    /**
     * @note
     * If one of the following bits is set in asset issuer permissions,
-    * it means the asset issuer (or owner for bitassets) has the permission to update
+    * it means the asset issuer (or owner for backed assets) has the permission to update
     * the corresponding flag, parameters or perform certain actions.
     * - @ref charge_market_fee
     * - @ref white_list
@@ -136,7 +136,7 @@ namespace graphene { namespace protocol {
     */
    enum asset_issuer_permission_flags {
       // If one of the following bits is set in asset issuer permissions,
-      // it means the asset issuer (or owner for bitassets) has the permission to update
+      // it means the asset issuer (or owner for backed assets) has the permission to update
       // the corresponding flag, parameters or perform certain actions.
       // Note: This comment is copied and reformatted above for better Doxygen documentation formatting.
       charge_market_fee    = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
@@ -144,7 +144,7 @@ namespace graphene { namespace protocol {
       override_authority   = 0x04, /**< issuer may transfer asset back to himself */
       transfer_restricted  = 0x08, /**< require the issuer to be one party to every transfer */
       disable_force_settle = 0x10, /**< disable force settling */
-      global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
+      global_settle        = 0x20, /**< allow the backed asset owner to force a global settling -- this may be set in permissions, but not flags */
       disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
       validator_fed_asset  = 0x80, /**< allow the asset to be fed by validators */
       delegate_fed_asset   = 0x100 /**< allow the asset to be fed by the delegates */

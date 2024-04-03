@@ -62,7 +62,7 @@ void database::initialize_evaluators()
    register_evaluator<asset_issue_evaluator>();
    register_evaluator<asset_reserve_evaluator>();
    register_evaluator<asset_update_evaluator>();
-   register_evaluator<asset_update_bitasset_evaluator>();
+   register_evaluator<asset_update_backed_asset_evaluator>();
    register_evaluator<asset_update_feed_producers_evaluator>();
    register_evaluator<asset_settle_evaluator>();
    register_evaluator<asset_global_settle_evaluator>();
@@ -133,7 +133,7 @@ void database::initialize_indexes()
    auto bal_idx = add_index< primary_index<account_balance_index          > >();
    bal_idx->add_secondary_index<balances_by_account_index>();
 
-   add_index< primary_index<asset_bitasset_data_index,                 13 > >(); // 8192
+   add_index< primary_index<backed_asset_data_index,                 13 > >(); // 8192
    add_index< primary_index<simple_index<global_property_object          >> >();
    add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
    add_index< primary_index<account_stats_index,                       20 > >(); // 1 Mi

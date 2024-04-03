@@ -1157,7 +1157,7 @@ vector<call_order_object> database_api_impl::get_call_orders(const std::string& 
 
    const asset_object* mia = get_asset_from_string(a);
    const auto& call_index = _db.get_index_type<call_order_index>().indices().get<by_collateral>();
-   price index_price = price::min( mia->bitasset_data(_db).options.short_backing_asset, mia->get_id() );
+   price index_price = price::min( mia->backed_asset_data(_db).options.short_backing_asset, mia->get_id() );
 
    vector< call_order_object> result;
    auto itr_min = call_index.lower_bound(index_price);
@@ -1282,7 +1282,7 @@ vector<collateral_bid_object> database_api_impl::get_collateral_bids( const std:
               ("configured_limit", configured_limit) );
 
    const asset_object& swan = *get_asset_from_string(asset_id_or_symbol);
-   FC_ASSERT( swan.is_market_issued(), "Asset is not a MPA" );
+   FC_ASSERT( swan.is_backed(), "Asset is not a Backed Asset" );
    const asset_id_type asset_id = swan.get_id();
    const auto& idx = _db.get_index_type<collateral_bid_index>().indices().get<by_price>();
    auto itr = idx.lower_bound( asset_id );

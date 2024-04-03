@@ -6,7 +6,7 @@ namespace graphene { namespace chain {
 
    class account_object;
    class asset_object;
-   class asset_bitasset_data_object;
+   class backed_asset_data_object;
    class call_order_object;
    class limit_order_object;
    class collateral_bid_object;
@@ -61,7 +61,7 @@ namespace graphene { namespace chain {
          const asset_object* _debt_asset = nullptr;
          const account_object* _paying_account = nullptr;
          const call_order_object* _order = nullptr;
-         const asset_bitasset_data_object* _bitasset_data = nullptr;
+         const backed_asset_data_object* _backed_asset_data = nullptr;
          const asset_dynamic_data_object*  _dynamic_data_obj = nullptr;
    };
 
@@ -74,7 +74,7 @@ namespace graphene { namespace chain {
          void_result do_apply( const bid_collateral_operation& o );
 
          const asset_object* _debt_asset = nullptr;
-         const asset_bitasset_data_object* _bitasset_data = nullptr;
+         const backed_asset_data_object* _backed_asset_data = nullptr;
          const account_object* _paying_account = nullptr;
          const collateral_bid_object* _bid = nullptr;
    };

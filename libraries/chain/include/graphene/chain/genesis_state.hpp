@@ -46,7 +46,7 @@ struct genesis_state_type {
       share_type max_supply;
       share_type accumulated_fees;
 
-      bool is_bitasset = false;
+      bool is_backed = false;
       vector<initial_collateral_position> collateral_records;
    };
    struct initial_balance_type {

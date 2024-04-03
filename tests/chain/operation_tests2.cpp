@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_delete )
 BOOST_AUTO_TEST_CASE( mia_feeds )
 { try {
    ACTORS((nathan)(dan)(ben)(vikram));
-   asset_id_type bit_usd_id = create_bitasset("USDBIT").get_id();
+   asset_id_type bit_usd_id = create_backed_asset("USDBIT").get_id();
 
    {
       asset_update_operation op;
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       generate_block(database::skip_nothing);
    }
    {
-      const asset_bitasset_data_object& obj = bit_usd_id(db).bitasset_data(db);
+      const backed_asset_data_object& obj = bit_usd_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(obj.feeds.size(), 3u);
       BOOST_CHECK(obj.current_feed == price_feed());
    }
@@ -741,17 +741,17 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       trx.operations.emplace_back(op);
       PUSH_TX( db, trx, ~0 );
 
-      const asset_bitasset_data_object& bitasset = bit_usd.bitasset_data(db);
-      BOOST_CHECK(bitasset.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      const backed_asset_data_object& ba = bit_usd.backed_asset_data(db);
+      BOOST_CHECK(ba.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = ben_id;
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = dan_id;
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
@@ -760,8 +760,8 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = nathan_id;
       trx.operations.back() = op;
@@ -773,13 +773,13 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
 { try {
    INVOKE( mia_feeds );
    const asset_object& bit_usd = get_asset("USDBIT");
-   const asset_bitasset_data_object& bitasset = bit_usd.bitasset_data(db);
+   const backed_asset_data_object& ba = bit_usd.backed_asset_data(db);
    GET_ACTOR(nathan);
 
-   BOOST_CHECK(!bitasset.current_feed.settlement_price.is_null());
+   BOOST_CHECK(!ba.current_feed.settlement_price.is_null());
 
    BOOST_TEST_MESSAGE("Setting minimum feeds to 4");
-   asset_update_bitasset_operation op;
+   asset_update_backed_asset_operation op;
    op.new_options.minimum_feeds = 4;
    op.asset_to_update = bit_usd.get_id();
    op.issuer = bit_usd.issuer;
@@ -788,7 +788,7 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
    PUSH_TX(db, trx);
 
    BOOST_TEST_MESSAGE("Checking current_feed is null");
-   BOOST_CHECK(bitasset.current_feed.settlement_price.is_null());
+   BOOST_CHECK(ba.current_feed.settlement_price.is_null());
 
    BOOST_TEST_MESSAGE("Setting minimum feeds to 3");
    op.new_options.minimum_feeds = 3;
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
    PUSH_TX(db, trx);
 
    BOOST_TEST_MESSAGE("Checking current_feed is not null");
-   BOOST_CHECK(!bitasset.current_feed.settlement_price.is_null());
+   BOOST_CHECK(!ba.current_feed.settlement_price.is_null());
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( validator_create )
@@ -1001,7 +1001,7 @@ BOOST_AUTO_TEST_CASE( global_settle_test )
    set_expiration( db, trx );
 
    ACTORS((nathan)(ben)(valentine)(dan));
-   asset_id_type bit_usd_id = create_bitasset("USDBIT", nathan_id, 100, global_settle | charge_market_fee).get_id();
+   asset_id_type bit_usd_id = create_backed_asset("USDBIT", nathan_id, 100, global_settle | charge_market_fee).get_id();
 
    update_feed_producers( bit_usd_id(db), { nathan_id } );
 
@@ -1373,7 +1373,7 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
       transfer(account_id_type()(db), shorter4_id(db), asset(initial_balance));
       transfer(account_id_type()(db), shorter5_id(db), asset(initial_balance));
 
-      asset_id_type bitusd_id = create_bitasset(
+      asset_id_type bitusd_id = create_backed_asset(
          "USDBIT",
          nathan_id,
          100,
@@ -1382,14 +1382,14 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
       asset_id_type core_id = asset_id_type();
 
-      auto update_bitasset_options = [&]( asset_id_type asset_id,
-         std::function< void(bitasset_options&) > update_function )
+      auto update_backed_asset_options = [&]( asset_id_type asset_id,
+         std::function< void(backed_asset_options&) > update_function )
       {
          const asset_object& _asset = asset_id(db);
-         asset_update_bitasset_operation op;
+         asset_update_backed_asset_operation op;
          op.asset_to_update = asset_id;
          op.issuer = _asset.issuer;
-         op.new_options = (*_asset.bitasset_data_id)(db).options;
+         op.new_options = (*_asset.backed_asset_data_id)(db).options;
          update_function( op.new_options );
          signed_transaction tx;
          tx.operations.push_back( op );
@@ -1414,8 +1414,8 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
       BOOST_TEST_MESSAGE( "Update maximum_force_settlement_volume = 9000" );
 
-      BOOST_CHECK( bitusd_id(db).is_market_issued() );
-      update_bitasset_options( bitusd_id, [&]( bitasset_options& new_options )
+      BOOST_CHECK( bitusd_id(db).is_backed() );
+      update_backed_asset_options( bitusd_id, [&]( backed_asset_options& new_options )
       { new_options.maximum_force_settlement_volume = 9000; } );
 
       BOOST_TEST_MESSAGE( "Publish price feed" );
@@ -1451,7 +1451,7 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
 
       BOOST_TEST_MESSAGE( "Update force_settlement_delay_sec = 100, force_settlement_offset_percent = 1%" );
 
-      update_bitasset_options( bitusd_id, [&]( bitasset_options& new_options )
+      update_backed_asset_options( bitusd_id, [&]( backed_asset_options& new_options )
       { new_options.force_settlement_delay_sec = 100;
         new_options.force_settlement_offset_percent = GRAPHENE_1_PERCENT; } );
 
@@ -1484,7 +1484,7 @@ BOOST_AUTO_TEST_CASE( force_settle_test )
       blocks += 2;
 
       BOOST_CHECK(db.find(settle_id) == nullptr);
-      BOOST_CHECK_EQUAL( bitusd_id(db).bitasset_data(db).force_settled_volume.value, 50 );
+      BOOST_CHECK_EQUAL( bitusd_id(db).backed_asset_data(db).force_settled_volume.value, 50 );
       BOOST_CHECK_EQUAL( get_balance(nathan_id, bitusd_id), 14950);
       BOOST_CHECK_EQUAL( get_balance(nathan_id, core_id), 49 );   // 1% force_settlement_offset_percent (rounded unfavorably)
       BOOST_CHECK_EQUAL( call3_id(db).debt.value, 2950 );

@@ -264,20 +264,20 @@ namespace graphene { namespace chain {
          /// @ingroup Market Helpers
          /// @{
 
-         /// Globally settle @p bitasset at @p settle_price, let margin calls pay a premium and margin call fee if
+         /// Globally settle @p backed_asset at @p settle_price, let margin calls pay a premium and margin call fee if
          /// @p check_margin_calls is @c true (in this case others would be closed not at @p settle_price but at a
          /// price better for their owners).
-         void globally_settle_asset(const asset_object &bitasset, const price &settle_price);
+         void globally_settle_asset(const asset_object &backed_asset, const price &settle_price);
          void cancel_settle_order(const force_settlement_object& order, bool create_virtual_op = true);
          void cancel_limit_order(const limit_order_object& order, bool create_virtual_op = true);
-         void revive_bitasset( const asset_object& bitasset );
+         void revive_backed_asset( const asset_object& backed_asset );
          void cancel_bid(const collateral_bid_object& bid, bool create_virtual_op = true);
          void execute_bid( const collateral_bid_object& bid, share_type debt_covered, share_type collateral_from_fund, const price_feed& current_feed );
 
       private:
-         void _cancel_bids_and_revive_mpa(const asset_object &bitasset, const asset_bitasset_data_object &bad);
+         void _cancel_bids_and_revive_backed_asset(const asset_object &backed_asset, const backed_asset_data_object &bad);
          bool check_for_blackswan(const asset_object &mia, bool enable_black_swan = true,
-                                  const asset_bitasset_data_object *bitasset_ptr = nullptr);
+                                  const backed_asset_data_object *backed_asset_ptr = nullptr);
       public:
          /**
           * @brief Process a new limit order through the markets
@@ -290,7 +290,7 @@ namespace graphene { namespace chain {
          bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
 
          bool check_call_orders(const asset_object &mia, bool enable_black_swan = true,
-                                const asset_bitasset_data_object *bitasset_ptr = nullptr);
+                                const backed_asset_data_object *backed_asset_ptr = nullptr);
 
          // Note: Ideally this should be private.
          //       Now it is public because we use it in a non-member function in db_market.cpp .
@@ -577,8 +577,8 @@ namespace graphene { namespace chain {
          void update_block_producers();
          void update_council_delegates();
          void update_worker_votes();
-         void process_bids( const asset_bitasset_data_object& bad );
-         void process_bitassets();
+         void process_bids( const backed_asset_data_object& bad );
+         void process_backed_assets();
 
          template<class Type>
          void perform_account_maintenance( Type tally_helper );

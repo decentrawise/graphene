@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( call_order_update )
    try {
 
       ACTORS((dan)(sam));
-      const auto &bitusd = create_bitasset("USDBIT", sam.get_id());
+      const auto &bitusd = create_backed_asset("USDBIT", sam.get_id());
       const auto& core   = asset_id_type()(db);
 
       transfer(council_account, dan_id, asset(10000000));
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE( call_order_update )
       current_feed.maintenance_collateral_ratio = 1750; // need to set this explicitly, testnet has a different default
       publish_feed( bitusd, sam, current_feed );
 
-      FC_ASSERT( bitusd.bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
+      FC_ASSERT( bitusd.backed_asset_data(db).current_feed.settlement_price == current_feed.settlement_price );
 
       BOOST_TEST_MESSAGE( "attempting to borrow using 2x collateral at 1:1 price now that there is a valid order" );
       borrow( dan, bitusd.amount(5000), asset(10000));
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE( old_call_order_update )
       set_expiration( db, trx );
 
       ACTORS((dan)(sam));
-      const auto &bitusd = create_bitasset("USDBIT", sam.get_id());
+      const auto &bitusd = create_backed_asset("USDBIT", sam.get_id());
       const auto& core   = asset_id_type()(db);
 
       transfer(council_account, dan_id, asset(10000000));
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE( old_call_order_update )
       current_feed.maintenance_collateral_ratio = 1750; // need to set this explicitly, testnet has a different default
       publish_feed( bitusd, sam, current_feed );
 
-      FC_ASSERT( bitusd.bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
+      FC_ASSERT( bitusd.backed_asset_data(db).current_feed.settlement_price == current_feed.settlement_price );
 
       BOOST_TEST_MESSAGE( "attempting to borrow using 2x collateral at 1:1 price now that there is a valid order" );
       borrow( dan, bitusd.amount(5000), asset(10000));
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE( more_call_order_update_test )
       set_expiration( db, trx );
 
       ACTORS((dan)(sam)(alice)(bob));
-      const auto &bitusd = create_bitasset("USDBIT", sam.get_id());
+      const auto &bitusd = create_backed_asset("USDBIT", sam.get_id());
       const auto& core   = asset_id_type()(db);
 
       transfer(council_account, dan_id, asset(10000000));
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE( more_call_order_update_test )
       current_feed.maximum_short_squeeze_ratio = 1100; // need to set this explicitly, testnet has a different default
       publish_feed( bitusd, sam, current_feed );
 
-      FC_ASSERT( bitusd.bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
+      FC_ASSERT( bitusd.backed_asset_data(db).current_feed.settlement_price == current_feed.settlement_price );
 
       BOOST_TEST_MESSAGE( "attempting to borrow using 1.75x collateral at 1:1 price should not be allowed" );
       GRAPHENE_REQUIRE_THROW( borrow( bob, bitusd.amount(10000), core.amount(17500) ), fc::exception );
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_target_cr_test )
       set_expiration( db, trx );
 
       ACTORS((sam)(alice)(bob));
-      const auto &bitusd = create_bitasset("USDBIT", sam.get_id());
+      const auto &bitusd = create_backed_asset("USDBIT", sam.get_id());
       const auto& core   = asset_id_type()(db);
       asset_id_type bitusd_id = bitusd.get_id();
       asset_id_type core_id = core.get_id();
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_target_cr_test )
       current_feed.maximum_short_squeeze_ratio = 1100; // need to set this explicitly, testnet has a different default
       publish_feed( bitusd, sam, current_feed );
 
-      FC_ASSERT( bitusd.bitasset_data(db).current_feed.settlement_price == current_feed.settlement_price );
+      FC_ASSERT( bitusd.backed_asset_data(db).current_feed.settlement_price == current_feed.settlement_price );
 
       auto call_update_proposal = [this]( const account_object& proposer,
                                        const account_object& updater,
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE( margin_call_limit_test )
 { try {
       ACTORS((buyer)(seller)(borrower)(borrower2)(feedproducer));
 
-      const auto& bitusd = create_bitasset("USDBIT", feedproducer_id);
+      const auto& bitusd = create_backed_asset("USDBIT", feedproducer_id);
       const auto& core   = asset_id_type()(db);
 
       int64_t init_balance(1000000);
@@ -880,11 +880,11 @@ BOOST_AUTO_TEST_CASE( create_delegate )
 BOOST_AUTO_TEST_CASE( create_mia )
 {
    try {
-      const asset_object& bitusd = create_bitasset( "USDBIT" );
+      const asset_object& bitusd = create_backed_asset( "USDBIT" );
       BOOST_CHECK(bitusd.symbol == "USDBIT");
-      BOOST_CHECK(bitusd.bitasset_data(db).options.short_backing_asset == asset_id_type());
+      BOOST_CHECK(bitusd.backed_asset_data(db).options.short_backing_asset == asset_id_type());
       BOOST_CHECK(bitusd.dynamic_asset_data_id(db).current_supply == 0);
-      GRAPHENE_REQUIRE_THROW( create_bitasset("USDBIT"), fc::exception);
+      GRAPHENE_REQUIRE_THROW( create_backed_asset("USDBIT"), fc::exception);
    } catch ( const fc::exception& e ) {
       elog( "${e}", ("e", e.to_detail_string() ) );
       throw;
@@ -960,7 +960,7 @@ BOOST_AUTO_TEST_CASE( create_ua )
       BOOST_CHECK(asset(1, test_asset_id) * test_asset.options.core_exchange_rate == asset(2));
       BOOST_CHECK((test_asset.options.flags & white_list) == 0);
       BOOST_CHECK(test_asset.options.max_supply == 100000000);
-      BOOST_CHECK(!test_asset.bitasset_data_id.valid());
+      BOOST_CHECK(!test_asset.backed_asset_data_id.valid());
       BOOST_CHECK(test_asset.options.market_fee_percent == GRAPHENE_MAX_MARKET_FEE_PERCENT/100);
       GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
 
@@ -1520,17 +1520,17 @@ BOOST_AUTO_TEST_CASE( validator_feeds )
       trx.operations.emplace_back(op);
       PUSH_TX( db, trx, ~0 );
 
-      const asset_bitasset_data_object& bitasset = bit_usd.bitasset_data(db);
-      BOOST_CHECK(bitasset.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      const backed_asset_data_object& ba = bit_usd.backed_asset_data(db);
+      BOOST_CHECK(ba.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = block_producers[1];
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = block_producers[2];
       op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
@@ -1539,8 +1539,8 @@ BOOST_AUTO_TEST_CASE( validator_feeds )
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(bitasset.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(bitasset.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
    } catch (const fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -1698,7 +1698,7 @@ BOOST_AUTO_TEST_CASE( producer_pay_test )
 } FC_LOG_AND_RETHROW() }
 
 /**
- *  Reserve asset test should make sure that all assets except bitassets
+ *  Reserve asset test should make sure that all assets except backed assets
  *  can be burned, and all supplies add up.
  */
 BOOST_AUTO_TEST_CASE( reserve_asset_test )
@@ -1706,7 +1706,7 @@ BOOST_AUTO_TEST_CASE( reserve_asset_test )
    try
    {
       ACTORS((alice)(bob)(sam)(judge));
-      const auto& basset = create_bitasset("USDBIT", judge_id);
+      const auto& basset = create_backed_asset("USDBIT", judge_id);
       const auto& uasset = create_user_asset(UA_TEST_SYMBOL);
       const auto& passet = create_prediction_market("PMARK", judge_id);
       const auto& casset = asset_id_type()(db);
@@ -1747,7 +1747,7 @@ BOOST_AUTO_TEST_CASE( reserve_asset_test )
       BOOST_CHECK_EQUAL( (casset.reserved( db ) - initial_reserve).value, reserve_amount );
       verify_asset_supplies(db);
 
-      BOOST_TEST_MESSAGE( "Test reserve operation on market issued asset" );
+      BOOST_TEST_MESSAGE( "Test reserve operation on backed asset" );
       transfer( council_account, alice_id, casset.amount( init_balance*100 ) );
       update_feed_producers( basset, {sam.get_id()} );
       price_feed current_feed;
@@ -1793,7 +1793,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_evaluator_test )
       const auto& core   = asset_id_type()(db);
 
       // attempt to increase current supply beyond max_supply
-      const auto& bitusd = create_bitasset( "USDBIT", alice_id, 100, charge_market_fee, 2U, 
+      const auto& bitusd = create_backed_asset( "USDBIT", alice_id, 100, charge_market_fee, 2U, 
             asset_id_type{}, GRAPHENE_MAX_SHARE_SUPPLY / 2 );
 
       {

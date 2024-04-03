@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(get_account_history) {
       graphene::app::history_api hist_api(app);
 
       //account_id_type() do 3 ops
-      create_bitasset("USD", account_id_type());
+      create_backed_asset("USD", account_id_type());
       create_account("dan");
       create_account("bob");
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(get_account_history_additional) {
       vector<operation_history_object> histories = hist_api.get_account_history("1.2.0", operation_history_id_type(0), 4, operation_history_id_type(0));
       BOOST_CHECK_EQUAL(histories.size(), 0u);
 
-      create_bitasset("USD", account_id_type()); // create op 0
+      create_backed_asset("USD", account_id_type()); // create op 0
       generate_block();
       // what if the account only has one history entry and it is 0?
       histories = hist_api.get_account_history("1.2.0", operation_history_id_type(), 4, operation_history_id_type());
@@ -80,11 +80,11 @@ BOOST_AUTO_TEST_CASE(get_account_history_additional) {
 
       const account_object& dan = create_account("dan"); // create op 1
 
-      create_bitasset("CNY", dan.get_id());      // create op 2
-      create_bitasset("BTC", account_id_type()); // create op 3
-      create_bitasset("XMR", dan.get_id());      // create op 4
-      create_bitasset("EUR", account_id_type()); // create op 5
-      create_bitasset("OIL", dan.get_id());      // create op 6
+      create_backed_asset("CNY", dan.get_id());      // create op 2
+      create_backed_asset("BTC", account_id_type()); // create op 3
+      create_backed_asset("XMR", dan.get_id());      // create op 4
+      create_backed_asset("EUR", account_id_type()); // create op 5
+      create_backed_asset("OIL", dan.get_id());      // create op 6
 
       generate_block();
 
@@ -387,15 +387,15 @@ BOOST_AUTO_TEST_CASE(track_account) {
       create_account("alice");
 
       //account_id_type() creates some ops
-      create_bitasset("CNY", account_id_type());
-      create_bitasset("USD", account_id_type());
+      create_backed_asset("CNY", account_id_type());
+      create_backed_asset("USD", account_id_type());
 
       // account_id_type() creates dan(account tracked)
       const account_object& dan = create_account("dan");
       auto dan_id = dan.get_id();
 
       // dan makes 1 op
-      create_bitasset("EUR", dan_id);
+      create_backed_asset("EUR", dan_id);
 
       generate_block();
 
@@ -422,8 +422,8 @@ BOOST_AUTO_TEST_CASE(track_account) {
       BOOST_CHECK_EQUAL(histories[1].id.instance(), 3u);
 
       // create more ops, starting with an untracked account
-      create_bitasset( "BTC", account_id_type() );
-      create_bitasset( "GBP", dan_id );
+      create_backed_asset( "BTC", account_id_type() );
+      create_backed_asset( "GBP", dan_id );
 
       generate_block();
 
@@ -436,8 +436,8 @@ BOOST_AUTO_TEST_CASE(track_account) {
       db.pop_block();
 
       // Try again, should result in same object IDs
-      create_bitasset( "BTC", account_id_type() );
-      create_bitasset( "GBP", dan_id );
+      create_backed_asset( "BTC", account_id_type() );
+      create_backed_asset( "GBP", dan_id );
 
       generate_block();
 
@@ -462,11 +462,11 @@ BOOST_AUTO_TEST_CASE(track_account2) {
       auto alice_id = alice.get_id();
 
       //account_id_type() creates some ops
-      create_bitasset("CNY", account_id_type());
-      create_bitasset("USD", account_id_type());
+      create_backed_asset("CNY", account_id_type());
+      create_backed_asset("USD", account_id_type());
 
       // alice makes 1 op
-      create_bitasset("EUR", alice_id);
+      create_backed_asset("EUR", alice_id);
 
       // account_id_type() creates dan(account not tracked)
       create_account("dan");
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(get_account_history_operations) {
       graphene::app::history_api hist_api(app);
 
       //account_id_type() do 3 ops
-      create_bitasset("CNY", account_id_type());
+      create_backed_asset("CNY", account_id_type());
       create_account("sam");
       create_account("alice");
 
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(api_limit_get_account_history_operations) {
    try {
    graphene::app::history_api hist_api(app);
    //account_id_type() do 3 ops
-   create_bitasset("CNY", account_id_type());
+   create_backed_asset("CNY", account_id_type());
    create_account("sam");
    create_account("alice");
 
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(api_limit_get_account_history) {
    try{
    graphene::app::history_api hist_api(app);
    //account_id_type() do 3 ops
-   create_bitasset("USD", account_id_type());
+   create_backed_asset("USD", account_id_type());
    create_account("dan");
    create_account("bob");
 
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(api_limit_get_relative_account_history) {
    try{
    graphene::app::history_api hist_api(app);
    //account_id_type() do 3 ops
-   create_bitasset("USD", account_id_type());
+   create_backed_asset("USD", account_id_type());
    create_account("dan");
    create_account("bob");
 
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(api_limit_get_account_history_by_operations) {
    graphene::app::history_api hist_api(app);
    flat_set<uint16_t> operation_types;
    //account_id_type() do 3 ops
-   create_bitasset("USD", account_id_type());
+   create_backed_asset("USD", account_id_type());
    create_account("dan");
    create_account("bob");
    generate_block();

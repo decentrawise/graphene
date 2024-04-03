@@ -894,7 +894,7 @@ BOOST_AUTO_TEST_CASE( wallet_create_htlc )
          graphene::chain::asset_options asset_ops;
          asset_ops.max_supply = 1000000;
          asset_ops.core_exchange_rate = price(asset(2),asset(1,asset_id_type(1)));
-         fc::optional<graphene::chain::bitasset_options> bit_opts;
+         fc::optional<graphene::chain::backed_asset_options> bit_opts;
          con.wallet_api_ptr->create_asset("nathan", "BOBCOIN", 5, asset_ops, bit_opts, true);
       }
       catch(exception& e)

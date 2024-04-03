@@ -568,13 +568,13 @@ BOOST_AUTO_TEST_CASE( merkle_root )
 }
 
 /**
- * Bitasset feed expiration
+ * Backed asset feed expiration
  */
-BOOST_AUTO_TEST_CASE( bitasset_feed_expiration_test )
+BOOST_AUTO_TEST_CASE( backed_asset_feed_expiration_test )
 {
    time_point_sec now = fc::time_point::now();
 
-   asset_bitasset_data_object o;
+   backed_asset_data_object o;
 
    o.current_feed_publication_time = now - fc::hours(1);
    o.options.feed_lifetime_sec = std::numeric_limits<uint32_t>::max() - 1;

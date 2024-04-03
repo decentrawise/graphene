@@ -69,15 +69,15 @@ namespace graphene { namespace chain {
          const asset_object* asset_to_update = nullptr;
    };
 
-   class asset_update_bitasset_evaluator : public evaluator<asset_update_bitasset_evaluator>
+   class asset_update_backed_asset_evaluator : public evaluator<asset_update_backed_asset_evaluator>
    {
       public:
-         typedef asset_update_bitasset_operation operation_type;
+         typedef asset_update_backed_asset_operation operation_type;
 
-         void_result do_evaluate( const asset_update_bitasset_operation& o );
-         void_result do_apply( const asset_update_bitasset_operation& o );
+         void_result do_evaluate( const asset_update_backed_asset_operation& o );
+         void_result do_apply( const asset_update_backed_asset_operation& o );
 
-         const asset_bitasset_data_object* bitasset_to_update = nullptr;
+         const backed_asset_data_object* backed_asset_to_update = nullptr;
          const asset_object* asset_to_update = nullptr;
    };
 
@@ -133,7 +133,7 @@ namespace graphene { namespace chain {
          void_result do_apply( const asset_publish_feed_operation& o );
 
          const asset_object* asset_ptr = nullptr;
-         const asset_bitasset_data_object* bitasset_ptr = nullptr;
+         const backed_asset_data_object* backed_asset_ptr = nullptr;
    };
 
    class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_evaluator>

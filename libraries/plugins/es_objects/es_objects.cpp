@@ -54,7 +54,7 @@ class es_objects_plugin_impl
          object_options assets         { true, false, true,  "asset"      };
          object_options balances       { true, false, true,  "balance"    };
          object_options limit_orders   { true, false, false, "limitorder" };
-         object_options asset_bitasset { true, false, true,  "bitasset"   };
+         object_options backed_assets  { true, false, true,  "backedasset"};
          object_options budget         { true, false, true,  "budget"     };
 
          std::string index_prefix = "objects-";
@@ -165,7 +165,7 @@ void es_objects_plugin_impl::sync_db( bool delete_before_load )
 
    loader.load<account_object             >( _options.accounts,       delete_before_load );
    loader.load<asset_object               >( _options.assets,         delete_before_load );
-   loader.load<asset_bitasset_data_object >( _options.asset_bitasset, delete_before_load );
+   loader.load<backed_asset_data_object   >( _options.backed_assets,  delete_before_load );
    loader.load<account_balance_object     >( _options.balances,       delete_before_load );
    loader.load<proposal_object            >( _options.proposals,      delete_before_load );
    loader.load<limit_order_object         >( _options.limit_orders,   delete_before_load );
@@ -197,7 +197,7 @@ void es_objects_plugin_impl::index_database(const vector<object_id_type>& ids, a
       { account_id_type::space_type,             _options.accounts       },
       { account_balance_id_type::space_type,     _options.balances       },
       { asset_id_type::space_type,               _options.assets         },
-      { asset_bitasset_data_id_type::space_type, _options.asset_bitasset },
+      { backed_asset_data_id_type::space_type,   _options.backed_assets  },
       { limit_order_id_type::space_type,         _options.limit_orders   },
       { proposal_id_type::space_type,            _options.proposals      },
       { budget_record_id_type::space_type,       _options.budget         }
@@ -224,8 +224,8 @@ void es_objects_plugin_impl::index_database(const vector<object_id_type>& ids, a
          case asset_id_type::space_type:
             prepareTemplate( db.get<asset_object>(value), opt );
             break;
-         case asset_bitasset_data_id_type::space_type:
-            prepareTemplate( db.get<asset_bitasset_data_object>(value), opt );
+         case backed_asset_data_id_type::space_type:
+            prepareTemplate( db.get<backed_asset_data_object>(value), opt );
             break;
          case limit_order_id_type::space_type:
             prepareTemplate( db.get<limit_order_object>(value), opt );
@@ -411,10 +411,10 @@ void es_objects_plugin::plugin_set_program_options(
                "It is implicitly true and can not be set to false if es-objects-limit-orders-store-updates is true. "
                "(false)")
 
-         ("es-objects-asset-bitasset", boost::program_options::value<bool>(),
-               "Store bitasset data, including price feeds (true)")
-         ("es-objects-asset-bitasset-store-updates", boost::program_options::value<bool>(),
-               "Store all updates to the bitasset data (false)")
+         ("es-objects-backed-assets", boost::program_options::value<bool>(),
+               "Store backed asset data, including price feeds (true)")
+         ("es-objects-backed-assets-store-updates", boost::program_options::value<bool>(),
+               "Store all updates to the backed asset data (false)")
 
          ("es-objects-budget-records", boost::program_options::value<bool>(), "Store budget records (true)")
 
@@ -463,8 +463,8 @@ void detail::es_objects_plugin_impl::plugin_options::init(const boost::program_o
    utilities::get_program_option( options, "es-objects-limit-orders",                 limit_orders.enabled );
    utilities::get_program_option( options, "es-objects-limit-orders-store-updates",   limit_orders.store_updates );
    utilities::get_program_option( options, "es-objects-limit-orders-no-delete",       limit_orders.no_delete );
-   utilities::get_program_option( options, "es-objects-asset-bitasset",               asset_bitasset.enabled );
-   utilities::get_program_option( options, "es-objects-asset-bitasset-store-updates", asset_bitasset.store_updates );
+   utilities::get_program_option( options, "es-objects-backed-assets",                backed_assets.enabled );
+   utilities::get_program_option( options, "es-objects-backed-assets-store-updates",  backed_assets.store_updates );
    utilities::get_program_option( options, "es-objects-budget-records",               budget.enabled );
    utilities::get_program_option( options, "es-objects-index-prefix",         index_prefix );
    utilities::get_program_option( options, "es-objects-max-mapping-depth",    max_mapping_depth );

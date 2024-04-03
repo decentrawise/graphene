@@ -282,7 +282,7 @@ struct database_fixture_base {
 
    const asset_object& get_asset( const string& symbol )const;
    const account_object& get_account( const string& name )const;
-   asset_create_operation make_bitasset( const string& name,
+   asset_create_operation make_backed_asset( const string& name,
                                        account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
@@ -291,7 +291,7 @@ struct database_fixture_base {
                                        share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY,
                                        optional<uint16_t> initial_cr = {},
                                        optional<uint16_t> margin_call_fee_ratio = {} );
-   const asset_object& create_bitasset(const string& name,
+   const asset_object& create_backed_asset(const string& name,
                                        account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
@@ -442,9 +442,9 @@ struct database_fixture_init : database_fixture_base {
    {
       F::init( *this );
 
-      asset_id_type mpa1_id(1);
-      BOOST_REQUIRE( mpa1_id(db).is_market_issued() );
-      BOOST_CHECK( mpa1_id(db).bitasset_data(db).asset_id == mpa1_id );
+      asset_id_type ba1_id(1);
+      BOOST_REQUIRE( ba1_id(db).is_backed() );
+      BOOST_CHECK( ba1_id(db).backed_asset_data(db).asset_id == ba1_id );
 
       BOOST_CHECK_EQUAL( account_id_type()(db).creation_block_num, 0 );
       BOOST_CHECK( account_id_type()(db).creation_time == genesis_state.initial_timestamp );
@@ -452,8 +452,8 @@ struct database_fixture_init : database_fixture_base {
       BOOST_CHECK_EQUAL( asset_id_type()(db).creation_block_num, 0 );
       BOOST_CHECK( asset_id_type()(db).creation_time == genesis_state.initial_timestamp );
 
-      BOOST_CHECK_EQUAL( mpa1_id(db).creation_block_num, 0 );
-      BOOST_CHECK( mpa1_id(db).creation_time == genesis_state.initial_timestamp );
+      BOOST_CHECK_EQUAL( ba1_id(db).creation_block_num, 0 );
+      BOOST_CHECK( ba1_id(db).creation_time == genesis_state.initial_timestamp );
    }
 
    static void init( database_fixture_init<F>& fixture )

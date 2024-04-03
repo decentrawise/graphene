@@ -154,7 +154,7 @@ namespace graphene { namespace protocol {
        */
       ///@{
       /**
-       * Forced settlements will evaluate using this price, defined as BITASSET / COLLATERAL
+       * Forced settlements will evaluate using this price, defined as ASSET / COLLATERAL
        */
       price settlement_price;
 

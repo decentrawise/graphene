@@ -17,7 +17,7 @@ namespace graphene { namespace wallet { namespace detail {
       opts.flags &= (uint16_t)(~white_list);
       opts.issuer_permissions = opts.flags;
       opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-      bitasset_options bopts;
+      backed_asset_options bopts;
       create_asset(get_account(creator).name, symbol, 2, opts, bopts, true);
    }
 

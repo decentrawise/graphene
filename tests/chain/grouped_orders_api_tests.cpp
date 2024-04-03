@@ -19,10 +19,10 @@ BOOST_AUTO_TEST_CASE(api_limit_get_grouped_limit_orders) {
    optional<price> start;
 
 	//account_id_type() do 3 ops
-   create_bitasset("USD", account_id_type());
+   create_backed_asset("USD", account_id_type());
    create_account("dan");
    create_account("bob");
-   asset_id_type bit_jmj_id = create_bitasset("JMJBIT").get_id();
+   asset_id_type bit_jmj_id = create_backed_asset("JMJBIT").get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
    GRAPHENE_CHECK_THROW(orders_api.get_grouped_limit_orders(std::string( static_cast<object_id_type>(asset_id_type())), std::string( static_cast<object_id_type>(asset_id_type())),10, start,260), fc::exception);

@@ -280,7 +280,7 @@ fc::variant es_data_adaptor::adapt( const fc::variant_object& op, uint16_t max_d
       { "owner_special_authority",  data_type::static_variant_type }, // for accounts
       { "htlc_preimage_hash",       data_type::static_variant_type }, // for HTLCs
       { "argument",                 data_type::static_variant_type }, // for custom authority, restriction.argument
-      { "feeds",                    data_type::map_type }, // asset_bitasset_data_object.feeds
+      { "feeds",                    data_type::map_type }, // backed_asset_data_object.feeds
       { "acceptable_collateral",    data_type::map_type }, // for credit offers
       { "acceptable_borrowers",     data_type::map_type }, // for credit offers
       { "on_fill",                  data_type::array_type } // for limit orders

@@ -1062,7 +1062,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
 
    ACTORS((seller));
 
-   const auto& bitcny = create_bitasset("CNY");
+   const auto& bitcny = create_backed_asset("CNY");
    const auto& core   = asset_id_type()(db);
 
    int64_t init_balance(10000000);
@@ -1392,9 +1392,9 @@ BOOST_AUTO_TEST_CASE( get_assets_by_issuer ) {
    try {
       graphene::app::database_api db_api(db, &(this->app.get_options()));
 
-      create_bitasset("CNY");
-      create_bitasset("EUR");
-      create_bitasset("USD");
+      create_backed_asset("CNY");
+      create_backed_asset("EUR");
+      create_backed_asset("USD");
 
       generate_block();
 
@@ -1423,8 +1423,8 @@ BOOST_AUTO_TEST_CASE( get_call_orders_by_account ) {
 
       graphene::app::database_api db_api(db, &(this->app.get_options()));
 
-      const auto &usd = create_bitasset("USD", feedproducer_id);
-      const auto &cny = create_bitasset("CNY", feedproducer_id);
+      const auto &usd = create_backed_asset("USD", feedproducer_id);
+      const auto &cny = create_backed_asset("CNY", feedproducer_id);
       const auto &core = asset_id_type()(db);
 
       int64_t init_balance(1000000);
@@ -1467,7 +1467,7 @@ BOOST_AUTO_TEST_CASE( get_settle_orders_by_account ) {
 
       graphene::app::database_api db_api(db, &(this->app.get_options()));
 
-      const auto &usd = create_bitasset("USD", creator_id);
+      const auto &usd = create_backed_asset("USD", creator_id);
       const auto &core = asset_id_type()(db);
       asset_id_type usd_id = usd.get_id();
 
@@ -1508,10 +1508,10 @@ BOOST_AUTO_TEST_CASE( api_limit_get_limit_orders ){
    try{
    graphene::app::database_api db_api( db, &( app.get_options() ));
    //account_id_type() do 3 ops
-   create_bitasset("USD", account_id_type());
+   create_backed_asset("USD", account_id_type());
    create_account("dan");
    create_account("bob");
-   asset_id_type bit_jmj_id = create_bitasset("JMJBIT").get_id();
+   asset_id_type bit_jmj_id = create_backed_asset("JMJBIT").get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
    GRAPHENE_CHECK_THROW(db_api.get_limit_orders(std::string(static_cast<object_id_type>(asset_id_type())),
@@ -1533,11 +1533,11 @@ BOOST_AUTO_TEST_CASE( api_limit_get_call_orders ){
    auto nathan_private_key = generate_private_key("nathan");
    account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).get_id();
    transfer(account_id_type(), nathan_id, asset(100));
-   asset_id_type bitusd_id = create_bitasset(
+   asset_id_type bitusd_id = create_backed_asset(
 	   "USDBIT", nathan_id, 100, disable_force_settle).get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
-   BOOST_CHECK( bitusd_id(db).is_market_issued() );
+   BOOST_CHECK( bitusd_id(db).is_backed() );
    GRAPHENE_CHECK_THROW(db_api.get_call_orders(std::string(static_cast<object_id_type>(bitusd_id)),
 	   370), fc::exception);
    vector< call_order_object>  call_order =db_api.get_call_orders(std::string(
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE( api_limit_get_settle_orders ){
    auto nathan_private_key = generate_private_key("nathan");
    account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).get_id();
    transfer(account_id_type(), nathan_id, asset(100));
-   asset_id_type bitusd_id = create_bitasset(
+   asset_id_type bitusd_id = create_backed_asset(
 	   "USDBIT", nathan_id, 100, disable_force_settle).get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
@@ -1578,9 +1578,9 @@ BOOST_AUTO_TEST_CASE( api_limit_get_order_book ){
    account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).get_id();
    transfer(account_id_type(), nathan_id, asset(100));
    transfer(account_id_type(), dan_id, asset(100));
-   asset_id_type bitusd_id = create_bitasset(
+   asset_id_type bitusd_id = create_backed_asset(
 	   "USDBIT", nathan_id, 100, disable_force_settle).get_id();
-   asset_id_type bitdan_id = create_bitasset(
+   asset_id_type bitdan_id = create_backed_asset(
 	   "DANBIT", dan_id, 100, disable_force_settle).get_id();
    generate_block();
    fc::usleep(fc::milliseconds(100));
@@ -1610,11 +1610,11 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
    BOOST_CHECK_EQUAL( 0, oassets[0]->total_in_collateral->value );
    BOOST_CHECK( !oassets[0]->total_backing_collateral.valid() );
 
-   asset_id_type bitusd_id = create_bitasset( "USDBIT", nathan_id, 100, charge_market_fee ).get_id();
+   asset_id_type bitusd_id = create_backed_asset( "USDBIT", nathan_id, 100, charge_market_fee ).get_id();
    update_feed_producers( bitusd_id, { nathan_id } );
-   asset_id_type bitdan_id = create_bitasset( "DANBIT", dan_id, 100, charge_market_fee ).get_id();
+   asset_id_type bitdan_id = create_backed_asset( "DANBIT", dan_id, 100, charge_market_fee ).get_id();
    update_feed_producers( bitdan_id, { nathan_id } );
-   asset_id_type btc_id = create_bitasset( "BTC", nathan_id, 100, charge_market_fee, 8, bitusd_id ).get_id();
+   asset_id_type btc_id = create_backed_asset( "BTC", nathan_id, 100, charge_market_fee, 8, bitusd_id ).get_id();
    update_feed_producers( btc_id, { nathan_id } );
 
    oassets = db_api.get_assets( { GRAPHENE_SYMBOL, "USDBIT", "DANBIT", "BTC" } );

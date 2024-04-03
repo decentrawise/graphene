@@ -81,13 +81,13 @@ void  asset_create_operation::validate()const
    FC_ASSERT( is_valid_symbol(symbol) );
    common_options.validate();
    if( common_options.issuer_permissions & (disable_force_settle|global_settle) )
-      FC_ASSERT( bitasset_opts.valid() );
+      FC_ASSERT( backed_options.valid() );
    if( is_prediction_market )
    {
-      FC_ASSERT( bitasset_opts.valid(), "Cannot have a User Asset implement a prediction market." );
+      FC_ASSERT( backed_options.valid(), "Cannot have a User Asset implement a prediction market." );
       FC_ASSERT( common_options.issuer_permissions & global_settle );
    }
-   if( bitasset_opts ) bitasset_opts->validate();
+   if( backed_options ) backed_options->validate();
 
    asset dummy = asset(1) * common_options.core_exchange_rate;
    FC_ASSERT(dummy.asset_id == asset_id_type(1));
@@ -163,7 +163,7 @@ void asset_settle_operation::validate() const
    FC_ASSERT( amount.amount >= 0 );
 }
 
-void asset_update_bitasset_operation::validate() const
+void asset_update_backed_asset_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
    new_options.validate();
@@ -180,7 +180,7 @@ void asset_global_settle_operation::validate()const
    FC_ASSERT( asset_to_settle == settle_price.base.asset_id );
 }
 
-void bitasset_options::validate() const
+void backed_asset_options::validate() const
 {
    FC_ASSERT(minimum_feeds > 0);
    FC_ASSERT(force_settlement_offset_percent <= GRAPHENE_100_PERCENT);
@@ -232,7 +232,7 @@ void asset_claim_pool_operation::validate()const {
 } } // namespace graphene::protocol
 
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_options )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::bitasset_options )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::backed_asset_options )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::additional_asset_options )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_create_operation::fee_parameters_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_global_settle_operation::fee_parameters_type )
@@ -242,7 +242,7 @@ GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_pool_
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_fees_operation::fee_parameters_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_operation::fee_parameters_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_issuer_operation::fee_parameters_type )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_bitasset_operation::fee_parameters_type )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_backed_asset_operation::fee_parameters_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_feed_producers_operation::fee_parameters_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_publish_feed_operation::fee_parameters_type )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_issue_operation::fee_parameters_type )
@@ -256,7 +256,7 @@ GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_pool_
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_fees_operation )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_operation )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_issuer_operation )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_bitasset_operation )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_backed_asset_operation )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_feed_producers_operation )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_publish_feed_operation )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::protocol::asset_issue_operation )

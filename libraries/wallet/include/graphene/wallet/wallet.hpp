@@ -194,7 +194,7 @@ class wallet_api
        */
       vector<force_settlement_object>   get_settle_orders( const string& a, uint32_t limit )const;
 
-      /** Returns the collateral_bid object for the given MPA
+      /** Returns the collateral_bid object for the given BA
        *
        * @param asset_symbol_or_id the symbol or id of the asset
        * @param limit the number of entries to return
@@ -216,7 +216,7 @@ class wallet_api
       /**
        * Get operations relevant to the specified account filtering by operation type, with transaction id
        *
-       * @param account_name_or_id the name or id of the account, whose history shoulde be queried
+       * @param account_name_or_id the name or id of the account, whose history should be queried
        * @param operation_types The IDs of the operation we want to get operations in the account
        *                        ( 0 = transfer , 1 = limit order create, ...)
        * @param start the sequence number where to start looping back throw the history
@@ -248,13 +248,13 @@ class wallet_api
        */
       extended_asset_object             get_asset( const string& asset_symbol_or_id ) const;
 
-      /** Returns the BitAsset-specific data for a given asset.
-       * Market-issued assets's behavior are determined both by their "BitAsset Data" and
+      /** Returns the Backed Asset specific data for a given asset.
+       * Backed assets's behavior are determined both by their "Backed Asset Data" and
        * their basic asset data, as returned by \c get_asset().
-       * @param asset_symbol_or_id the symbol or id of the BitAsset in question
-       * @returns the BitAsset-specific data for this asset
+       * @param asset_symbol_or_id the symbol or id of the Backed Asset in question
+       * @returns the Backed Asset specific data for this asset
        */
-      asset_bitasset_data_object        get_bitasset_data( const string& asset_symbol_or_id )const;
+      backed_asset_data_object        get_backed_asset_data( const string& asset_symbol_or_id )const;
 
       /**
        * Returns information about the given HTLC object.
@@ -1014,7 +1014,7 @@ class wallet_api
        * @param asset_symbol_or_id the symbol or id of the asset being borrowed.
        * @param amount_of_collateral the amount of the backing asset to add to your collateral
        *        position.  Make this negative to claim back some of your collateral.
-       *        The backing asset is defined in the \c bitasset_options for the asset being borrowed.
+       *        The backing asset is defined in the \c backed_asset_options for the asset being borrowed.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction borrowing the asset
        */
@@ -1032,7 +1032,7 @@ class wallet_api
        * @param asset_symbol_or_id the symbol or id of the asset being borrowed.
        * @param amount_of_collateral the amount of the backing asset to add to your collateral
        *        position.  Make this negative to claim back some of your collateral.
-       *        The backing asset is defined in the \c bitasset_options for the asset being borrowed.
+       *        The backing asset is defined in the \c backed_asset_options for the asset being borrowed.
        * @param extensions additional options
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction borrowing the asset
@@ -1051,7 +1051,7 @@ class wallet_api
        */
       signed_transaction cancel_order( const limit_order_id_type& order_id, bool broadcast = false ) const;
 
-      /** Creates a new user-issued or market-issued asset.
+      /** Creates a new user-issued or backed asset.
        *
        * Many options can be changed later using \c update_asset()
        *
@@ -1068,8 +1068,7 @@ class wallet_api
        *               this new asset. Since this ID is not known at the time this operation is
        *               created, create this price as though the new asset has instance ID 1, and
        *               the chain will overwrite it with the new asset's ID.
-       * @param bitasset_opts options specific to BitAssets.  This may be null unless the
-       *               \c market_issued flag is set in common.flags
+       * @param backed_options options specific to Backed Assets.  This may be null for user assets
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction creating a new asset
        */
@@ -1077,7 +1076,7 @@ class wallet_api
                                        const string& symbol,
                                        uint8_t precision,
                                        const asset_options& common,
-                                       const optional<bitasset_options>& bitasset_opts,
+                                       const optional<backed_asset_options>& backed_options,
                                        bool broadcast = false )const;
 
       /** Create the specified amount of the specified asset and credit into the specified account.
@@ -1099,8 +1098,8 @@ class wallet_api
        * enumerated in the asset_object::asset_options struct. This command is used to update
        * these options for an existing asset.
        *
-       * @note This operation cannot be used to update BitAsset-specific options. For these options,
-       * \c update_bitasset() instead.
+       * @note This operation cannot be used to update Backed Asset specific options. For these options,
+       * \c update_backed_asset() instead.
        *
        * @param symbol_or_id the symbol or id of the asset to update
        * @param new_options the new asset_options object, which will entirely replace the existing
@@ -1127,33 +1126,33 @@ class wallet_api
                                               const string& new_issuer,
                                               bool broadcast = false )const;
 
-      /** Update the options specific to a BitAsset.
+      /** Update the options specific to a Backed Asset.
        *
-       * BitAssets have some options which are not relevant to other asset types.
-       * This operation is used to update those options an an existing BitAsset.
+       * Backed Assets have some options which are not relevant to other asset types.
+       * This operation is used to update those options an an existing Backed Asset.
        *
        * @see update_asset()
        *
-       * @param symbol_or_id the symbol or id of the asset to update, which must be a market-issued asset
-       * @param new_options the new bitasset_options object, which will entirely replace the existing
+       * @param symbol_or_id the symbol or id of the asset to update, which must be a backed asset
+       * @param new_options the new backed_asset_options object, which will entirely replace the existing
        *                    options.
        * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the bitasset
+       * @returns the signed transaction updating the backed asset
        */
-      signed_transaction update_bitasset( const string& symbol_or_id,
-                                          const bitasset_options& new_options,
+      signed_transaction update_backed_asset( const string& symbol_or_id,
+                                          const backed_asset_options& new_options,
                                           bool broadcast = false )const;
 
-      /** Update the set of feed-producing accounts for a BitAsset.
+      /** Update the set of feed-producing accounts for a Backed Asset.
        *
-       * BitAssets have price feeds selected by taking the median values of recommendations from
+       * Backed Assets have price feeds selected by taking the median values of recommendations from
        * a set of feed producers.
-       * This command is used to specify which accounts may produce feeds for a given BitAsset.
+       * This command is used to specify which accounts may produce feeds for a given Backed Asset.
        * @param symbol_or_id the symbol or id of the asset to update
        * @param new_feed_producers a list of account names or ids which are authorized to produce feeds for the asset.
        *                           this list will completely replace the existing list
        * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the bitasset's feed producers
+       * @returns the signed transaction updating the backed asset's feed producers
        */
       signed_transaction update_asset_feed_producers( const string& symbol_or_id,
                                                       const flat_set<string>& new_feed_producers,
@@ -1161,8 +1160,8 @@ class wallet_api
 
       /** Publishes a price feed for the named asset.
        *
-       * Price feed providers use this command to publish their price feeds for market-issued assets. A price feed is
-       * used to tune the market for a particular market-issued asset. For each value in the feed, the median across
+       * Price feed providers use this command to publish their price feeds for backed assets. A price feed is
+       * used to tune the market for a particular backed asset. For each value in the feed, the median across
        * all delegate feeds for that asset is calculated and the market for the asset is configured with the
        * median of that value.
        *
@@ -1170,9 +1169,9 @@ class wallet_api
        * and a settlement price.
        * The call limit price is structured as (collateral asset) / (debt asset) and the short limit price is
        * structured as (asset for sale) / (collateral asset).
-       * Note that the asset IDs are opposite to eachother, so if we're
+       * Note that the asset IDs are opposite to each other, so if we're
        * publishing a feed for USD, the call limit price will be CORE/USD and the short limit price will be USD/CORE.
-       * The settlement price may be flipped either direction, as long as it is a ratio between the market-issued
+       * The settlement price may be flipped either direction, as long as it is a ratio between the backed
        * asset and its collateral.
        *
        * @param publishing_account the account publishing the price feed
@@ -1225,7 +1224,7 @@ class wallet_api
       /** Burns an amount of given asset to its reserve pool.
        *
        * This command burns an amount of given asset to reduce the amount in circulation.
-       * @note you cannot burn market-issued assets.
+       * @note you cannot burn backed assets.
        * @param from the account containing the asset you wish to burn
        * @param amount the amount to burn, in nominal units
        * @param symbol_or_id the symbol or id of the asset to burn
@@ -1245,7 +1244,7 @@ class wallet_api
        * A pool will be formed containing the collateral got from the margin positions.
        * Users owning an amount of the asset may use \c settle_asset() to claim collateral instantly
        * at the settle price from the pool.
-       * If this asset is used as backing for other bitassets, those bitassets will not be affected.
+       * If this asset is used as backing for other backed assets, those backed assets will not be affected.
        *
        * @note this operation is used only by the asset issuer.
        *
@@ -1258,17 +1257,17 @@ class wallet_api
                                               const price& settle_price,
                                               bool broadcast = false )const;
 
-      /** Schedules a market-issued asset for automatic settlement.
+      /** Schedules a backed asset for automatic settlement.
        *
-       * Holders of market-issued assests may request a forced settlement for some amount of their asset.
+       * Holders of backed assets may request a forced settlement for some amount of their asset.
        * This means that the specified sum will be locked by the chain and held for the settlement period,
        * after which time the chain will
-       * choose a margin posision holder and buy the settled asset using the margin's collateral.
+       * choose a margin position holder and buy the settled asset using the margin's collateral.
        * The price of this sale
-       * will be based on the feed price for the market-issued asset being settled.
-       * The exact settlement price will be the
-       * feed price at the time of settlement with an offset in favor of the margin position, where the offset is a
-       * blockchain parameter set in the asset's bitasset options.
+       * will be based on the feed price for the backed asset being settled.
+       * The exact settlement price will be the feed price at the time of settlement with an offset in favor
+       * of the margin position, where the offset is a blockchain parameter set in the backed asset's
+       * options.
        *
        * @param account_to_settle the name or id of the account owning the asset
        * @param amount_to_settle the amount of the asset to schedule for settlement
@@ -1281,7 +1280,7 @@ class wallet_api
                                        const string& symbol_or_id,
                                        bool broadcast = false )const;
 
-      /** Creates or updates a bid on an MPA after global settlement.
+      /** Creates or updates a bid on a BA after global settlement.
        *
        * In order to revive a market-pegged asset after global settlement (aka
        * black swan), investors can bid collateral in order to take over part of
@@ -1290,7 +1289,7 @@ class wallet_api
        *
        * @param bidder the name or id of the account making the bid
        * @param debt_amount the amount of debt of the named asset to bid for
-       * @param debt_symbol_or_id the symbol or id of the MPA to bid for
+       * @param debt_symbol_or_id the symbol or id of the BA to bid for
        * @param additional_collateral the amount of additional collateral to bid
        *        for taking over debt_amount. The asset type of this amount is
        *        determined automatically from \c debt_symbol_or_id.
@@ -1846,7 +1845,7 @@ FC_API( graphene::wallet::wallet_api,
         (create_asset)
         (update_asset)
         (update_asset_issuer)
-        (update_bitasset)
+        (update_backed_asset)
         (get_htlc)
         (update_asset_feed_producers)
         (publish_asset_feed)
@@ -1855,7 +1854,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_asset_id)
         (get_asset_name)
         (get_asset_symbol)
-        (get_bitasset_data)
+        (get_backed_asset_data)
         (fund_asset_fee_pool)
         (claim_asset_fee_pool)
         (reserve_asset)

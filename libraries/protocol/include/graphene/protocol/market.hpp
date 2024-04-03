@@ -175,7 +175,7 @@ namespace graphene { namespace protocol {
     * @ingroup operations
     *
     * @note This is a virtual operation that is created while reviving a
-    * bitasset from collateral bids.
+    * backed asset from collateral bids.
     */
    struct execute_bid_operation : public base_operation
    {

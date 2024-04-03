@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       constexpr auto izzycoin_market_percent = 10*GRAPHENE_1_PERCENT;
       constexpr auto jillcoin_market_percent = 20*GRAPHENE_1_PERCENT;
 
-      asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id, izzycoin_market_percent ).get_id();
-      asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, jillcoin_market_percent ).get_id();
+      asset_id_type izzycoin_id = create_backed_asset( "IZZYCOIN", izzy_id, izzycoin_market_percent ).get_id();
+      asset_id_type jillcoin_id = create_backed_asset( "JILLCOIN", jill_id, jillcoin_market_percent ).get_id();
 
       update_asset(izzy_id, izzy_private_key, izzycoin_id, izzycoin_reward_percent);
       update_asset(jill_id, jill_private_key, jillcoin_id, jillcoin_reward_percent);

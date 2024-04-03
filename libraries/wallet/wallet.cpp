@@ -563,11 +563,11 @@ extended_asset_object wallet_api::get_asset( const string& asset_name_or_id ) co
    return *found_asset;
 }
 
-asset_bitasset_data_object wallet_api::get_bitasset_data( const string& asset_name_or_id ) const
+backed_asset_data_object wallet_api::get_backed_asset_data( const string& asset_name_or_id ) const
 {
    auto asset = get_asset(asset_name_or_id);
-   FC_ASSERT(asset.is_market_issued() && asset.bitasset_data_id);
-   return my->get_object(*asset.bitasset_data_id);
+   FC_ASSERT(asset.is_backed() && asset.backed_asset_data_id);
+   return my->get_object(*asset.backed_asset_data_id);
 }
 
 account_id_type wallet_api::get_account_id( const string& account_name_or_id ) const
@@ -778,10 +778,10 @@ signed_transaction wallet_api::create_asset( const string& issuer,
                                              const string& symbol,
                                              uint8_t precision,
                                              const asset_options& common,
-                                             const optional<bitasset_options>& bitasset_opts,
+                                             const optional<backed_asset_options>& backed_options,
                                              bool broadcast )const
 {
-   return my->create_asset(issuer, symbol, precision, common, bitasset_opts, broadcast);
+   return my->create_asset(issuer, symbol, precision, common, backed_options, broadcast);
 }
 
 signed_transaction wallet_api::update_asset( const string& symbol,
@@ -798,11 +798,11 @@ signed_transaction wallet_api::update_asset_issuer( const string& symbol,
    return my->update_asset_issuer(symbol, new_issuer, broadcast);
 }
 
-signed_transaction wallet_api::update_bitasset( const string& symbol,
-                                                const bitasset_options& new_options,
+signed_transaction wallet_api::update_backed_asset( const string& symbol,
+                                                const backed_asset_options& new_options,
                                                 bool broadcast /* = false */ )const
 {
-   return my->update_bitasset(symbol, new_options, broadcast);
+   return my->update_backed_asset(symbol, new_options, broadcast);
 }
 
 signed_transaction wallet_api::update_asset_feed_producers( const string& symbol,
@@ -1178,13 +1178,13 @@ string wallet_api::gethelp( const string& method )const
    }
    else if( method == "create_asset" )
    {
-      ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
+      ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BACKED_ASSET_OPTIONS BROADCAST\n\n";
       ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";
       ss << "Example value of OPTIONS: \n";
       ss << fc::json::to_pretty_string( graphene::chain::asset_options() );
-      ss << "\nExample value of BITASSET_OPTIONS: \n";
-      ss << fc::json::to_pretty_string( graphene::chain::bitasset_options() );
-      ss << "\nBITASSET_OPTIONS may be null\n";
+      ss << "\nExample value of BACKED_ASSET_OPTIONS: \n";
+      ss << fc::json::to_pretty_string( graphene::chain::backed_asset_options() );
+      ss << "\nBACKED_ASSET_OPTIONS may be null\n";
    }
    else if (doxygenHelpString.empty())
       ss << "No help defined for method " << method << "\n";

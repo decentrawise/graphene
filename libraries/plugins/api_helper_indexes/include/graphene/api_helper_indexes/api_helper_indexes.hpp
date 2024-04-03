@@ -7,9 +7,9 @@ namespace graphene { namespace api_helper_indexes {
 using namespace chain;
 
 /**
- *  @brief This secondary index tracks how much of each asset is locked up as collateral for MPAs, and how much
- *         collateral is backing an MPA in total.
- *  @note This is implemented with \c flat_map considering there aren't too many MPAs and PMs in the system thus
+ *  @brief This secondary index tracks how much of each asset is locked up as collateral for BAs, and how much
+ *         collateral is backing a BA in total.
+ *  @note This is implemented with \c flat_map considering there aren't too many BAs in the system thus
  *        the performance would be acceptable.
  */
 class amount_in_collateral_index : public secondary_index

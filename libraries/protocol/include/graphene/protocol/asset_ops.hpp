@@ -69,11 +69,11 @@ namespace graphene { namespace protocol {
    };
 
    /**
-    * @brief The bitasset_options struct contains configurable options available only to BitAssets.
+    * @brief The backed_asset_options struct contains configurable options available only to Backed Assets.
     *
     * @note Changes to this struct will break protocol compatibility
     */
-   struct bitasset_options {
+   struct backed_asset_options {
       /// Time before a price feed expires
       uint32_t feed_lifetime_sec = GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME;
       /// Minimum number of unexpired feeds required to extract a median feed from
@@ -126,10 +126,9 @@ namespace graphene { namespace protocol {
       /// ID is not known at the time this operation is created, create this price as though the new asset has instance
       /// ID 1, and the chain will overwrite it with the new asset's ID.
       asset_options              common_options;
-      /// Options only available for BitAssets. MUST be non-null if and only if the @ref market_issued flag is set in
-      /// common_options.flags
-      optional<bitasset_options> bitasset_opts;
-      /// For BitAssets, set this to true if the asset implements a @ref prediction_market; false otherwise
+      /// Options only available for Backed Assets. MUST be non-null if and only if the @ref is_backed() is true
+      optional<backed_asset_options> backed_options;
+      /// For Backed Assets, set this to true if the asset implements a @ref prediction_market; false otherwise
       bool is_prediction_market = false;
 
       extensions_type extensions;
@@ -140,13 +139,13 @@ namespace graphene { namespace protocol {
    };
 
    /**
-    *  @brief allows global settling of bitassets (black swan or prediction markets)
+    *  @brief allows global settling of backed assets (black swan or prediction markets)
     *
     *  In order to use this operation, @ref asset_to_settle must have the global_settle flag set
     *
     *  When this operation is executed all balances are converted into the backing asset at the
     *  settle_price and all open margin positions are called at the settle price.  If this asset is
-    *  used as backing for other bitassets, those bitassets will be force settled at their current
+    *  used as backing for other backed assets, those backed assets will be force settled at their current
     *  feed price.
     */
    struct asset_global_settle_operation : public base_operation
@@ -165,13 +164,13 @@ namespace graphene { namespace protocol {
    };
 
    /**
-    * @brief Schedules a market-issued asset for automatic settlement
+    * @brief Schedules a backed asset for automatic settlement
     * @ingroup operations
     *
-    * Holders of market-issued assets may request a forced settlement for some amount of their asset. This means that
+    * Holders of backed assets may request a forced settlement for some amount of their asset. This means that
     * the specified sum will be locked by the chain and held for the settlement period, after which time the chain will
     * choose a margin position holder and buy the settled asset using the margin's collateral. The price of this sale
-    * will be based on the feed price for the market-issued asset being settled. The exact settlement price will be the
+    * will be based on the feed price for the backed asset being settled. The exact settlement price will be the
     * feed price at the time of settlement with an offset in favor of the margin position, where the offset is a
     * blockchain parameter set in the global_property_object.
     *
@@ -192,7 +191,7 @@ namespace graphene { namespace protocol {
       asset           fee;
       /// Account requesting the force settlement. This account pays the fee
       account_id_type account;
-      /// Amount of asset to force settle. This must be a market-issued asset
+      /// Amount of asset to force settle. This must be a backed asset
       asset           amount;
 
       extensions_type extensions;
@@ -213,7 +212,7 @@ namespace graphene { namespace protocol {
       force_settlement_id_type settlement;
       /// Account requesting the force settlement. This account pays the fee
       account_id_type account;
-      /// Amount of asset to force settle. This must be a market-issued asset
+      /// Amount of asset to force settle. This must be a backed asset
       asset           amount;
 
       extensions_type extensions;
@@ -255,8 +254,8 @@ namespace graphene { namespace protocol {
     * There are a number of options which all assets in the network use. These options are enumerated in the @ref
     * asset_options struct. This operation is used to update these options for an existing asset.
     *
-    * @note This operation cannot be used to update BitAsset-specific options. For these options, use @ref
-    * asset_update_bitasset_operation instead.
+    * @note This operation cannot be used to update Backed Asset specific options. For these options, use @ref
+    * asset_update_backed_asset_operation instead.
     *
     * @note This operation cannot be used to update asset issuer. For that use @ref asset_update_issuer_operation
     * instead.
@@ -288,19 +287,19 @@ namespace graphene { namespace protocol {
    };
 
    /**
-    * @brief Update options specific to BitAssets
+    * @brief Update options specific to Backed Assets
     * @ingroup operations
     *
-    * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
-    * options an an existing BitAsset.
+    * Backed Assets have some options which are not relevant to other asset types. This operation is used to update those
+    * options of an existing Backed Asset.
     *
     * @pre @ref issuer MUST be an existing account and MUST match asset_object::issuer on @ref asset_to_update
-    * @pre @ref asset_to_update MUST be a BitAsset, i.e. @ref asset_object::is_market_issued() returns true
+    * @pre @ref asset_to_update MUST be a Backed Asset, i.e. @ref asset_object::is_backed() returns true
     * @pre @ref fee MUST be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
     * @pre @ref new_options SHALL be internally consistent, as verified by @ref validate()
-    * @post @ref asset_to_update will have BitAsset-specific options matching those of new_options
+    * @post @ref asset_to_update will have Backed Asset specific options matching those of new_options
     */
-   struct asset_update_bitasset_operation : public base_operation
+   struct asset_update_backed_asset_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
 
@@ -308,7 +307,7 @@ namespace graphene { namespace protocol {
       account_id_type issuer;
       asset_id_type   asset_to_update;
 
-      bitasset_options new_options;
+      backed_asset_options new_options;
       extensions_type  extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -316,15 +315,15 @@ namespace graphene { namespace protocol {
    };
 
    /**
-    * @brief Update the set of feed-producing accounts for a BitAsset
+    * @brief Update the set of feed-producing accounts for a Backed Asset
     * @ingroup operations
     *
-    * BitAssets have price feeds selected by taking the median values of recommendations from a set of feed producers.
-    * This operation is used to specify which accounts may produce feeds for a given BitAsset.
+    * Backed Assets have price feeds selected by taking the median values of recommendations from a set of feed producers.
+    * This operation is used to specify which accounts may produce feeds for a given Backed Asset.
     *
     * @pre @ref issuer MUST be an existing account, and MUST match asset_object::issuer on @ref asset_to_update
     * @pre @ref issuer MUST NOT be the council account
-    * @pre @ref asset_to_update MUST be a BitAsset, i.e. @ref asset_object::is_market_issued() returns true
+    * @pre @ref asset_to_update MUST be a Backed Asset, i.e. @ref asset_object::is_backed() returns true
     * @pre @ref fee MUST be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
     * @pre Cardinality of @ref new_feed_producers MUST NOT exceed @ref chain_parameters::maximum_asset_feed_publishers
     * @post @ref asset_to_update will have a set of feed producers matching @ref new_feed_producers
@@ -347,11 +346,11 @@ namespace graphene { namespace protocol {
    };
 
    /**
-    * @brief Publish price feeds for market-issued assets
+    * @brief Publish price feeds for backed assets
     * @ingroup operations
     *
-    * Price feed providers use this operation to publish their price feeds for market-issued assets. A price feed is
-    * used to tune the market for a particular market-issued asset. For each value in the feed, the median across all
+    * Price feed providers use this operation to publish their price feeds for backed assets. A price feed is
+    * used to tune the market for a particular backed asset. For each value in the feed, the median across all
     * delegate feeds for that asset is calculated and the market for the asset is configured with the median of that
     * value.
     *
@@ -359,7 +358,7 @@ namespace graphene { namespace protocol {
     * The call limit price is structured as (collateral asset) / (debt asset) and the short limit price is structured
     * as (asset for sale) / (collateral asset). Note that the asset IDs are opposite to each other, so if we're
     * publishing a feed for USD, the call limit price will be CORE/USD and the short limit price will be USD/CORE. The
-    * settlement price may be flipped either direction, as long as it is a ratio between the market-issued asset and
+    * settlement price may be flipped either direction, as long as it is a ratio between the backed asset and
     * its collateral.
     */
    struct asset_publish_feed_operation : public base_operation
@@ -405,7 +404,7 @@ namespace graphene { namespace protocol {
     * @brief used to take an asset out of circulation, returning to the issuer
     * @ingroup operations
     *
-    * @note You cannot use this operation on market-issued assets.
+    * @note You cannot use this operation on backed assets.
     */
    struct asset_reserve_operation : public base_operation
    {
@@ -525,7 +524,7 @@ FC_REFLECT( graphene::protocol::asset_options,
             (description)
             (extensions)
           )
-FC_REFLECT( graphene::protocol::bitasset_options,
+FC_REFLECT( graphene::protocol::backed_asset_options,
             (feed_lifetime_sec)
             (minimum_feeds)
             (force_settlement_delay_sec)
@@ -543,7 +542,7 @@ FC_REFLECT( graphene::protocol::asset_settle_cancel_operation::fee_parameters_ty
 FC_REFLECT( graphene::protocol::asset_fund_fee_pool_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::protocol::asset_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::protocol::asset_update_issuer_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::protocol::asset_update_bitasset_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::protocol::asset_update_backed_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::protocol::asset_update_feed_producers_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::protocol::asset_publish_feed_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::protocol::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
@@ -556,7 +555,7 @@ FC_REFLECT( graphene::protocol::asset_create_operation,
             (symbol)
             (precision)
             (common_options)
-            (bitasset_opts)
+            (backed_options)
             (is_prediction_market)
             (extensions)
           )
@@ -574,7 +573,7 @@ FC_REFLECT( graphene::protocol::asset_update_issuer_operation,
             (new_issuer)
             (extensions)
           )
-FC_REFLECT( graphene::protocol::asset_update_bitasset_operation,
+FC_REFLECT( graphene::protocol::asset_update_backed_asset_operation,
             (fee)
             (issuer)
             (asset_to_update)
@@ -597,7 +596,7 @@ FC_REFLECT( graphene::protocol::asset_reserve_operation,
 FC_REFLECT( graphene::protocol::asset_fund_fee_pool_operation, (fee)(from_account)(asset_id)(amount)(extensions) );
 
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_options )
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::bitasset_options )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::backed_asset_options )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::additional_asset_options )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_create_operation::fee_parameters_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_global_settle_operation::fee_parameters_type )
@@ -607,7 +606,7 @@ GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_pool_op
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_fees_operation::fee_parameters_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_operation::fee_parameters_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_issuer_operation::fee_parameters_type )
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_bitasset_operation::fee_parameters_type )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_backed_asset_operation::fee_parameters_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_feed_producers_operation::fee_parameters_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_publish_feed_operation::fee_parameters_type )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_issue_operation::fee_parameters_type )
@@ -621,7 +620,7 @@ GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_pool_op
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_claim_fees_operation )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_operation )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_issuer_operation )
-GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_bitasset_operation )
+GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_backed_asset_operation )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_update_feed_producers_operation )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_publish_feed_operation )
 GRAPHENE_DECLARE_EXTERNAL_SERIALIZATION( graphene::protocol::asset_issue_operation )

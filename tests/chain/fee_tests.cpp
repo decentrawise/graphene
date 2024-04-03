@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
       transfer( council_account,  izzy_id, _core(1000000) );
       transfer( council_account,  jill_id, _core(1000000) );
 
-      asset_id_type izzycoin_id = create_bitasset( "IZZYCOIN", izzy_id,   GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
-      asset_id_type jillcoin_id = create_bitasset( "JILLCOIN", jill_id, 2*GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
+      asset_id_type izzycoin_id = create_backed_asset( "IZZYCOIN", izzy_id,   GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
+      asset_id_type jillcoin_id = create_backed_asset( "JILLCOIN", jill_id, 2*GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
 
       const share_type izzy_prec = asset::scaled_precision( asset_id_type(izzycoin_id)(db).precision );
       const share_type jill_prec = asset::scaled_precision( asset_id_type(jillcoin_id)(db).precision );
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
          const asset_object& izzycoin = izzycoin_id(db);
          const asset_object& jillcoin = jillcoin_id(db);
 
-         //wdump( (izzycoin)(izzycoin.dynamic_asset_data_id(db))((*izzycoin.bitasset_data_id)(db)) );
-         //wdump( (jillcoin)(jillcoin.dynamic_asset_data_id(db))((*jillcoin.bitasset_data_id)(db)) );
+         //wdump( (izzycoin)(izzycoin.dynamic_asset_data_id(db))((*izzycoin.backed_asset_data_id)(db)) );
+         //wdump( (jillcoin)(jillcoin.dynamic_asset_data_id(db))((*jillcoin.backed_asset_data_id)(db)) );
 
          // check the correct amount of fees has been awarded
          BOOST_CHECK( izzycoin.dynamic_asset_data_id(db).accumulated_fees == _izzy(1).amount );

@@ -138,7 +138,7 @@ namespace graphene { namespace chain {
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_transfer );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update );
-   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update_bitasset );
+   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update_backed_asset );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_update_feed_producers );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( asset_issue );
 

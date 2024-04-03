@@ -225,13 +225,13 @@ public:
          string referrer_account, bool broadcast = false, bool save_wallet = true);
 
    signed_transaction create_asset(string issuer, string symbol, uint8_t precision, asset_options common,
-         fc::optional<bitasset_options> bitasset_opts, bool broadcast = false);
+         fc::optional<backed_asset_options> backed_options, bool broadcast = false);
 
    signed_transaction update_asset(string symbol, asset_options new_options, bool broadcast );
 
    signed_transaction update_asset_issuer(string symbol, string new_issuer, bool broadcast );
 
-   signed_transaction update_bitasset(string symbol, bitasset_options new_options, bool broadcast );
+   signed_transaction update_backed_asset(string symbol, backed_asset_options new_options, bool broadcast );
 
    signed_transaction update_asset_feed_producers(string symbol, flat_set<string> new_feed_producers,
          bool broadcast );

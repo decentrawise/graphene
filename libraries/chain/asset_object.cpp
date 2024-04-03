@@ -7,7 +7,7 @@
 
 using namespace graphene::chain;
 
-share_type asset_bitasset_data_object::max_force_settlement_volume(share_type current_supply) const
+share_type backed_asset_data_object::max_force_settlement_volume(share_type current_supply) const
 {
    if( options.maximum_force_settlement_volume == 0 )
       return 0;
@@ -21,7 +21,7 @@ share_type asset_bitasset_data_object::max_force_settlement_volume(share_type cu
    return static_cast<uint64_t>(volume);
 }
 
-void graphene::chain::asset_bitasset_data_object::update_median_feeds( time_point_sec current_time,
+void graphene::chain::backed_asset_data_object::update_median_feeds( time_point_sec current_time,
                                                                        time_point_sec next_maintenance_time )
 {
    current_feed_publication_time = current_time;
@@ -151,7 +151,7 @@ string asset_object::amount_to_string(share_type amount) const
 FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
                     (current_supply)(confidential_supply)(accumulated_fees)(fee_pool) )
 
-FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::asset_bitasset_data_object, (graphene::db::object),
+FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::backed_asset_data_object, (graphene::db::object),
                     (asset_id)
                     (feeds)
                     (current_feed)
@@ -167,5 +167,5 @@ FC_REFLECT_DERIVED_NO_TYPENAME( graphene::chain::asset_bitasset_data_object, (gr
                   )
 
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::asset_object )
-GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::asset_bitasset_data_object )
+GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::backed_asset_data_object )
 GRAPHENE_IMPLEMENT_EXTERNAL_SERIALIZATION( graphene::chain::asset_dynamic_data_object )

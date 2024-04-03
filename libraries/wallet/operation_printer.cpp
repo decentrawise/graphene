@@ -156,7 +156,7 @@ std::string operation_printer::operator()(const account_update_operation& op) co
 std::string operation_printer::operator()(const asset_create_operation& op) const
 {
    out << "Create ";
-   if( op.bitasset_opts.valid() )
+   if( op.backed_options.valid() )
       out << "Secured Asset ";
    else
       out << "User Asset ";
