@@ -194,7 +194,7 @@ void database::update_block_producers()
    const chain_property_object& cpo = get_chain_properties();
 
    validator_count = std::max( (validator_count * 2) + 1,
-                             (size_t)cpo.immutable_parameters.min_validator_count );
+                             (size_t)cpo.immutable_parameters.min_producer_count );
    auto wits = sort_votable_objects<validator_index>( validator_count );
 
    const global_property_object& gpo = get_global_properties();
@@ -223,7 +223,7 @@ void database::update_block_producers()
    }
 
    // Update validator authority
-   modify( get(GRAPHENE_VALIDATOR_ACCOUNT), [this,&wits]( account_object& a )
+   modify( get(GRAPHENE_PRODUCERS_ACCOUNT), [this,&wits]( account_object& a )
    {
       vote_counter vc;
       for( const validator_object& wit : wits )
@@ -244,7 +244,7 @@ void database::update_block_producers()
 
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
-void database::update_active_delegates()
+void database::update_council_delegates()
 { try {
    assert( !_council_count_histogram_buffer.empty() );
    share_type stake_target = (_total_voting_stake-_council_count_histogram_buffer[0]) / 2;
@@ -265,7 +265,7 @@ void database::update_active_delegates()
    const chain_property_object& cpo = get_chain_properties();
 
    delegate_count = std::max( (delegate_count * 2) + 1,
-                                      (size_t)cpo.immutable_parameters.min_delegate_count );
+                                      (size_t)cpo.immutable_parameters.min_council_count );
    auto delegates = sort_votable_objects<delegate_index>( delegate_count );
 
    auto update_delegate_total_votes = [this]( const delegate_object& cm ) {
@@ -309,9 +309,9 @@ void database::update_active_delegates()
    }
    modify( get_global_properties(), [&delegates](global_property_object& gp)
    {
-      gp.active_delegates.clear();
+      gp.council_delegates.clear();
       std::transform(delegates.begin(), delegates.end(),
-                     std::inserter(gp.active_delegates, gp.active_delegates.begin()),
+                     std::inserter(gp.council_delegates, gp.council_delegates.begin()),
                      [](const delegate_object& d) { return d.get_id(); });
    });
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
@@ -398,7 +398,7 @@ void database::process_budget()
       initialize_budget_record( now, rec );
       share_type available_funds = rec.total_budget;
 
-      share_type validator_budget = gpo.parameters.validator_pay_per_block.value * blocks_to_maint;
+      share_type validator_budget = gpo.parameters.producer_pay_per_block.value * blocks_to_maint;
       rec.requested_validator_budget = validator_budget;
       validator_budget = std::min(validator_budget, available_funds);
       rec.validator_budget = validator_budget;
@@ -807,7 +807,7 @@ void database::perform_chain_maintenance(const signed_block& next_block)
          : d(d), props(gpo)
       {
          d._vote_tally_buffer.resize(props.next_available_vote_id);
-         d._validator_count_histogram_buffer.resize(props.parameters.maximum_validator_count / 2 + 1);
+         d._validator_count_histogram_buffer.resize(props.parameters.maximum_producer_count / 2 + 1);
          d._council_count_histogram_buffer.resize(props.parameters.maximum_council_count / 2 + 1);
          d._total_voting_stake = 0;
       }
@@ -836,21 +836,21 @@ void database::perform_chain_maintenance(const signed_block& next_block)
                   d._vote_tally_buffer[offset] += voting_stake;
             }
 
-            if( opinion_account.options.num_validator <= props.parameters.maximum_validator_count )
+            if( opinion_account.options.num_producers <= props.parameters.maximum_producer_count )
             {
-               uint16_t offset = std::min(size_t(opinion_account.options.num_validator/2),
+               uint16_t offset = std::min(size_t(opinion_account.options.num_producers/2),
                                           d._validator_count_histogram_buffer.size() - 1);
-               // votes for a number greater than maximum_validator_count
-               // are turned into votes for maximum_validator_count.
+               // votes for a number greater than maximum_producer_count
+               // are turned into votes for maximum_producer_count.
                //
                // in particular, this takes care of the case where a
                // member was voting for a high number, then the
                // parameter was lowered.
                d._validator_count_histogram_buffer[offset] += voting_stake;
             }
-            if( opinion_account.options.num_council <= props.parameters.maximum_council_count )
+            if( opinion_account.options.num_delegates <= props.parameters.maximum_council_count )
             {
-               uint16_t offset = std::min(size_t(opinion_account.options.num_council/2),
+               uint16_t offset = std::min(size_t(opinion_account.options.num_delegates/2),
                                           d._council_count_histogram_buffer.size() - 1);
                // votes for a number greater than maximum_council_count
                // are turned into votes for maximum_council_count.
@@ -880,7 +880,7 @@ void database::perform_chain_maintenance(const signed_block& next_block)
 
    update_top_n_authorities(*this);
    update_block_producers();
-   update_active_delegates();
+   update_council_delegates();
    update_worker_votes();
 
    modify(gpo, [&dgpo](global_property_object& p) {

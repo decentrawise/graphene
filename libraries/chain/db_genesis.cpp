@@ -12,7 +12,7 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/validator_object.hpp>
-#include <graphene/chain/validator_schedule_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
 #include <fc/crypto/digest.hpp>
@@ -78,7 +78,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                       }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
-       a.registrar = GRAPHENE_VALIDATOR_ACCOUNT;
+       a.registrar = GRAPHENE_PRODUCERS_ACCOUNT;
        a.referrer = a.registrar;
        a.lifetime_referrer = a.registrar;
        a.membership_expiration_date = time_point_sec::maximum();
@@ -86,7 +86,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.creation_block_num = 0;
        a.creation_time = _current_block_time;
-   }).get_id() == GRAPHENE_VALIDATOR_ACCOUNT);
+   }).get_id() == GRAPHENE_PRODUCERS_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.name = "relaxed-council-account";
        a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
@@ -249,9 +249,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.recent_slots_filled = std::numeric_limits<fc::uint128_t>::max();
    });
 
-   FC_ASSERT( (genesis_state.immutable_parameters.min_validator_count & 1) == 1, "min_validator_count must be odd" );
-   FC_ASSERT( (genesis_state.immutable_parameters.min_delegate_count & 1) == 1,
-              "min_delegate_count must be odd" );
+   FC_ASSERT( (genesis_state.immutable_parameters.min_producer_count & 1) == 1, "min_producer_count must be odd" );
+   FC_ASSERT( (genesis_state.immutable_parameters.min_council_count & 1) == 1,
+              "min_council_count must be odd" );
 
    _p_chain_property_obj = & create<chain_property_object>([chain_id,&genesis_state](chain_property_object& p)
    {
@@ -526,10 +526,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    // Create validator scheduler
-   _p_validator_schedule_obj = & create<validator_schedule_object>([this]( validator_schedule_object& wso )
+   _p_producer_schedule_obj = & create<producer_schedule_object>([this]( producer_schedule_object& wso )
    {
       for( const validator_id_type& wid : get_global_properties().block_producers )
-         wso.current_shuffled_validators.push_back( wid );
+         wso.current_shuffled_producers.push_back( wid );
    });
 
    // Create FBA counters

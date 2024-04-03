@@ -43,20 +43,20 @@
 #define GRAPHENE_DEFAULT_MAINTENANCE_INTERVAL  (60*60*24) // seconds, aka: 1 day
 #define GRAPHENE_DEFAULT_MAINTENANCE_SKIP_SLOTS 3  // number of slots to skip for maintenance interval
 
-#define GRAPHENE_DEFAULT_FORCE_SETTLEMENT_DELAY                 (60*60*24) ///< 1 day
-#define GRAPHENE_DEFAULT_FORCE_SETTLEMENT_OFFSET                0 ///< 1%
-#define GRAPHENE_DEFAULT_FORCE_SETTLEMENT_MAX_VOLUME            (20* GRAPHENE_1_PERCENT) ///< 20%
-#define GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME                    (60*60*24) ///< 1 day
-#define GRAPHENE_DEFAULT_MAX_AUTHORITY_MEMBERSHIP               10
-#define GRAPHENE_DEFAULT_MAX_ASSET_WHITELIST_AUTHORITIES        10
-#define GRAPHENE_DEFAULT_MAX_ASSET_FEED_PUBLISHERS              10
+#define GRAPHENE_DEFAULT_FORCE_SETTLEMENT_DELAY               (60*60*24) ///< 1 day
+#define GRAPHENE_DEFAULT_FORCE_SETTLEMENT_OFFSET              0 ///< 1%
+#define GRAPHENE_DEFAULT_FORCE_SETTLEMENT_MAX_VOLUME          (20* GRAPHENE_1_PERCENT) ///< 20%
+#define GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME                  (60*60*24) ///< 1 day
+#define GRAPHENE_DEFAULT_MAX_AUTHORITY_MEMBERSHIP             10
+#define GRAPHENE_DEFAULT_MAX_ASSET_WHITELIST_AUTHORITIES      10
+#define GRAPHENE_DEFAULT_MAX_ASSET_FEED_PUBLISHERS            10
 
-#define GRAPHENE_DEFAULT_MIN_VALIDATOR_COUNT                    (11)
-#define GRAPHENE_DEFAULT_MIN_COUNCIL_COUNT           (11)
-#define GRAPHENE_DEFAULT_MAX_VALIDATORS                        (1001) // SHOULD BE ODD
-#define GRAPHENE_DEFAULT_MAX_COUNCIL                        (1001) // SHOULD BE ODD
+#define GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT                   (11)
+#define GRAPHENE_DEFAULT_MIN_COUNCIL_COUNT                    (11)
+#define GRAPHENE_DEFAULT_MAX_PRODUCERS                        (1001) // SHOULD BE ODD
+#define GRAPHENE_DEFAULT_MAX_COUNCIL                          (1001) // SHOULD BE ODD
 #define GRAPHENE_DEFAULT_MAX_PROPOSAL_LIFETIME_SEC            (60*60*24*7*4) // Four weeks
-#define GRAPHENE_DEFAULT_COUNCIL_PROPOSAL_REVIEW_PERIOD_SEC (60*60*24*7*2) // Two weeks
+#define GRAPHENE_DEFAULT_COUNCIL_PROPOSAL_REVIEW_PERIOD_SEC   (60*60*24*7*2) // Two weeks
 #define GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE               (20*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_LIFETIME_REFERRER_PERCENT_OF_FEE     (30*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_CASHBACK_VESTING_PERIOD_SEC          (60*60*24*365) ///< 1 year
@@ -68,9 +68,9 @@
 #define GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS          4
 #define GRAPHENE_DEFAULT_MAX_BUYBACK_MARKETS                  4
 
-#define GRAPHENE_DEFAULT_VALIDATOR_PAY_PER_BLOCK            (GRAPHENE_BLOCKCHAIN_PRECISION * int64_t( 10) )
-#define GRAPHENE_DEFAULT_VALIDATOR_PAY_VESTING_SECONDS      (60*60*24)
-#define GRAPHENE_DEFAULT_WORKER_BUDGET_PER_DAY            (GRAPHENE_BLOCKCHAIN_PRECISION * int64_t(500) * 1000 )
+#define GRAPHENE_DEFAULT_PRODUCER_PAY_PER_BLOCK              (GRAPHENE_BLOCKCHAIN_PRECISION * int64_t( 10) )
+#define GRAPHENE_DEFAULT_PRODUCER_PAY_VESTING_SECONDS        (60*60*24)
+#define GRAPHENE_DEFAULT_WORKER_BUDGET_PER_DAY               (GRAPHENE_BLOCKCHAIN_PRECISION * int64_t(500) * 1000 )
 #define GRAPHENE_DEFAULT_MINIMUM_FEEDS                       7
 
 #define GRAPHENE_MIN_BLOCK_SIZE_LIMIT (GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT*5) // 5 transactions per block
@@ -100,8 +100,8 @@
 ///@{
 /// Represents the current delegates, two-week review period
 #define GRAPHENE_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(0))
-/// Represents the current validators
-#define GRAPHENE_VALIDATOR_ACCOUNT (graphene::protocol::account_id_type(1))
+/// Represents the current block producers
+#define GRAPHENE_PRODUCERS_ACCOUNT (graphene::protocol::account_id_type(1))
 /// Represents the current delegates
 #define GRAPHENE_RELAXED_COUNCIL_ACCOUNT (graphene::protocol::account_id_type(2))
 /// Represents the canonical account with NO authority (nobody can access funds in null account)

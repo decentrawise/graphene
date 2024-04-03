@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
 {
    try {
       // Initialize council by voting for each member and for desired count
-      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+      vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
       generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
       generate_block();
 

@@ -220,7 +220,7 @@
     "maximum_proposal_lifetime": 2419200,
     "maximum_asset_whitelist_authorities": 10,
     "maximum_asset_feed_publishers": 10,
-    "maximum_validator_count": 1001,
+    "maximum_producer_count": 1001,
     "maximum_council_count": 1001,
     "maximum_authority_membership": 10,
     "reserve_percent_of_fee": 2000,
@@ -230,7 +230,7 @@
     "cashback_vesting_threshold": 10000000,
     "count_non_member_votes": true,
     "allow_non_member_whitelists": false,
-    "validator_pay_per_block": 1000000,
+    "producer_pay_per_block": 1000000,
     "worker_budget_per_day": "50000000000",
     "max_predicate_opcode": 1,
     "fee_liquidation_threshold": 10000000,
@@ -376,8 +376,8 @@
   ],
   "initial_worker_candidates": [],
   "immutable_parameters": {
-    "min_delegate_count": 11,
-    "min_validator_count": 11,
+    "min_council_count": 11,
+    "min_producer_count": 11,
     "num_special_accounts": 0,
     "num_special_assets": 0
   }

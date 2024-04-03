@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
    ACTORS((nathan));
 
    // Initialize validators by voting for each member and for desired count
-   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_VALIDATOR_COUNT);
+   vote_for_delegates_and_validators(INITIAL_COUNCIL_COUNT, INITIAL_PRODUCER_COUNT);
    generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
    generate_block();
 
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
    std::vector<account_id_type> block_producers;
    for(const validator_id_type& wit_id : global_props.block_producers)
       block_producers.push_back(wit_id(db).validator_account);
-   BOOST_REQUIRE_EQUAL(block_producers.size(), INITIAL_VALIDATOR_COUNT);
+   BOOST_REQUIRE_EQUAL(block_producers.size(), INITIAL_PRODUCER_COUNT);
 
    {
       BOOST_TEST_MESSAGE("Adding price feed 1");
@@ -520,26 +520,26 @@ assets_bitasset_eval create_assets_bitasset_eval(database_fixture *fixture)
          100, charge_market_fee, 2, asset_objs.bit_usd ).get_id();
 
    BOOST_TEST_MESSAGE( "Create USDBACKEDII" );
-   asset_objs.bit_usdbacked2 = fixture->create_bitasset( "USDBACKEDII", GRAPHENE_VALIDATOR_ACCOUNT,
+   asset_objs.bit_usdbacked2 = fixture->create_bitasset( "USDBACKEDII", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_usd ).get_id();
 
    BOOST_TEST_MESSAGE( "Create PARENT" );
-   asset_objs.bit_parent = fixture->create_bitasset( "PARENT", GRAPHENE_VALIDATOR_ACCOUNT).get_id();
+   asset_objs.bit_parent = fixture->create_bitasset( "PARENT", GRAPHENE_PRODUCERS_ACCOUNT).get_id();
 
    BOOST_TEST_MESSAGE( "Create CHILDUSER" );
-   asset_objs.bit_child_bitasset = fixture->create_bitasset( "CHILDUSER", GRAPHENE_VALIDATOR_ACCOUNT,
+   asset_objs.bit_child_bitasset = fixture->create_bitasset( "CHILDUSER", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 2, asset_objs.bit_parent ).get_id();
 
    BOOST_TEST_MESSAGE( "Create user issued USERISSUED" );
    asset_objs.user_issued = fixture->create_user_issued_asset( "USERISSUED",
-         GRAPHENE_VALIDATOR_ACCOUNT(fixture->db), charge_market_fee ).get_id();
+         GRAPHENE_PRODUCERS_ACCOUNT(fixture->db), charge_market_fee ).get_id();
 
    BOOST_TEST_MESSAGE( "Create a user-issued asset with a precision of 6" );
-   asset_objs.six_precision = fixture->create_user_issued_asset( "SIXPRECISION", GRAPHENE_VALIDATOR_ACCOUNT(fixture->db),
+   asset_objs.six_precision = fixture->create_user_issued_asset( "SIXPRECISION", GRAPHENE_PRODUCERS_ACCOUNT(fixture->db),
          charge_market_fee, price(asset(1, asset_id_type(1)), asset(1)), 6 ).get_id();
 
    BOOST_TEST_MESSAGE( "Create Prediction market with precision of 6, backed by SIXPRECISION" );
-   asset_objs.prediction = fixture->create_prediction_market( "PREDICTION", GRAPHENE_VALIDATOR_ACCOUNT,
+   asset_objs.prediction = fixture->create_prediction_market( "PREDICTION", GRAPHENE_PRODUCERS_ACCOUNT,
          100, charge_market_fee, 6, asset_objs.six_precision ).get_id();
 
    return asset_objs;

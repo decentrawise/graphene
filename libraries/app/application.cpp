@@ -58,7 +58,7 @@ namespace detail {
       dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(nathan_key)));
       graphene::chain::genesis_state_type initial_state;
       initial_state.initial_parameters.get_mutable_fees() = fee_schedule::get_default();
-      initial_state.initial_block_producers = GRAPHENE_DEFAULT_MIN_VALIDATOR_COUNT;
+      initial_state.initial_block_producers = GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT;
       initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *
             initial_state.initial_parameters.block_interval);
@@ -523,7 +523,7 @@ void application_impl::open_chain_database() const
                 graphene::chain::database::skip_transaction_signatures |
                 graphene::chain::database::skip_transaction_dupe_check |
                 graphene::chain::database::skip_tapos_check |
-                graphene::chain::database::skip_validator_schedule_check;
+                graphene::chain::database::skip_producer_schedule_check;
 
       auto genesis_loader = [this](){
          return initialize_genesis_state();

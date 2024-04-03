@@ -106,7 +106,7 @@ bool generate_block(std::shared_ptr<graphene::app::application> app, graphene::c
       fc::ecc::private_key council_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
       auto db = app->chain_database();
       returned_block = db->generate_block( db->get_slot_time(1),
-                                         db->get_scheduled_validator(1),
+                                         db->get_scheduled_producer(1),
                                          council_key,
                                          database::skip_nothing );
       return true;
@@ -134,7 +134,7 @@ bool generate_maintenance_block(std::shared_ptr<graphene::app::application> app)
       auto maint_time = db->get_dynamic_global_properties().next_maintenance_time;
       auto slots_to_miss = db->get_slot_at_time(maint_time);
       db->generate_block(db->get_slot_time(slots_to_miss),
-            db->get_scheduled_validator(slots_to_miss),
+            db->get_scheduled_producer(slots_to_miss),
             council_key,
             skip);
       return true;

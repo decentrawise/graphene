@@ -128,8 +128,8 @@ bool is_cheap_name( const string& n )
 
 void account_options::validate() const
 {
-   auto needed_validators = num_validator;
-   auto needed_delegates = num_council;
+   auto needed_validators = num_producers;
+   auto needed_delegates = num_delegates;
 
    for( vote_id_type id : votes )
       if( id.type() == vote_id_type::validator && needed_validators > 0 )

@@ -85,7 +85,7 @@ void debug_api_impl::debug_generate_blocks( const std::string& debug_key, uint32
    std::shared_ptr< graphene::chain::database > db = app.chain_database();
    for( uint32_t i=0; i<count; i++ )
    {
-      graphene::chain::validator_id_type scheduled_validator = db->get_scheduled_validator( 1 );
+      graphene::chain::validator_id_type scheduled_validator = db->get_scheduled_producer( 1 );
       fc::time_point_sec scheduled_time = db->get_slot_time( 1 );
       graphene::chain::public_key_type scheduled_key = scheduled_validator( *db ).signing_key;
       if( scheduled_key != debug_public_key )

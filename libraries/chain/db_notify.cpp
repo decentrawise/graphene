@@ -426,7 +426,7 @@ static void get_relevant_accounts( const object* obj, flat_set<account_id_type>&
               break;
            } case impl_chain_property_object_type:
               break;
-             case impl_validator_schedule_object_type:
+             case impl_producer_schedule_object_type:
               break;
              case impl_budget_record_object_type:
               break;

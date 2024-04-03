@@ -354,14 +354,14 @@ namespace graphene { namespace wallet { namespace detail {
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
 
-      if (account_object_to_modify.options.num_validator == desired_number_of_validators &&
-          account_object_to_modify.options.num_council == desired_number_of_delegates)
+      if (account_object_to_modify.options.num_producers == desired_number_of_validators &&
+          account_object_to_modify.options.num_delegates == desired_number_of_delegates)
          FC_THROW("Account ${account} is already voting for ${validators} validators"
                   " and ${delegates} delegates",
                   ("account", account_to_modify)("validators", desired_number_of_validators)
                   ("delegates",desired_number_of_validators));
-      account_object_to_modify.options.num_validator = desired_number_of_validators;
-      account_object_to_modify.options.num_council = desired_number_of_delegates;
+      account_object_to_modify.options.num_producers = desired_number_of_validators;
+      account_object_to_modify.options.num_delegates = desired_number_of_delegates;
 
       account_update_operation account_update_op;
       account_update_op.account = account_object_to_modify.id;

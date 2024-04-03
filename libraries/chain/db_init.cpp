@@ -20,7 +20,7 @@
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/validator_object.hpp>
-#include <graphene/chain/validator_schedule_object.hpp>
+#include <graphene/chain/producer_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/htlc_object.hpp>
 
@@ -140,7 +140,7 @@ void database::initialize_indexes()
    add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
    add_index< primary_index<simple_index<block_summary_object            >> >();
    add_index< primary_index<simple_index<chain_property_object          > > >();
-   add_index< primary_index<simple_index<validator_schedule_object        > > >();
+   add_index< primary_index<simple_index<producer_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
    add_index< primary_index< special_authority_index                      > >();
    add_index< primary_index< buyback_index                                > >();

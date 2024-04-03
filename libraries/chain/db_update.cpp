@@ -36,7 +36,7 @@ void database::update_global_dynamic_data( const signed_block& b, const uint32_t
       dgp.head_block_number = block_num;
       dgp.head_block_id = b.id();
       dgp.time = b.timestamp;
-      dgp.current_validator = b.validator;
+      dgp.current_producer = b.validator;
       dgp.recent_slots_filled = (
            (dgp.recent_slots_filled << 1)
            + 1) << missed_blocks;
@@ -62,14 +62,14 @@ void database::update_signing_validator(const validator_object& signing_validato
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
-   share_type validator_pay = std::min( gpo.parameters.validator_pay_per_block, dpo.validator_budget );
+   share_type producer_pay = std::min( gpo.parameters.producer_pay_per_block, dpo.validator_budget );
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
-      _dpo.validator_budget -= validator_pay;
+      _dpo.validator_budget -= producer_pay;
    } );
 
-   deposit_validator_pay( signing_validator, validator_pay );
+   deposit_producer_pay( signing_validator, producer_pay );
 
    modify( signing_validator, [&]( validator_object& _wit )
    {

@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE( three_node_network )
 
       auto block_1 = db2->generate_block(
          db2->get_slot_time(1),
-         db2->get_scheduled_validator(1),
+         db2->get_scheduled_producer(1),
          council_key,
          database::skip_nothing);
 

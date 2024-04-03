@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
 
       // Check current default validators, default chain is configured with 10 validators
       auto validators = db.get_global_properties().block_producers;
-      BOOST_CHECK_EQUAL(validators.size(), INITIAL_VALIDATOR_COUNT);
+      BOOST_CHECK_EQUAL(validators.size(), INITIAL_PRODUCER_COUNT);
       BOOST_CHECK_EQUAL(validators.begin()[0].instance.value, 1u);
       BOOST_CHECK_EQUAL(validators.begin()[1].instance.value, 2u);
       BOOST_CHECK_EQUAL(validators.begin()[2].instance.value, 3u);
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
             op.account = l.first;
             op.new_options = l.first(db).options;
             op.new_options->votes.insert(l.second(db).vote_id);
-            op.new_options->num_validator = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+            op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                         [](vote_id_type id) {
                                                            return id.type() == vote_id_type::validator;
                                                         });
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
          op.account = validator11_id;
          op.new_options = validator11_id(db).options;
          op.new_options->votes.insert(validator11_validator_id(db).vote_id);
-         op.new_options->num_validator = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+         op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                      [](vote_id_type id) {
                                                         return id.type() == vote_id_type::validator;
                                                      });
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(maintenance_feed_cleanup)
          op.account = validator0_id;
          op.new_options = validator0_id(db).options;
          op.new_options->votes.insert(validator0_validator_id(db).vote_id);
-         op.new_options->num_validator = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+         op.new_options->num_producers = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
                                                      [](vote_id_type id) {
                                                         return id.type() == vote_id_type::validator;
                                                      });

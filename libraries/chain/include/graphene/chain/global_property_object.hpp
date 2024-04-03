@@ -21,10 +21,10 @@ namespace graphene { namespace chain {
          chain_parameters           parameters;
          optional<chain_parameters> pending_parameters;
 
-         uint32_t                           next_available_vote_id = 0;
-         vector<delegate_id_type>   active_delegates; // updated once per maintenance interval
-         flat_set<validator_id_type>          block_producers; // updated once per maintenance interval
-         // n.b. validator scheduling is done by validator_schedule object
+         uint32_t                      next_available_vote_id = 0;
+         vector<delegate_id_type>      council_delegates; // updated once per maintenance interval
+         flat_set<validator_id_type>   block_producers; // updated once per maintenance interval
+         // n.b. block producer scheduling is done by producer_schedule object
    };
 
    /**
@@ -43,7 +43,7 @@ namespace graphene { namespace chain {
          uint32_t          head_block_number = 0;
          block_id_type     head_block_id;
          time_point_sec    time;
-         validator_id_type   current_validator;
+         validator_id_type current_producer;
          time_point_sec    next_maintenance_time;
          time_point_sec    last_budget_time;
          share_type        validator_budget;
@@ -62,7 +62,7 @@ namespace graphene { namespace chain {
           * number of slots since genesis.  Also equal to the total
           * number of missed slots plus head_block_number.
           */
-         uint64_t                current_aslot = 0;
+         uint64_t          current_aslot = 0;
 
          /**
           * used to compute validator participation.

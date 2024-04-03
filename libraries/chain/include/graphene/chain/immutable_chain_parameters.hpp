@@ -7,10 +7,10 @@ namespace graphene { namespace chain {
 
 struct immutable_chain_parameters
 {
-   uint16_t min_delegate_count = GRAPHENE_DEFAULT_MIN_COUNCIL_COUNT;
-   uint16_t min_validator_count = GRAPHENE_DEFAULT_MIN_VALIDATOR_COUNT;
+   uint16_t min_council_count =  GRAPHENE_DEFAULT_MIN_COUNCIL_COUNT;
+   uint16_t min_producer_count = GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT;
    uint32_t num_special_accounts = 0;
-   uint32_t num_special_assets = 0;
+   uint32_t num_special_assets =   0;
 };
 
 } } // graphene::chain
