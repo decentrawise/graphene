@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
    }
    {
       BOOST_TEST_MESSAGE("With underlying bitasset changed from one to another, price feeds should still be publish-able");
-      BOOST_TEST_MESSAGE("Re-Adding Witness 1 price feed");
+      BOOST_TEST_MESSAGE("Re-Adding Validator 1 price feed");
       publish_feed(block_producers[0], core_id, 1, bit_jmj_id, 30, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
       BOOST_CHECK(bitasset.current_feed.core_exchange_rate.base.asset_id != bitasset.current_feed.core_exchange_rate.quote.asset_id);
    }
    {
-      BOOST_TEST_MESSAGE("Re-Adding Witness 2 price feed");
+      BOOST_TEST_MESSAGE("Re-Adding Validator 2 price feed");
       publish_feed(block_producers[1], core_id, 1, bit_jmj_id, 100, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
    }
    {
       BOOST_TEST_MESSAGE("With underlying bitasset changed from one to another, price feeds should still be publish-able");
-      BOOST_TEST_MESSAGE("Re-Adding Witness 1 price feed");
+      BOOST_TEST_MESSAGE("Re-Adding Validator 1 price feed");
       publish_feed(block_producers[0], bit_usd_id, 1, bit_jmj_id, 30, core_id);
 
       const asset_bitasset_data_object& bitasset = bit_jmj_id(db).bitasset_data(db);

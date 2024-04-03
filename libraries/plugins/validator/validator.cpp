@@ -213,7 +213,7 @@ void validator_plugin::schedule_production_loop()
    fc::time_point next_wakeup( now + fc::microseconds( time_to_next_second ) );
 
    _block_production_task = fc::schedule([this]{block_production_loop();},
-                                         next_wakeup, "Witness Block Production");
+                                         next_wakeup, "Validator Block Production");
 }
 
 block_production_condition::block_production_condition_enum validator_plugin::block_production_loop()
@@ -318,16 +318,16 @@ block_production_condition::block_production_condition_enum validator_plugin::ma
    //
    assert( now > db.head_block_time() );
 
-   graphene::chain::validator_id_type scheduled_validator = db.get_scheduled_producer( slot );
+   graphene::chain::validator_id_type scheduled_producer = db.get_scheduled_producer( slot );
    // we must control the validator scheduled to produce the next block.
-   if( _validators.find( scheduled_validator ) == _validators.end() )
+   if( _validators.find( scheduled_producer ) == _validators.end() )
    {
-      capture("scheduled_validator", scheduled_validator);
+      capture("scheduled_producer", scheduled_producer);
       return block_production_condition::not_my_turn;
    }
 
    fc::time_point_sec scheduled_time = db.get_slot_time( slot );
-   graphene::chain::public_key_type scheduled_key = *_validator_key_cache[scheduled_validator]; // should be valid
+   graphene::chain::public_key_type scheduled_key = *_validator_key_cache[scheduled_producer]; // should be valid
    auto private_key_itr = _private_keys.find( scheduled_key );
 
    if( private_key_itr == _private_keys.end() )
@@ -354,7 +354,7 @@ block_production_condition::block_production_condition_enum validator_plugin::ma
 
    auto block = db.generate_block(
       scheduled_time,
-      scheduled_validator,
+      scheduled_producer,
       private_key_itr->second,
       _production_skip_flags
       );

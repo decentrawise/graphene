@@ -27,7 +27,7 @@ namespace graphene { namespace chain {
       signed_block          data;
 
       // contains validator block signing keys scheduled *after* the block has been applied
-      shared_ptr< vector< pair< validator_id_type, public_key_type > > > scheduled_validators;
+      shared_ptr< vector< pair< validator_id_type, public_key_type > > > scheduled_producers;
       uint64_t                                                         next_block_aslot = 0;
       fc::time_point_sec                                               next_block_time;
    };

@@ -115,7 +115,7 @@ bool database::_push_block(const signed_block& new_block)
       // verify that the block signer is in the current set of block producers.
       shared_ptr<fork_item> prev_block = _fork_db.fetch_block( new_block.previous );
       GRAPHENE_ASSERT( prev_block, unlinkable_block_exception, "block does not link to known chain" );
-      if( prev_block->scheduled_validators && 0 == (skip&(skip_producer_schedule_check|skip_validator_signature)) )
+      if( prev_block->scheduled_producers && 0 == (skip&(skip_producer_schedule_check|skip_validator_signature)) )
          verify_signing_validator( new_block, *prev_block );
    }
 
@@ -208,28 +208,28 @@ void database::verify_signing_validator( const signed_block& new_block, const fo
 {
    FC_ASSERT( new_block.timestamp >= fork_entry.next_block_time );
    uint32_t slot_num = ( new_block.timestamp - fork_entry.next_block_time ).to_seconds() / block_interval();
-   uint64_t index = ( fork_entry.next_block_aslot + slot_num ) % fork_entry.scheduled_validators->size();
-   const auto& scheduled_validator = (*fork_entry.scheduled_validators)[index];
-   FC_ASSERT( new_block.validator == scheduled_validator.first, "Witness produced block at wrong time",
-              ("block validator",new_block.validator)("scheduled",scheduled_validator)("slot_num",slot_num) );
-   FC_ASSERT( new_block.validate_signee( scheduled_validator.second ) );
+   uint64_t index = ( fork_entry.next_block_aslot + slot_num ) % fork_entry.scheduled_producers->size();
+   const auto& scheduled_producer = (*fork_entry.scheduled_producers)[index];
+   FC_ASSERT( new_block.validator == scheduled_producer.first, "Validator produced block at wrong time",
+              ("block validator",new_block.validator)("scheduled",scheduled_producer)("slot_num",slot_num) );
+   FC_ASSERT( new_block.validate_signee( scheduled_producer.second ) );
 }
 
 void database::update_validators( fork_item& fork_entry )const
 {
-   if( fork_entry.scheduled_validators ) return;
+   if( fork_entry.scheduled_producers ) return;
 
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    fork_entry.next_block_aslot = dpo.current_aslot + 1;
    fork_entry.next_block_time = get_slot_time( 1 );
 
    const producer_schedule_object& wso = get_producer_schedule_object();
-   fork_entry.scheduled_validators = std::make_shared< vector< pair< validator_id_type, public_key_type > > >();
-   fork_entry.scheduled_validators->reserve( wso.current_shuffled_producers.size() );
+   fork_entry.scheduled_producers = std::make_shared< vector< pair< validator_id_type, public_key_type > > >();
+   fork_entry.scheduled_producers->reserve( wso.current_shuffled_producers.size() );
    for( size_t i = 0; i < wso.current_shuffled_producers.size(); ++i )
    {
        const auto& validator = wso.current_shuffled_producers[i](*this);
-       fork_entry.scheduled_validators->emplace_back( wso.current_shuffled_producers[i], validator.block_producer_key );
+       fork_entry.scheduled_producers->emplace_back( wso.current_shuffled_producers[i], validator.block_producer_key );
    }
 }
 
@@ -364,8 +364,8 @@ signed_block database::_generate_block(
    uint32_t skip = get_node_properties().skip_flags;
    uint32_t slot_num = get_slot_at_time( when );
    FC_ASSERT( slot_num > 0 );
-   validator_id_type scheduled_validator = get_scheduled_producer( slot_num );
-   FC_ASSERT( scheduled_validator == validator_id );
+   validator_id_type scheduled_producer = get_scheduled_producer( slot_num );
+   FC_ASSERT( scheduled_producer == validator_id );
 
    //
    // The following code throws away existing pending_tx_session and
@@ -754,10 +754,10 @@ const validator_object& database::validate_block_header( uint32_t skip, const si
       uint32_t slot_num = get_slot_at_time( next_block.timestamp );
       FC_ASSERT( slot_num > 0 );
 
-      validator_id_type scheduled_validator = get_scheduled_producer( slot_num );
+      validator_id_type scheduled_producer = get_scheduled_producer( slot_num );
 
-      FC_ASSERT( next_block.validator == scheduled_validator, "Witness produced block at wrong time",
-                 ("block validator",next_block.validator)("scheduled",scheduled_validator)("slot_num",slot_num) );
+      FC_ASSERT( next_block.validator == scheduled_producer, "Validator produced block at wrong time",
+                 ("block validator",next_block.validator)("scheduled",scheduled_producer)("slot_num",slot_num) );
    }
 
    return validator;
