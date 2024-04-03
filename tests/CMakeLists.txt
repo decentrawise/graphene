@@ -33,12 +33,12 @@ add_executable( app_test ${APP_SOURCES} )
 target_link_libraries( app_test graphene_app graphene_egenesis_none
                        ${PLATFORM_SPECIFIC_LIBS} )
 
-file(GLOB CLI_SOURCES "cli/*.cpp")
-add_executable( cli_test ${CLI_SOURCES} )
+file(GLOB WALLET_SOURCES "wallet/*.cpp")
+add_executable( wallet_test ${WALLET_SOURCES} )
 if(WIN32)
    list(APPEND PLATFORM_SPECIFIC_LIBS ws2_32)
 endif()
-target_link_libraries( cli_test graphene_wallet graphene_app graphene_egenesis_none
+target_link_libraries( wallet_test graphene_wallet graphene_app graphene_egenesis_none
                        ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( cli/main.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

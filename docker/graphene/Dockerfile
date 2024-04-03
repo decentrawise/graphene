@@ -45,10 +45,10 @@ RUN \
     -DCMAKE_BUILD_TYPE=Release \
     -DGRAPHENE_DISABLE_UNITY_BUILD=ON \
     . && \
-  make graphened cli_wallet get_dev_key && \
+  make graphened wallet get_dev_key && \
   install -s programs/graphened/graphened \
     programs/genesis_util/get_dev_key \
-    programs/cli_wallet/cli_wallet \
+    programs/wallet/wallet \
     /usr/local/bin && \
   #
   # Obtain version

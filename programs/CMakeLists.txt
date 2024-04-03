@@ -1,5 +1,5 @@
 add_subdirectory( build_helpers )
-add_subdirectory( cli_wallet )
+add_subdirectory( wallet )
 add_subdirectory( genesis_util )
 add_subdirectory( graphened )
 add_subdirectory( js_operation_serializer )

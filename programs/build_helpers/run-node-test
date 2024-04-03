@@ -20,12 +20,12 @@ programs/graphened/graphened --data-dir "$DATA_DIR" \
 			--rpc-endpoint 127.0.0.1:8090 --force-validate >node.log 2>&1 &
 NODE_PID=$!
 
-echo "Waiting for cli_wallet start..." 1>&2 &
+echo "Waiting for wallet start..." 1>&2 &
 CLI_PID=$!
 sleep 5
 _START="`date +%s`"
 while ! ps -p "$CLI_PID" >/dev/null && [ $((`date +%s` - $_START)) -lt 120 ]; do
-    programs/cli_wallet/cli_wallet -sws://127.0.0.1:8090 -d -H127.0.0.1:8091 >cli.log 2>&1 &
+    programs/wallet/wallet -sws://127.0.0.1:8090 -d -H127.0.0.1:8091 >cli.log 2>&1 &
     CLI_PID=$!
     sleep 10
 done
