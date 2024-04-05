@@ -15,8 +15,8 @@ BOOST_AUTO_TEST_CASE(api_limit_get_grouped_limit_orders) {
    {
    app.enable_plugin("grouped_orders");
    graphene::app::orders_api orders_api(app);
-   optional< api_access_info > acc;
-   optional<price> start;
+   graphene::protocol::optional< api_access_info > acc;
+   graphene::protocol::optional<price> start;
 
 	//account_id_type() do 3 ops
    create_backed_asset("USD", account_id_type());

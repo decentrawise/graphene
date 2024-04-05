@@ -1,5 +1,5 @@
 # Defines Graphene Protocol targets
-cmake_minimum_required( VERSION 3.2 FATAL_ERROR )
+cmake_minimum_required( VERSION 3.5 FATAL_ERROR )
 project( Graphene LANGUAGES CXX C)
 
 set( BLOCKCHAIN_NAME "Graphene" )
@@ -9,7 +9,7 @@ set( GUI_CLIENT_EXECUTABLE_NAME Graphene )
 set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
-set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
 if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
@@ -190,6 +190,8 @@ if (NOT MSVC)
     add_definitions (-fPIC)
 endif(NOT MSVC)
 
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set( GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/libraries/egenesis/genesis.json"
      CACHE STRING "Path to embedded genesis file" )
@@ -254,6 +256,8 @@ add_compiler_flag_if_available("-Wpointer-arith")
 add_compiler_flag_if_available("-Wshift-negative-value")
 add_compiler_flag_if_available("-Wtype-limits")
 add_compiler_flag_if_available("-Wunused-but-set-parameter")
+add_compiler_flag_if_available("-ferror-limit=0")
+
 
 if( WIN32 )
 

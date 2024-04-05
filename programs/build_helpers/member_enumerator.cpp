@@ -176,11 +176,11 @@ int main( int argc, char** argv )
       graphene::member_enumerator::class_processor::process_class<signed_block>(result);
 
       fc::mutable_variant_object mvo;
-      for( const std::pair< std::string, std::vector< std::string > >& e : result )
+      for( auto &[key, value] : result )
       {
          variant v;
-         to_variant( e.second, v , 1);
-         mvo.set( e.first, v );
+         to_variant( value, v , 1);
+         mvo.set( key, v );
       }
 
       std::cout << fc::json::to_string( mvo ) << std::endl;
