@@ -35,7 +35,7 @@ We recommend building on Ubuntu 20.04 LTS (64-bit)
 **Install Operating System Dependencies:**
 
     sudo apt-get update
-    sudo apt-get install autoconf cmake make automake libtool git libboost-all-dev libssl-dev g++ libcurl4-openssl-dev doxygen
+    sudo apt-get install autoconf cmake make automake libtool git libboost-all-dev libssl-dev g++ libcurl4-openssl-dev doxygen libbz2-dev liblzma-dev libzstd-dev
 
 **Build Node And Command-Line Wallet:**
 
