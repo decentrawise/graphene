@@ -141,7 +141,7 @@ bool wallet_api::copy_wallet_file( const string& destination_filename )const
    return my->copy_wallet_file(destination_filename);
 }
 
-optional<signed_block_with_info> wallet_api::get_block(uint32_t num)const
+graphene::protocol::optional<signed_block_with_info> wallet_api::get_block(uint32_t num)const
 {
    return my->_remote_db->get_block(num);
 }
@@ -419,8 +419,8 @@ vector<limit_order_object> wallet_api::get_account_limit_orders(
       const string& base,
       const string& quote,
       uint32_t limit,
-      const optional<limit_order_id_type>& ostart_id,
-      const optional<price>& ostart_price )const
+      const graphene::protocol::optional<limit_order_id_type>& ostart_id,
+      const graphene::protocol::optional<price>& ostart_price )const
 {
    return my->_remote_db->get_account_limit_orders(name_or_id, base, quote, limit, ostart_id, ostart_price);
 }
@@ -778,7 +778,7 @@ signed_transaction wallet_api::create_asset( const string& issuer,
                                              const string& symbol,
                                              uint8_t precision,
                                              const asset_options& common,
-                                             const optional<backed_asset_options>& backed_options,
+                                             const graphene::protocol::optional<backed_asset_options>& backed_options,
                                              bool broadcast )const
 {
    return my->create_asset(issuer, symbol, precision, common, backed_options, broadcast);
@@ -970,7 +970,7 @@ signed_transaction wallet_api::vote_for_validator( const string& voting_account,
 }
 
 signed_transaction wallet_api::set_voting_proxy( const string& account_to_modify,
-                                                 const optional<string>& voting_account,
+                                                 const graphene::protocol::optional<string>& voting_account,
                                                  bool broadcast /* = false */ )const
 {
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
@@ -1905,7 +1905,7 @@ order_book wallet_api::get_order_book( const string& base, const string& quote, 
 
 // custom operations
 signed_transaction wallet_api::account_store_map( const string& account, const string& catalog, bool is_to_remove,
-      const flat_map<string, optional<string>>& key_values, bool broadcast )const
+      const flat_map<string, graphene::protocol::optional<string>>& key_values, bool broadcast )const
 {
    return my->account_store_map(account, catalog, is_to_remove, key_values, broadcast);
 }

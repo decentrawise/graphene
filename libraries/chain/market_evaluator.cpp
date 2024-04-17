@@ -213,7 +213,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
       FC_ASSERT( o.delta_collateral.amount > 0, "Delta collateral amount of new debt position should be positive" );
       FC_ASSERT( o.delta_debt.amount > 0, "Delta debt amount of new debt position should be positive" );
 
-      call_obj = &d.create<call_order_object>( [&o,this]( call_order_object& call ){
+      call_obj = &d.create<call_order_object>( [&o]( call_order_object& call ){
          call.borrower = o.funding_account;
          call.collateral = o.delta_collateral.amount;
          call.debt = o.delta_debt.amount;
@@ -243,7 +243,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
       old_collateralization = call_obj->collateralization();
       old_debt = call_obj->debt;
 
-      d.modify( *call_obj, [&o,new_debt,new_collateral,this]( call_order_object& call ){
+      d.modify( *call_obj, [&o,new_debt,new_collateral]( call_order_object& call ){
          call.collateral = new_collateral;
          call.debt       = new_debt;
          call.target_collateral_ratio = o.extensions.value.target_collateral_ratio;

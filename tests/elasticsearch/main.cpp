@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(elasticsearch_account_history) {
          es.query = query;
 
          string res;
-         variant j;
+         graphene::protocol::variant j;
          string total;
 
          wait_for( ES_WAIT_TIME,  [&]() {
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(elasticsearch_objects) {
          es.query = query;
 
          string res;
-         variant j;
+         graphene::protocol::variant j;
          string total;
 
          wait_for( ES_WAIT_TIME,  [&]() {

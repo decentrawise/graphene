@@ -18,7 +18,7 @@ namespace graphene { namespace wallet {
  * This class takes a variant and turns it into an object
  * of the given type, with the new operator.
  */
-object* create_object( const variant& v );
+object* create_object( const graphene::protocol::variant& v );
 
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
@@ -43,7 +43,7 @@ class wallet_api
        * delegates.
        * @returns runtime info about the blockchain
        */
-      variant                           info()const;
+      graphene::protocol::variant       info()const;
       /** Returns info such as client version, git version of graphene/fc, version of boost, openssl.
        * @returns compile time info and client and dependencies versions
        */
@@ -52,7 +52,7 @@ class wallet_api
        * @param num height of the block to retrieve
        * @returns info about the block, or null if not found
        */
-      optional<signed_block_with_info>    get_block( uint32_t num )const;
+      graphene::protocol::optional<signed_block_with_info>    get_block( uint32_t num )const;
       /** Returns the number of accounts registered on the blockchain
        * @returns the number of registered accounts
        */
@@ -166,8 +166,8 @@ class wallet_api
                                             const string& base,
                                             const string& quote,
                                             uint32_t limit = 101,
-                                            const optional<limit_order_id_type>& ostart_id = {},
-                                            const optional<price>& ostart_price = optional<price>() )const;
+                                            const graphene::protocol::optional<limit_order_id_type>& ostart_id = {},
+                                            const graphene::protocol::optional<price>& ostart_price = graphene::protocol::optional<price>() )const;
 
       /**
        * @brief Get limit orders in a given market
@@ -261,7 +261,7 @@ class wallet_api
        * @param htlc_id the id of the HTLC object.
        * @returns the information about the HTLC object
        */
-      optional<variant>                 get_htlc( const htlc_id_type& htlc_id ) const;
+      graphene::protocol::optional<graphene::protocol::variant>                 get_htlc( const htlc_id_type& htlc_id ) const;
 
       /** Lookup the id of a named account.
        * @param account_name_or_id the name or ID of the account to look up
@@ -310,7 +310,7 @@ class wallet_api
        * @param id the id of the object to return
        * @returns the requested object
        */
-      variant                           get_object( const object_id_type& id ) const;
+      graphene::protocol::variant        get_object( const object_id_type& id ) const;
 
       /** Returns the current wallet filename.
        *
@@ -1076,7 +1076,7 @@ class wallet_api
                                        const string& symbol,
                                        uint8_t precision,
                                        const asset_options& common,
-                                       const optional<backed_asset_options>& backed_options,
+                                       const graphene::protocol::optional<backed_asset_options>& backed_options,
                                        bool broadcast = false )const;
 
       /** Create the specified amount of the specified asset and credit into the specified account.
@@ -1432,7 +1432,7 @@ class wallet_api
          const share_type& daily_pay,
          const string& name,
          const string& url,
-         const variant& worker_settings,
+         const graphene::protocol::variant& worker_settings,
          bool broadcast = false
          )const;
 
@@ -1579,7 +1579,7 @@ class wallet_api
        * @return the signed transaction changing your vote proxy settings
        */
       signed_transaction set_voting_proxy( const string& account_to_modify,
-                                           const optional<string>& voting_account,
+                                           const graphene::protocol::optional<string>& voting_account,
                                            bool broadcast = false )const;
 
       /** Set your vote for the number of validators and delegates in the system.
@@ -1748,7 +1748,7 @@ class wallet_api
       void flood_network( const string& prefix, uint32_t number_of_transactions )const;
 
       void network_add_nodes( const vector<string>& nodes )const;
-      vector< variant > network_get_connected_peers()const;
+      vector< graphene::protocol::variant > network_get_connected_peers()const;
 
       /**
        *  Used to transfer from one set of blinded balances to another
@@ -1761,7 +1761,7 @@ class wallet_api
                                               bool to_temp = false )const;
 
 
-      std::map< string, std::function< string( const variant&, const fc::variants& ) >, std::less<> >
+      std::map< string, std::function< string( const graphene::protocol::variant&, const fc::variants& ) >, std::less<> >
             get_result_formatters() const;
 
       void encrypt_keys()const;
@@ -1781,7 +1781,7 @@ class wallet_api
        * @return The signed transaction
        */
       signed_transaction account_store_map( const string& account, const string& catalog, bool is_to_remove,
-            const flat_map<string, optional<string>>& key_values, bool broadcast )const;
+            const flat_map<string, graphene::protocol::optional<string>>& key_values, bool broadcast )const;
 
       /**
        * Get \c account_storage_object of an account by using the custom operations plugin.

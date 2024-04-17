@@ -2036,7 +2036,7 @@ set<public_key_type> database_api::get_required_signatures( const signed_transac
 set<public_key_type> database_api_impl::get_required_signatures( const signed_transaction& trx,
                                                             const flat_set<public_key_type>& available_keys )const
 {
-   auto chain_time = _db.head_block_time();
+   _db.head_block_time();
    auto result = trx.get_required_signatures( _db.get_chain_id(),
                                        available_keys,
                                        [&]( account_id_type id ){ return &id(_db).active; },
@@ -2056,7 +2056,7 @@ set<address> database_api::get_potential_address_signatures( const signed_transa
 
 set<public_key_type> database_api_impl::get_potential_signatures( const signed_transaction& trx )const
 {
-   auto chain_time = _db.head_block_time();
+   _db.head_block_time();
 
    set<public_key_type> result;
    auto get_active = [this, &result]( account_id_type id ){
@@ -2091,7 +2091,7 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
 
 set<address> database_api_impl::get_potential_address_signatures( const signed_transaction& trx )const
 {
-   auto chain_time = _db.head_block_time();
+   _db.head_block_time();
 
    set<address> result;
    auto get_active = [this, &result]( account_id_type id ){
