@@ -53,7 +53,6 @@ namespace graphene { namespace protocol {
       to.producer_pay_vesting_seconds = from.producer_pay_vesting_seconds;
       to.worker_budget_per_day = from.worker_budget_per_day;
       to.max_predicate_opcode = from.max_predicate_opcode;
-      to.fee_liquidation_threshold = from.fee_liquidation_threshold;
       to.accounts_per_fee_scale = from.accounts_per_fee_scale;
       to.account_fee_scale_bitshifts = from.account_fee_scale_bitshifts;
       to.max_authority_depth = from.max_authority_depth;
