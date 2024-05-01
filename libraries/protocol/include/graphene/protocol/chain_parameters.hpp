@@ -41,7 +41,7 @@ namespace graphene { namespace protocol {
       amount_type producer_pay_per_block              = GRAPHENE_DEFAULT_PRODUCER_PAY_PER_BLOCK; ///< CORE to be allocated to validators (per block)
       uint32_t    producer_pay_vesting_seconds        = GRAPHENE_DEFAULT_PRODUCER_PAY_VESTING_PERIOD; ///< vesting_seconds parameter for validator VBO's
       amount_type worker_budget_per_day               = GRAPHENE_DEFAULT_WORKER_BUDGET_PER_DAY; ///< CORE to be allocated to workers (per day)
-      uint16_t    max_predicate_opcode                = GRAPHENE_DEFAULT_MAX_ASSERT_OPCODE; ///< predicate_opcode must be less than this number
+      uint16_t    max_predicate_opcode                = GRAPHENE_DEFAULT_MAX_PREDICATE_OPCODE; ///< predicate_opcode must be less than this number
       uint16_t    accounts_per_fee_scale              = GRAPHENE_DEFAULT_ACCOUNTS_PER_FEE_SCALE; ///< number of accounts between fee scalings
       uint8_t     account_fee_scale_bitshifts         = GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS; ///< number of times to left bitshift account registration fee at each scaling
       uint8_t     max_authority_depth                 = GRAPHENE_DEFAULT_SIG_CHECK_MAX_DEPTH; ///< max depth of signature checks

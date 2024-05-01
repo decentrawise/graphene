@@ -27,7 +27,7 @@
 #define GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS                     32
 
 /**
- * Default configuration parameters
+ * Default chain parameters
  */
 #define GRAPHENE_DEFAULT_BLOCK_INTERVAL                         5   // seconds
 #define GRAPHENE_DEFAULT_MAX_TRANSACTION_SIZE                   2048    // bytes
@@ -48,7 +48,7 @@
 #define GRAPHENE_DEFAULT_LIFETIME_REFERRER_PERCENT_OF_FEE       (30*GRAPHENE_1_PERCENT)
 #define GRAPHENE_DEFAULT_CASHBACK_VESTING_PERIOD                (60*60*24*365)  ///< 1 year in seconds
 #define GRAPHENE_DEFAULT_CASHBACK_VESTING_THRESHOLD             (GRAPHENE_CORE_ASSET_PRECISION*int64_t(100))
-#define GRAPHENE_DEFAULT_MAX_ASSERT_OPCODE                      1
+#define GRAPHENE_DEFAULT_MAX_PREDICATE_OPCODE                   1
 #define GRAPHENE_DEFAULT_ACCOUNTS_PER_FEE_SCALE                 1000
 #define GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS            4
 
