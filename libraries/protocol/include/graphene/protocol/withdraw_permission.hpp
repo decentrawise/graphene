@@ -27,7 +27,7 @@ namespace graphene { namespace protocol {
     */
    struct withdraw_permission_create_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee =  GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset             fee;
       /// The account authorizing withdrawals from its balances
@@ -60,7 +60,7 @@ namespace graphene { namespace protocol {
     */
    struct withdraw_permission_update_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee =  GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset                         fee;
       /// This account pays the fee. Must match permission_to_update->withdraw_from_account
@@ -98,7 +98,7 @@ namespace graphene { namespace protocol {
    struct withdraw_permission_claim_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee = 20*GRAPHENE_BLOCKCHAIN_PRECISION; 
+         uint64_t fee = 20*GRAPHENE_CORE_ASSET_PRECISION; 
          uint32_t price_per_kbyte = 10;
       };
 
@@ -117,7 +117,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return withdraw_to_account; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
    /**

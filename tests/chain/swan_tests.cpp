@@ -21,7 +21,7 @@ using namespace graphene::chain::test;
 namespace graphene { namespace chain {
 
 struct swan_fixture : database_fixture {
-    limit_order_id_type init_standard_swan(share_type amount = 1000) {
+    limit_order_id_type init_standard_swan(amount_type amount = 1000) {
         standard_users();
         standard_asset();
         return trigger_swan(amount, amount);
@@ -46,7 +46,7 @@ struct swan_fixture : database_fixture {
         update_feed_producers(swan(), {_feedproducer});
     }
 
-    limit_order_id_type trigger_swan(share_type amount1, share_type amount2) {
+    limit_order_id_type trigger_swan(amount_type amount1, amount_type amount2) {
         set_expiration( db, trx );
         // starting out with price 1:1
         set_feed( 1, 1 );
@@ -73,7 +73,7 @@ struct swan_fixture : database_fixture {
         return oid;
     }
 
-    void set_feed(share_type usd, share_type core) {
+    void set_feed(amount_type usd, amount_type core) {
         price_feed feed;
         feed.maintenance_collateral_ratio = 1750; // need to set this explicitly, testnet has a different default
         feed.settlement_price = swan().amount(usd) / back().amount(core);
@@ -81,7 +81,7 @@ struct swan_fixture : database_fixture {
     }
 
     void expire_feed() {
-      generate_blocks(db.head_block_time() + GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME);
+      generate_blocks(db.head_block_time() + GRAPHENE_ASSET_PRICE_FEED_LIFETIME);
       generate_block();
       FC_ASSERT( swan().backed_asset_data(db).current_feed.settlement_price.is_null() );
     }
@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE( black_swan_by_settlement )
 
       /*
        * GRAPHENE_COLLATERAL_RATIO_DENOM
-      uint16_t maintenance_collateral_ratio = GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO;
-      uint16_t maximum_short_squeeze_ratio = GRAPHENE_DEFAULT_MAX_SHORT_SQUEEZE_RATIO;
+      uint16_t maintenance_collateral_ratio = GRAPHENE_MAINTENANCE_COLLATERAL_RATIO;
+      uint16_t maximum_short_squeeze_ratio = GRAPHENE_MAX_SHORT_SQUEEZE_RATIO;
       */
 
       // situations to test:
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE( overflow )
 { try {
    init_standard_swan( 700 );
 
-   bid_collateral( borrower(),  back().amount(2200), swan().amount(GRAPHENE_MAX_SHARE_SUPPLY - 1) );
+   bid_collateral( borrower(),  back().amount(2200), swan().amount(GRAPHENE_CORE_ASSET_MAX_SUPPLY - 1) );
    bid_collateral( borrower2(), back().amount(2100), swan().amount(1399) );
    set_feed(1, 2);
    wait_for_maintenance();

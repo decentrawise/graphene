@@ -42,7 +42,7 @@ namespace graphene { namespace chain {
        * Tracks the total amount
        * WARNING: Due to caching, this value does not always represent the total amount claimed during the current period; it may represent what was claimed during the last claimed period (because it is only updated after a withdrawal operation such as claim).  For the latest current period, use current_period().
        */
-      share_type claimed_this_period;
+      amount_type claimed_this_period;
 
       /***
        * Determine how much is still available to be claimed during the period that contains a time of interest.  This object and function is mainly intended to be used with the "current" time as a parameter.  The current time can be obtained from the time of the current head of the blockchain.

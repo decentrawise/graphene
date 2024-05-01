@@ -27,11 +27,11 @@ struct limit_order_group_key
 
 struct limit_order_group_data
 {
-   limit_order_group_data( const price& p, const share_type s ) : max_price(p), total_for_sale(s) {}
+   limit_order_group_data( const price& p, const amount_type s ) : max_price(p), total_for_sale(s) {}
    limit_order_group_data() {}
 
    price         max_price;
-   share_type    total_for_sale; ///< asset id is min_price.base.asset_id
+   amount_type    total_for_sale; ///< asset id is min_price.base.asset_id
 };
 
 namespace detail

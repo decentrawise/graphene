@@ -79,7 +79,7 @@ object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::
    }).id;
 } FC_CAPTURE_AND_RETHROW( (o) ) } // GCOVR_EXCL_LINE
 
-void refund_worker_type::pay_worker(share_type pay, database& db)
+void refund_worker_type::pay_worker(amount_type pay, database& db)
 {
    total_burned += pay;
    db.modify( db.get_core_dynamic_data(), [pay](asset_dynamic_data_object& d) {
@@ -87,7 +87,7 @@ void refund_worker_type::pay_worker(share_type pay, database& db)
    });
 }
 
-void vesting_balance_worker_type::pay_worker(share_type pay, database& db)
+void vesting_balance_worker_type::pay_worker(amount_type pay, database& db)
 {
    db.modify(balance(db), [&](vesting_balance_object& b) {
       b.deposit(db.head_block_time(), asset(pay));
@@ -95,7 +95,7 @@ void vesting_balance_worker_type::pay_worker(share_type pay, database& db)
 }
 
 
-void burn_worker_type::pay_worker(share_type pay, database& db)
+void burn_worker_type::pay_worker(amount_type pay, database& db)
 {
    total_burned += pay;
    db.adjust_balance( GRAPHENE_NULL_ACCOUNT, pay );

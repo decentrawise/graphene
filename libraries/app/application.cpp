@@ -58,7 +58,7 @@ namespace detail {
       dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(nathan_key)));
       graphene::chain::genesis_state_type initial_state;
       initial_state.initial_parameters.get_mutable_fees() = fee_schedule::get_default();
-      initial_state.initial_block_producers = GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT;
+      initial_state.initial_block_producers = GRAPHENE_MIN_PRODUCER_COUNT;
       initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *
             initial_state.initial_parameters.block_interval);
@@ -75,8 +75,8 @@ namespace detail {
 
       initial_state.initial_accounts.emplace_back("nathan", nathan_key.get_public_key());
       initial_state.initial_balances.push_back({address(nathan_key.get_public_key()),
-                                                GRAPHENE_SYMBOL,
-                                                GRAPHENE_MAX_SHARE_SUPPLY});
+                                                GRAPHENE_CORE_ASSET_SYMBOL,
+                                                GRAPHENE_CORE_ASSET_MAX_SUPPLY});
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );
 
       return initial_state;

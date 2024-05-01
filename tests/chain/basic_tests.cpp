@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE( price_test )
     BOOST_CHECK_THROW( asset(1) * price( asset(0), asset(1, asset_id_type(1)) ), fc::assert_exception );
     BOOST_CHECK_THROW( asset(1) * price( asset(1, asset_id_type(1)), asset(0) ), fc::assert_exception );
     // overflow
-    BOOST_CHECK_THROW( asset(GRAPHENE_MAX_SHARE_SUPPLY/2+1) * price( asset(1), asset(2, asset_id_type(1)) ), fc::assert_exception );
-    BOOST_CHECK_THROW( asset(2) * price( asset(GRAPHENE_MAX_SHARE_SUPPLY/2+1, asset_id_type(1)), asset(1) ), fc::assert_exception );
+    BOOST_CHECK_THROW( asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2+1) * price( asset(1), asset(2, asset_id_type(1)) ), fc::assert_exception );
+    BOOST_CHECK_THROW( asset(2) * price( asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2+1, asset_id_type(1)), asset(1) ), fc::assert_exception );
 
     BOOST_CHECK( asset(1).multiply_and_round_up( price( asset(1), asset(1, asset_id_type(1)) ) ) == asset(1, asset_id_type(1)) );
     BOOST_CHECK( asset(1).multiply_and_round_up( price( asset(1, asset_id_type(1)), asset(1) ) ) == asset(1, asset_id_type(1)) );
@@ -256,9 +256,9 @@ BOOST_AUTO_TEST_CASE( price_test )
     BOOST_CHECK_THROW( asset(1).multiply_and_round_up( price( asset(0), asset(1, asset_id_type(1)) ) ), fc::assert_exception );
     BOOST_CHECK_THROW( asset(1).multiply_and_round_up( price( asset(1, asset_id_type(1)), asset(0) ) ), fc::assert_exception );
     // overflow
-    BOOST_CHECK_THROW( asset(GRAPHENE_MAX_SHARE_SUPPLY/2+1).multiply_and_round_up( price( asset(1), asset(2, asset_id_type(1)) ) ),
+    BOOST_CHECK_THROW( asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2+1).multiply_and_round_up( price( asset(1), asset(2, asset_id_type(1)) ) ),
                        fc::assert_exception );
-    BOOST_CHECK_THROW( asset(2).multiply_and_round_up( price( asset(GRAPHENE_MAX_SHARE_SUPPLY/2+1, asset_id_type(1)), asset(1) ) ),
+    BOOST_CHECK_THROW( asset(2).multiply_and_round_up( price( asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2+1, asset_id_type(1)), asset(1) ) ),
                        fc::assert_exception );
 
     price_feed dummy;
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE( price_multiplication_test )
 { try {
    // random test
    std::mt19937_64 gen( time(NULL) );
-   std::uniform_int_distribution<int64_t> amt_uid(1, GRAPHENE_MAX_SHARE_SUPPLY);
+   std::uniform_int_distribution<int64_t> amt_uid(1, GRAPHENE_CORE_ASSET_MAX_SUPPLY);
    std::uniform_int_distribution<int64_t> amt_uid2(1, 1000*1000*1000);
    std::uniform_int_distribution<int64_t> amt_uid3(1, 1000*1000);
    std::uniform_int_distribution<int64_t> amt_uid4(1, 1000);
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE( price_multiplication_test )
       }
       catch( fc::assert_exception& e )
       {
-         BOOST_CHECK( e.to_detail_string().find( "result <= GRAPHENE_MAX_SHARE_SUPPLY" ) != string::npos );
+         BOOST_CHECK( e.to_detail_string().find( "result <= GRAPHENE_CORE_ASSET_MAX_SUPPLY" ) != string::npos );
       }
    }
 } FC_LOG_AND_RETHROW() }
@@ -359,25 +359,25 @@ BOOST_AUTO_TEST_CASE( scaled_precision )
    const int64_t _p = _t*_k;
    const int64_t _e = _p*_k;
 
-   BOOST_CHECK( asset::scaled_precision( 0) == share_type(   1   ) );
-   BOOST_CHECK( asset::scaled_precision( 1) == share_type(  10   ) );
-   BOOST_CHECK( asset::scaled_precision( 2) == share_type( 100   ) );
-   BOOST_CHECK( asset::scaled_precision( 3) == share_type(   1*_k) );
-   BOOST_CHECK( asset::scaled_precision( 4) == share_type(  10*_k) );
-   BOOST_CHECK( asset::scaled_precision( 5) == share_type( 100*_k) );
-   BOOST_CHECK( asset::scaled_precision( 6) == share_type(   1*_m) );
-   BOOST_CHECK( asset::scaled_precision( 7) == share_type(  10*_m) );
-   BOOST_CHECK( asset::scaled_precision( 8) == share_type( 100*_m) );
-   BOOST_CHECK( asset::scaled_precision( 9) == share_type(   1*_g) );
-   BOOST_CHECK( asset::scaled_precision(10) == share_type(  10*_g) );
-   BOOST_CHECK( asset::scaled_precision(11) == share_type( 100*_g) );
-   BOOST_CHECK( asset::scaled_precision(12) == share_type(   1*_t) );
-   BOOST_CHECK( asset::scaled_precision(13) == share_type(  10*_t) );
-   BOOST_CHECK( asset::scaled_precision(14) == share_type( 100*_t) );
-   BOOST_CHECK( asset::scaled_precision(15) == share_type(   1*_p) );
-   BOOST_CHECK( asset::scaled_precision(16) == share_type(  10*_p) );
-   BOOST_CHECK( asset::scaled_precision(17) == share_type( 100*_p) );
-   BOOST_CHECK( asset::scaled_precision(18) == share_type(   1*_e) );
+   BOOST_CHECK( asset::scaled_precision( 0) == amount_type(   1   ) );
+   BOOST_CHECK( asset::scaled_precision( 1) == amount_type(  10   ) );
+   BOOST_CHECK( asset::scaled_precision( 2) == amount_type( 100   ) );
+   BOOST_CHECK( asset::scaled_precision( 3) == amount_type(   1*_k) );
+   BOOST_CHECK( asset::scaled_precision( 4) == amount_type(  10*_k) );
+   BOOST_CHECK( asset::scaled_precision( 5) == amount_type( 100*_k) );
+   BOOST_CHECK( asset::scaled_precision( 6) == amount_type(   1*_m) );
+   BOOST_CHECK( asset::scaled_precision( 7) == amount_type(  10*_m) );
+   BOOST_CHECK( asset::scaled_precision( 8) == amount_type( 100*_m) );
+   BOOST_CHECK( asset::scaled_precision( 9) == amount_type(   1*_g) );
+   BOOST_CHECK( asset::scaled_precision(10) == amount_type(  10*_g) );
+   BOOST_CHECK( asset::scaled_precision(11) == amount_type( 100*_g) );
+   BOOST_CHECK( asset::scaled_precision(12) == amount_type(   1*_t) );
+   BOOST_CHECK( asset::scaled_precision(13) == amount_type(  10*_t) );
+   BOOST_CHECK( asset::scaled_precision(14) == amount_type( 100*_t) );
+   BOOST_CHECK( asset::scaled_precision(15) == amount_type(   1*_p) );
+   BOOST_CHECK( asset::scaled_precision(16) == amount_type(  10*_p) );
+   BOOST_CHECK( asset::scaled_precision(17) == amount_type( 100*_p) );
+   BOOST_CHECK( asset::scaled_precision(18) == amount_type(   1*_e) );
    GRAPHENE_CHECK_THROW( asset::scaled_precision(19), fc::exception );
 }
 

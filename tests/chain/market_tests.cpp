@@ -482,8 +482,8 @@ BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
 
    // call and call2's CR is quite high, and debt amount is quite a lot, assume neither of them will be completely filled
    price match_price( bitusd.amount(1) / core.amount(11) );
-   share_type call_to_cover = call_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
-   share_type call2_to_cover = call2_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
+   amount_type call_to_cover = call_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
+   amount_type call2_to_cover = call2_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
    BOOST_CHECK_LT( call_to_cover.value, call_id(db).debt.value );
    BOOST_CHECK_LT( call2_to_cover.value, call2_id(db).debt.value );
    // even though call2 has a higher CR, since call's TCR is less than call2's TCR, so we expect call will cover less when called
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
    BOOST_CHECK( tmp_call != nullptr );
 
    // call will receive call_to_cover, pay 11*call_to_cover
-   share_type call_to_pay = call_to_cover * 11;
+   amount_type call_to_pay = call_to_cover * 11;
    BOOST_CHECK_EQUAL( 1000 - call_to_cover.value, call.debt.value );
    BOOST_CHECK_EQUAL( 15000 - call_to_pay.value, call.collateral.value );
    // new collateral ratio should be higher than mcr as well as tcr
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
    BOOST_CHECK( tmp_call2 != nullptr );
 
    // call2 will receive call2_to_cover, pay 11*call2_to_cover
-   share_type call2_to_pay = call2_to_cover * 11;
+   amount_type call2_to_pay = call2_to_cover * 11;
    BOOST_CHECK_EQUAL( 1000 - call2_to_cover.value, call2.debt.value );
    BOOST_CHECK_EQUAL( 15500 - call2_to_pay.value, call2.collateral.value );
    // new collateral ratio should be higher than mcr as well as tcr
@@ -530,8 +530,8 @@ BOOST_AUTO_TEST_CASE(target_cr_test_limit_call)
 
    // then it will match with buy_med, at buy_med's price. Since buy_med is too big, it's partially filled.
    // buy_med receives the remaining USD of sell order, minus market fees, goes to buyer2's balance
-   share_type buy_med_get = 700*4 - 10 - call_to_cover - call2_to_cover;
-   share_type buy_med_pay = buy_med_get * 11; // buy_med pays at 1/11
+   amount_type buy_med_get = 700*4 - 10 - call_to_cover - call2_to_cover;
+   amount_type buy_med_pay = buy_med_get * 11; // buy_med pays at 1/11
    buy_med_get -= (buy_med_get/100); // minus 1% market fee
    BOOST_CHECK_EQUAL( buy_med_get.value, get_balance(buyer2, bitusd) );
    BOOST_CHECK_EQUAL( init_balance - 33000, get_balance(buyer2, core) );
@@ -649,8 +649,8 @@ BOOST_AUTO_TEST_CASE(target_cr_test_call_limit)
 
    // call and call2's CR is quite high, and debt amount is quite a lot, assume neither of them will be completely filled
    price match_price = sell_id(db).sell_price;
-   share_type call_to_cover = call_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
-   share_type call2_to_cover = call2_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
+   amount_type call_to_cover = call_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
+   amount_type call2_to_cover = call2_id(db).get_max_debt_to_cover(match_price,current_feed.settlement_price,1750);
    BOOST_CHECK_LT( call_to_cover.value, call_id(db).debt.value );
    BOOST_CHECK_LT( call2_to_cover.value, call2_id(db).debt.value );
    // even though call2 has a higher CR, since call's TCR is less than call2's TCR, so we expect call will cover less when called
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE(target_cr_test_call_limit)
    BOOST_CHECK( tmp_call != nullptr );
 
    // call will receive call_to_cover, pay 9*call_to_cover
-   share_type call_to_pay = call_to_cover * 9;
+   amount_type call_to_pay = call_to_cover * 9;
    BOOST_CHECK_EQUAL( 1000 - call_to_cover.value, call.debt.value );
    BOOST_CHECK_EQUAL( 15000 - call_to_pay.value, call.collateral.value );
    // new collateral ratio should be higher than mcr as well as tcr
@@ -682,7 +682,7 @@ BOOST_AUTO_TEST_CASE(target_cr_test_call_limit)
    // if the limit is big enough, call2 will receive call2_to_cover, pay 11*call2_to_cover
    // however it's not the case, so call2 will receive less
    call2_to_cover = 500 - call_to_cover;
-   share_type call2_to_pay = call2_to_cover * 9;
+   amount_type call2_to_pay = call2_to_cover * 9;
    BOOST_CHECK_EQUAL( 1000 - call2_to_cover.value, call2.debt.value );
    BOOST_CHECK_EQUAL( 15500 - call2_to_pay.value, call2.collateral.value );
    idump( (call2) );

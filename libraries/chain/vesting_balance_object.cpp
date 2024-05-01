@@ -4,17 +4,17 @@
 
 namespace graphene { namespace chain {
 
-inline bool sum_below_max_shares(const asset& a, const asset& b)
+inline bool sum_below_max_supply(const asset& a, const asset& b)
 {
-   assert(GRAPHENE_MAX_SHARE_SUPPLY + GRAPHENE_MAX_SHARE_SUPPLY > GRAPHENE_MAX_SHARE_SUPPLY);
-   return (a.amount              <= GRAPHENE_MAX_SHARE_SUPPLY)
-       && (            b.amount  <= GRAPHENE_MAX_SHARE_SUPPLY)
-       && ((a.amount + b.amount) <= GRAPHENE_MAX_SHARE_SUPPLY);
+   assert(GRAPHENE_CORE_ASSET_MAX_SUPPLY + GRAPHENE_CORE_ASSET_MAX_SUPPLY > GRAPHENE_CORE_ASSET_MAX_SUPPLY);
+   return (a.amount              <= GRAPHENE_CORE_ASSET_MAX_SUPPLY)
+       && (            b.amount  <= GRAPHENE_CORE_ASSET_MAX_SUPPLY)
+       && ((a.amount + b.amount) <= GRAPHENE_CORE_ASSET_MAX_SUPPLY);
 }
 
 asset linear_vesting_policy::get_allowed_withdraw( const vesting_policy_context& ctx )const
 {
-    share_type allowed_withdraw = 0;
+    amount_type allowed_withdraw = 0;
 
     if( ctx.now > begin_timestamp )
     {
@@ -23,7 +23,7 @@ asset linear_vesting_policy::get_allowed_withdraw( const vesting_policy_context&
 
         if( elapsed_seconds >= vesting_cliff_seconds )
         {
-            share_type total_vested = 0;
+            amount_type total_vested = 0;
             if( elapsed_seconds < vesting_duration_seconds )
             {
                 total_vested = static_cast<uint64_t>(fc::uint128_t( begin_balance.value ) * elapsed_seconds
@@ -35,7 +35,7 @@ asset linear_vesting_policy::get_allowed_withdraw( const vesting_policy_context&
             }
             assert( total_vested >= 0 );
 
-            const share_type withdrawn_already = begin_balance - ctx.balance.amount;
+            const amount_type withdrawn_already = begin_balance - ctx.balance.amount;
             assert( withdrawn_already >= 0 );
 
             allowed_withdraw = total_vested - withdrawn_already;
@@ -53,7 +53,7 @@ void linear_vesting_policy::on_deposit(const vesting_policy_context& ctx)
 bool linear_vesting_policy::is_deposit_allowed(const vesting_policy_context& ctx)const
 {
    return (ctx.amount.asset_id == ctx.balance.asset_id)
-      && sum_below_max_shares(ctx.amount, ctx.balance);
+      && sum_below_max_supply(ctx.amount, ctx.balance);
 }
 
 void linear_vesting_policy::on_withdraw(const vesting_policy_context& ctx)
@@ -123,7 +123,7 @@ void cdd_vesting_policy::on_withdraw(const vesting_policy_context& ctx)
 bool cdd_vesting_policy::is_deposit_allowed(const vesting_policy_context& ctx)const
 {
    return (ctx.amount.asset_id == ctx.balance.asset_id)
-         && sum_below_max_shares(ctx.amount, ctx.balance);
+         && sum_below_max_supply(ctx.amount, ctx.balance);
 }
 
 bool cdd_vesting_policy::is_deposit_vested_allowed(const vesting_policy_context& ctx) const
@@ -153,7 +153,7 @@ void instant_vesting_policy::on_deposit_vested(const vesting_policy_context&)
 bool instant_vesting_policy::is_deposit_allowed(const vesting_policy_context& ctx)const
 {
    return (ctx.amount.asset_id == ctx.balance.asset_id)
-      && sum_below_max_shares(ctx.amount, ctx.balance);
+      && sum_below_max_supply(ctx.amount, ctx.balance);
 }
 
 void instant_vesting_policy::on_withdraw(const vesting_policy_context& ctx)

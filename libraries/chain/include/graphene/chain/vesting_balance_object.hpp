@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
       /// Duration of the vesting period, in seconds. Must be greater than 0 and greater than vesting_cliff_seconds.
       uint32_t vesting_duration_seconds = 0;
       /// The total amount of asset to vest.
-      share_type begin_balance;
+      amount_type begin_balance;
 
       asset get_allowed_withdraw(const vesting_policy_context& ctx)const;
       bool is_deposit_allowed(const vesting_policy_context& ctx)const;

@@ -55,14 +55,14 @@ void amount_in_collateral_index::object_modified( const object& objct )
    object_inserted( objct );
 } FC_CAPTURE_AND_RETHROW( (objct) ); } // GCOVR_EXCL_LINE
 
-share_type amount_in_collateral_index::get_amount_in_collateral( const asset_id_type& asset )const
+amount_type amount_in_collateral_index::get_amount_in_collateral( const asset_id_type& asset )const
 { try {
    auto itr = in_collateral.find( asset );
    if( itr == in_collateral.end() ) return 0;
    return itr->second;
 } FC_CAPTURE_AND_RETHROW( (asset) ); } // GCOVR_EXCL_LINE
 
-share_type amount_in_collateral_index::get_backing_collateral( const asset_id_type& asset )const
+amount_type amount_in_collateral_index::get_backing_collateral( const asset_id_type& asset )const
 { try {
    auto itr = backing_collateral.find( asset );
    if( itr == backing_collateral.end() ) return 0;

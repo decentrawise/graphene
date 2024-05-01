@@ -21,7 +21,7 @@ namespace graphene { namespace chain {
       struct transfer_info {
          account_id_type from;
          account_id_type to;
-         share_type amount;
+         amount_type amount;
          asset_id_type asset_id;
       };
       struct condition_info {

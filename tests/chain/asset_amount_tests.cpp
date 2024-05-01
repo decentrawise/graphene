@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE( asset_to_from_string )
       negative_results[i] = "-" + positive_results[i];
    }
    graphene::chain::asset_object test_obj;
-   graphene::chain::share_type amt12345 = 12345;
+   graphene::chain::amount_type amt12345 = 12345;
    BOOST_TEST_MESSAGE( "Testing positive numbers" );
    for (int i = 0; i < 19; i++)
    {

@@ -85,11 +85,11 @@ namespace graphene { namespace chain {
       // the next two functions are helpers that allow template functions declared in this 
       // header to call db() without including database.hpp, which would
       // cause a circular dependency
-      share_type calculate_fee_for_operation(const operation& op) const;
+      amount_type calculate_fee_for_operation(const operation& op) const;
       void db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account);
 
       asset                            fee_from_account;
-      share_type                       core_fee_paid;
+      amount_type                       core_fee_paid;
       const account_object*            fee_paying_account = nullptr;
       const account_statistics_object* fee_paying_account_statistics = nullptr;
       const asset_object*              fee_asset          = nullptr;
@@ -129,7 +129,7 @@ namespace graphene { namespace chain {
          prepare_fee(op.fee_payer(), op.fee);
          if( !trx_state->skip_fee_schedule_check )
          {
-            share_type required_fee = calculate_fee_for_operation(op);
+            amount_type required_fee = calculate_fee_for_operation(op);
             GRAPHENE_ASSERT( core_fee_paid >= required_fee,
                        insufficient_fee,
                        "Insufficient Fee Paid",

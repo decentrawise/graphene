@@ -580,7 +580,7 @@ BOOST_FIXTURE_TEST_CASE( wallet_confidential_tx_test, wallet_fixture )
 
       // ** Block 2: Nathan will blind 100M CORE token:
       BOOST_TEST_MESSAGE("Blinding a large balance");
-      W.transfer_to_blind("nathan", GRAPHENE_SYMBOL, {{"nathan","100000000"}}, true);
+      W.transfer_to_blind("nathan", GRAPHENE_CORE_ASSET_SYMBOL, {{"nathan","100000000"}}, true);
       BOOST_CHECK( W.get_blind_balances("nathan")[0].amount == 10000000000000 );
       generate_block(app1); head_block++;
 
@@ -588,7 +588,7 @@ BOOST_FIXTURE_TEST_CASE( wallet_confidential_tx_test, wallet_fixture )
       // then confirm that balances are received, and then analyze the range
       // prooofs to make sure the mantissa length does not reveal approximate
       // balance
-      std::map<std::string, share_type> to_list = {{"alice",100000000000LL},
+      std::map<std::string, amount_type> to_list = {{"alice",100000000000LL},
                                                    {"bob",    1000000000LL}};
       vector<blind_confirmation> bconfs;
       asset_object core_asset = W.get_asset("1.3.0");

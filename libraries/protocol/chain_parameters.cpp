@@ -87,16 +87,16 @@ namespace graphene { namespace protocol {
       FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee + lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );
 
-      FC_ASSERT( block_interval >= GRAPHENE_MIN_BLOCK_INTERVAL );
-      FC_ASSERT( block_interval <= GRAPHENE_MAX_BLOCK_INTERVAL );
+      FC_ASSERT( block_interval >= GRAPHENE_LIMIT_MIN_BLOCK_INTERVAL );
+      FC_ASSERT( block_interval <= GRAPHENE_LIMIT_MAX_BLOCK_INTERVAL );
       FC_ASSERT( block_interval > 0 );
       FC_ASSERT( maintenance_interval > block_interval,
                  "Maintenance interval must be longer than block interval" );
       FC_ASSERT( maintenance_interval % block_interval == 0,
                  "Maintenance interval must be a multiple of block interval" );
-      FC_ASSERT( maximum_transaction_size >= GRAPHENE_MIN_TRANSACTION_SIZE_LIMIT,
+      FC_ASSERT( maximum_transaction_size >= GRAPHENE_LIMIT_MIN_TRANSACTION_SIZE,
                  "Transaction size limit is too low" );
-      FC_ASSERT( maximum_block_size >= GRAPHENE_MIN_BLOCK_SIZE_LIMIT,
+      FC_ASSERT( maximum_block_size >= GRAPHENE_LIMIT_MIN_BLOCK_SIZE,
                  "Block size limit is too low" );
       FC_ASSERT( maximum_time_until_expiration > block_interval,
                  "Maximum transaction expiration time must be greater than a block interval" );

@@ -22,14 +22,14 @@ namespace graphene { namespace protocol {
     */
    struct asset_options {
       /// The maximum supply of this asset which may exist at any given time. This can be as large as
-      /// GRAPHENE_MAX_SHARE_SUPPLY
-      share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+      /// GRAPHENE_CORE_ASSET_MAX_SUPPLY
+      amount_type max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
       /// When this asset is traded on the markets, this percentage of the total traded will be exacted and paid
       /// to the issuer. This is a fixed point value, representing hundredths of a percent, i.e. a value of 100
       /// in this field means a 1% fee is charged on market trades of this asset.
       uint16_t market_fee_percent = 0;
       /// Market fees calculated as @ref market_fee_percent of the traded volume are capped to this value
-      share_type max_market_fee = GRAPHENE_MAX_SHARE_SUPPLY;
+      amount_type max_market_fee = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
 
       /// The flags which the issuer has permission to update. See @ref asset_issuer_permission_flags
       uint16_t issuer_permissions = USER_ASSET_ISSUER_PERMISSION_MASK;
@@ -75,19 +75,19 @@ namespace graphene { namespace protocol {
     */
    struct backed_asset_options {
       /// Time before a price feed expires
-      uint32_t feed_lifetime_sec = GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME;
+      uint32_t feed_lifetime_sec = GRAPHENE_ASSET_PRICE_FEED_LIFETIME;
       /// Minimum number of unexpired feeds required to extract a median feed from
       uint8_t minimum_feeds = 1;
       /// This is the delay between the time a long requests settlement and the chain evaluates the settlement
-      uint32_t force_settlement_delay_sec = GRAPHENE_DEFAULT_FORCE_SETTLEMENT_DELAY;
+      uint32_t force_settlement_delay_sec = GRAPHENE_ASSET_FORCE_SETTLEMENT_DELAY;
       /// This is the percent to adjust the feed price in the short's favor in the event of a forced settlement
-      uint16_t force_settlement_offset_percent = GRAPHENE_DEFAULT_FORCE_SETTLEMENT_OFFSET;
+      uint16_t force_settlement_offset_percent = GRAPHENE_ASSET_FORCE_SETTLEMENT_OFFSET;
       /// Force settlement volume can be limited such that only a certain percentage of the total existing supply
       /// of the asset may be force-settled within any given chain maintenance interval. This field stores the
       /// percentage of the current supply which may be force settled within the current maintenance interval. If
       /// force settlements come due in an interval in which the maximum volume has already been settled, the new
       /// settlements will be enqueued and processed at the beginning of the next maintenance interval.
-      uint16_t maximum_force_settlement_volume = GRAPHENE_DEFAULT_FORCE_SETTLEMENT_MAX_VOLUME;
+      uint16_t maximum_force_settlement_volume = GRAPHENE_ASSET_FORCE_SETTLEMENT_MAX_VOLUME;
       /// This speicifies which asset type is used to collateralize short sales
       /// This field may only be updated if the current supply of the asset is zero.
       asset_id_type short_backing_asset;
@@ -106,9 +106,9 @@ namespace graphene { namespace protocol {
    struct asset_create_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t symbol3        = 500000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t symbol4        = 300000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t long_symbol    = 5000   * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t symbol3        = 500000 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint64_t symbol4        = 300000 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint64_t long_symbol    = 5000   * GRAPHENE_CORE_ASSET_PRECISION;
          uint32_t price_per_kbyte = 10; /// only required for large memos.
       };
 
@@ -135,7 +135,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee( const fee_parameters_type& k )const;
+      amount_type      calculate_fee( const fee_parameters_type& k )const;
    };
 
    /**
@@ -150,7 +150,7 @@ namespace graphene { namespace protocol {
     */
    struct asset_global_settle_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset           fee;
       account_id_type issuer; ///< must equal @ref asset_to_settle->issuer
@@ -185,7 +185,7 @@ namespace graphene { namespace protocol {
           * Note that in the event of a black swan or prediction market close out
           * everyone will have to pay this fee.
           */
-         uint64_t fee      = 100 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee      = 100 * GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset           fee;
@@ -225,7 +225,7 @@ namespace graphene { namespace protocol {
        */
       void validate() const { FC_ASSERT(!"Virtual operation"); }
 
-      share_type calculate_fee(const fee_parameters_type& params)const
+      amount_type calculate_fee(const fee_parameters_type& params)const
       { return 0; }
    };
 
@@ -234,12 +234,12 @@ namespace graphene { namespace protocol {
     */
    struct asset_fund_fee_pool_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee =  GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset           fee; ///< core asset
       account_id_type from_account;
       asset_id_type   asset_id;
-      share_type      amount; ///< core asset
+      amount_type      amount; ///< core asset
       
       extensions_type extensions;
 
@@ -268,7 +268,7 @@ namespace graphene { namespace protocol {
    struct asset_update_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee            = 500 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee            = 500 * GRAPHENE_CORE_ASSET_PRECISION;
          uint32_t price_per_kbyte = 10;
       };
 
@@ -283,7 +283,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
    /**
@@ -301,7 +301,7 @@ namespace graphene { namespace protocol {
     */
    struct asset_update_backed_asset_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset           fee;
       account_id_type issuer;
@@ -332,7 +332,7 @@ namespace graphene { namespace protocol {
     */
    struct asset_update_feed_producers_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset           fee;
       account_id_type issuer;
@@ -363,7 +363,7 @@ namespace graphene { namespace protocol {
     */
    struct asset_publish_feed_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset                  fee; ///< paid for by publisher
       account_id_type        publisher;
@@ -382,8 +382,8 @@ namespace graphene { namespace protocol {
    struct asset_issue_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
-         uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 20 * GRAPHENE_CORE_ASSET_PRECISION; 
+         uint32_t price_per_kbyte = GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset            fee;
@@ -397,7 +397,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
    /**
@@ -408,7 +408,7 @@ namespace graphene { namespace protocol {
     */
    struct asset_reserve_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset             fee;
       account_id_type   payer;
@@ -426,7 +426,7 @@ namespace graphene { namespace protocol {
    struct asset_claim_fees_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 20 * GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset           fee;
@@ -444,7 +444,7 @@ namespace graphene { namespace protocol {
     * @ingroup operations
     *
     * An issuer has general administrative power of an asset and in some cases
-    * also its shares issued to individuals. Thus, changing the issuer today
+    * also its tokens issued to individuals. Thus, changing the issuer today
     * requires the use of a separate operation that needs to be signed by the
     * owner authority.
     *
@@ -452,7 +452,7 @@ namespace graphene { namespace protocol {
    struct asset_update_issuer_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee            = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee            = 20 * GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset           fee;
@@ -489,7 +489,7 @@ namespace graphene { namespace protocol {
    struct asset_claim_pool_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 20 * GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset           fee;

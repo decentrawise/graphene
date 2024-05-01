@@ -32,12 +32,12 @@ void transfer_to_blind_operation::validate()const
       for( auto out : outputs )
       {
          auto info = fc::ecc::range_get_info( out.range_proof );
-         FC_ASSERT( info.max_value <= GRAPHENE_MAX_SHARE_SUPPLY );
+         FC_ASSERT( info.max_value <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
       }
    }
 }
 
-share_type transfer_to_blind_operation::calculate_fee( const fee_parameters_type& k )const
+amount_type transfer_to_blind_operation::calculate_fee( const fee_parameters_type& k )const
 {
     return k.fee + outputs.size() * k.price_per_output;
 }
@@ -100,13 +100,13 @@ void blind_transfer_operation::validate()const
       for( auto out : outputs )
       {
          auto info = fc::ecc::range_get_info( out.range_proof );
-         FC_ASSERT( info.max_value <= GRAPHENE_MAX_SHARE_SUPPLY );
+         FC_ASSERT( info.max_value <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
       }
    }
    FC_ASSERT( fc::ecc::verify_sum( in, out, net_public ), "", ("net_public", net_public) );
 } FC_CAPTURE_AND_RETHROW( (*this) ) } // GCOVR_EXCL_LINE
 
-share_type blind_transfer_operation::calculate_fee( const fee_parameters_type& k )const
+amount_type blind_transfer_operation::calculate_fee( const fee_parameters_type& k )const
 {
     return k.fee + outputs.size() * k.price_per_output;
 }

@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE( call_order_object_test )
    BOOST_REQUIRE_EQUAL( 1000, GRAPHENE_COLLATERAL_RATIO_DENOM );
 
    // function to create a new call_order_object
-   auto new_call_obj = []( const share_type c, const share_type d, int16_t mcr, optional<uint16_t> tcr = {} ) {
+   auto new_call_obj = []( const amount_type c, const amount_type d, int16_t mcr, optional<uint16_t> tcr = {} ) {
       call_order_object o;
       o.collateral = c;
       o.debt = d;
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE( call_order_object_test )
 
    // function to validate result of call_order_object::get_max_debt_to_cover(...)
    auto validate_result = []( const call_order_object& o, const price& match_price, const price& feed_price,
-                              int16_t mcr, const share_type result, bool print_log = true ) {
+                              int16_t mcr, const amount_type result, bool print_log = true ) {
       if( result == 0 )
          return 1;
 
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE( call_order_object_test )
    price mp, fp;
    call_order_object obj;
    int64_t expected;
-   share_type result;
+   amount_type result;
 
    mp = price( asset(1100), asset(1000, asset_id_type(1)) ); // match_price
    fp = price( asset(1000), asset(1000, asset_id_type(1)) ); // feed_price
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE( call_order_object_test )
 
    // random tests
    std::mt19937_64 gen( time(NULL) );
-   std::uniform_int_distribution<int64_t> amt_uid(1, GRAPHENE_MAX_SHARE_SUPPLY);
+   std::uniform_int_distribution<int64_t> amt_uid(1, GRAPHENE_CORE_ASSET_MAX_SUPPLY);
    std::uniform_int_distribution<int64_t> amt_uid2(1, 1000*1000*1000);
    std::uniform_int_distribution<int64_t> amt_uid3(1, 1000*1000);
    std::uniform_int_distribution<int64_t> amt_uid4(1, 300);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE( call_order_object_test )
       }
       catch( fc::assert_exception& e )
       {
-         BOOST_CHECK( e.to_detail_string().find( "result <= GRAPHENE_MAX_SHARE_SUPPLY" ) != string::npos );
+         BOOST_CHECK( e.to_detail_string().find( "result <= GRAPHENE_CORE_ASSET_MAX_SUPPLY" ) != string::npos );
          ++count[0];
       }
    }

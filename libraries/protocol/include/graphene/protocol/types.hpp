@@ -183,7 +183,7 @@ namespace graphene { namespace protocol {
    using transaction_id_type = fc::ripemd160;
    using digest_type = fc::sha256;
    using signature_type = fc::ecc::compact_signature;
-   using share_type = safe<int64_t>;
+   using amount_type = safe<int64_t>;
    using weight_type = uint16_t;
 
    struct public_key_type {
@@ -260,7 +260,7 @@ GRAPHENE_DEFINE_IDS(protocol, protocol_ids, /*protocol objects are not prefixed*
 FC_REFLECT(graphene::protocol::public_key_type, (key_data))
 FC_REFLECT(graphene::protocol::public_key_type::binary_key, (data)(check))
 
-FC_REFLECT_TYPENAME(graphene::protocol::share_type)
+FC_REFLECT_TYPENAME(graphene::protocol::amount_type)
 FC_REFLECT(graphene::protocol::void_t,)
 
 FC_REFLECT_ENUM(graphene::protocol::asset_issuer_permission_flags,

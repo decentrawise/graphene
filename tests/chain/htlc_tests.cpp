@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( htlc_expires )
 try {
    ACTORS((alice)(bob));
 
-   int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
+   int64_t init_balance(100 * GRAPHENE_CORE_ASSET_PRECISION);
 
    transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
@@ -69,7 +69,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
       BOOST_TEST_MESSAGE("Alice (who has 100 coins, is transferring 3 coins to Bob");
-      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 60;
       create_operation.preimage_hash = hash_it<fc::sha256>( pre_image );
@@ -86,7 +86,7 @@ try {
    }
 
    // verify funds on hold... 100 - 3 = 97, minus the 4 coin fee = 93
-   BOOST_CHECK_EQUAL( get_balance(alice_id, graphene::chain::asset_id_type()), 93 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   BOOST_CHECK_EQUAL( get_balance(alice_id, graphene::chain::asset_id_type()), 93 * GRAPHENE_CORE_ASSET_PRECISION );
 
    // make sure Bob (or anyone) can see the details of the transaction
    graphene::app::database_api db_api(db);
@@ -146,7 +146,7 @@ try {
    // let it expire (wait for timeout)
    generate_blocks( db.head_block_time() + fc::seconds(120) );
    // verify funds return (minus the fees)
-   BOOST_CHECK_EQUAL( get_balance(alice_id, graphene::chain::asset_id_type()), 92 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   BOOST_CHECK_EQUAL( get_balance(alice_id, graphene::chain::asset_id_type()), 92 * GRAPHENE_CORE_ASSET_PRECISION );
    // verify Bob cannot execute the contract after the fact
 } FC_LOG_AND_RETHROW()
 }
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE( htlc_fulfilled )
 try {
    ACTORS((alice)(bob)(joker));
 
-   int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
+   int64_t init_balance(100 * GRAPHENE_CORE_ASSET_PRECISION);
 
    transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
    transfer( council_account, bob_id, graphene::chain::asset(init_balance) );
@@ -176,7 +176,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
 
-      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 86400;
       create_operation.preimage_hash = hash_it<fc::sha1>( pre_image );
@@ -192,7 +192,7 @@ try {
    }
 
    // make sure Alice's money gets put on hold (100 - 20 - 4(fee) )
-   BOOST_CHECK_EQUAL( get_balance( alice_id, graphene::chain::asset_id_type()), 76 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   BOOST_CHECK_EQUAL( get_balance( alice_id, graphene::chain::asset_id_type()), 76 * GRAPHENE_CORE_ASSET_PRECISION );
 
    // extend the timeout so that Bob has more time
    {
@@ -210,7 +210,7 @@ try {
    }
 
    // make sure Alice's money is still on hold, and account for extra fee
-   BOOST_CHECK_EQUAL( get_balance( alice_id, graphene::chain::asset_id_type()), 72 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   BOOST_CHECK_EQUAL( get_balance( alice_id, graphene::chain::asset_id_type()), 72 * GRAPHENE_CORE_ASSET_PRECISION );
 
    // grab number of history objects to make sure everyone gets notified
    size_t alice_num_history = get_operation_history(alice_id).size();
@@ -231,9 +231,9 @@ try {
       trx.clear();
    }
    // verify funds end up in Bob's account (100 + 20 )
-   BOOST_CHECK_EQUAL( get_balance(bob_id,   graphene::chain::asset_id_type()), 120 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   BOOST_CHECK_EQUAL( get_balance(bob_id,   graphene::chain::asset_id_type()), 120 * GRAPHENE_CORE_ASSET_PRECISION );
    // verify funds remain out of Alice's acount ( 100 - 20 - 4 )
-   BOOST_CHECK_EQUAL( get_balance(alice_id, graphene::chain::asset_id_type()), 72 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   BOOST_CHECK_EQUAL( get_balance(alice_id, graphene::chain::asset_id_type()), 72 * GRAPHENE_CORE_ASSET_PRECISION );
    // verify all three get notified
    BOOST_CHECK_EQUAL( get_operation_history(alice_id).size(), alice_num_history + 1);
    BOOST_CHECK_EQUAL( get_operation_history(bob_id).size(), bob_num_history + 1);
@@ -256,7 +256,7 @@ try {
 
    ACTORS((alice)(bob));
 
-   int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION );
+   int64_t init_balance(100 * GRAPHENE_CORE_ASSET_PRECISION );
 
    transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
@@ -271,7 +271,7 @@ try {
    // Bob attempts to put a contract on the blockchain using Alice's funds
    {
       graphene::chain::htlc_create_operation create_operation;
-      create_operation.amount = graphene::chain::asset( 1 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 1 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 3;
       create_operation.preimage_hash = hash_it<fc::ripemd160>( pre_image );
@@ -286,7 +286,7 @@ try {
    // now try the same but with Alice's signature (should work)
    {
       graphene::chain::htlc_create_operation create_operation;
-      create_operation.amount = graphene::chain::asset( 1 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 1 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 3;
       create_operation.preimage_hash = hash_it<fc::ripemd160>( pre_image );
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE( htlc_parameters_test )
       const graphene::chain::fee_schedule& current_fee_schedule = *(db.get_global_properties().parameters.current_fees);
       const htlc_create_operation::fee_parameters_type& htlc_fee 
             = current_fee_schedule.get<htlc_create_operation>();
-      BOOST_CHECK_EQUAL(htlc_fee.fee, 2 * GRAPHENE_BLOCKCHAIN_PRECISION);
+      BOOST_CHECK_EQUAL(htlc_fee.fee, 2 * GRAPHENE_CORE_ASSET_PRECISION);
       
 } FC_LOG_AND_RETHROW() }
 
@@ -464,7 +464,7 @@ try {
    }
 
 
-   int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
+   int64_t init_balance(100 * GRAPHENE_CORE_ASSET_PRECISION);
    fund( alice, graphene::chain::asset(init_balance) );
    fund( bob, graphene::chain::asset(init_balance) );
 
@@ -494,7 +494,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
 
-      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION, ua_id );
+      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_CORE_ASSET_PRECISION, ua_id );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 86400;
       create_operation.preimage_hash = hash_it<fc::sha1>( pre_image );
@@ -528,7 +528,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
 
-      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_BLOCKCHAIN_PRECISION, ua_id );
+      create_operation.amount = graphene::chain::asset( 20 * GRAPHENE_CORE_ASSET_PRECISION, ua_id );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 86400;
       create_operation.preimage_hash = hash_it<fc::sha1>( pre_image );
@@ -580,7 +580,7 @@ try {
 
    ACTORS((alice)(bob)(carl)(dan));
 
-   int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
+   int64_t init_balance(100 * GRAPHENE_CORE_ASSET_PRECISION);
 
    transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
@@ -603,7 +603,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
       BOOST_TEST_MESSAGE("Alice, who has 100 coins, is transferring 3 coins to Bob");
-      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = bob_id;
       create_operation.claim_period_seconds = 60;
       create_operation.preimage_hash = hash_it<fc::hash160>( pre_image );
@@ -626,7 +626,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
       BOOST_TEST_MESSAGE("Alice, who has 100 coins, is transferring 3 coins to Carl");
-      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = carl_id;
       create_operation.claim_period_seconds = 60;
       create_operation.preimage_hash = hash_it<fc::sha256>( pre_image );
@@ -649,7 +649,7 @@ try {
    {
       graphene::chain::htlc_create_operation create_operation;
       BOOST_TEST_MESSAGE("Alice, who has 100 coins, is transferring 3 coins to Dan");
-      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_BLOCKCHAIN_PRECISION );
+      create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_CORE_ASSET_PRECISION );
       create_operation.to = dan_id;
       create_operation.claim_period_seconds = 60;
       create_operation.preimage_hash = hash_it<fc::sha256>( pre_image );

@@ -95,7 +95,7 @@ struct reward_database_fixture : database_fixture
        return asset( x*core_precision );
    };
 
-   const share_type core_precision = asset::scaled_precision( asset_id_type()(db).precision );
+   const amount_type core_precision = asset::scaled_precision( asset_id_type()(db).precision );
 
    void create_vesting_balance_object(const account_id_type& account_id, vesting_balance_type balance_type )
    {
@@ -234,8 +234,8 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       update_asset(izzy_id, izzy_private_key, izzycoin_id, izzycoin_reward_percent);
       update_asset(jill_id, jill_private_key, jillcoin_id, jillcoin_reward_percent);
 
-      const share_type izzy_prec = asset::scaled_precision( asset_id_type(izzycoin_id)(db).precision );
-      const share_type jill_prec = asset::scaled_precision( asset_id_type(jillcoin_id)(db).precision );
+      const amount_type izzy_prec = asset::scaled_precision( asset_id_type(izzycoin_id)(db).precision );
+      const amount_type jill_prec = asset::scaled_precision( asset_id_type(jillcoin_id)(db).precision );
 
       auto _izzy = [&]( int64_t x ) -> asset
       {   return asset( x*izzy_prec, izzycoin_id );   };
@@ -271,14 +271,14 @@ BOOST_AUTO_TEST_CASE(asset_rewards_test)
       // 1000 Izzys and 1500 Jills are matched, so the fees should be
       //   100 Izzy (10%) and 300 Jill (20%).
       // Bob's and Alice's referrers should get rewards
-      share_type bob_refereer_reward = get_market_fee_reward( bob.referrer, izzycoin_id );
-      share_type alice_refereer_reward = get_market_fee_reward( alice.referrer, jillcoin_id );
+      amount_type bob_refereer_reward = get_market_fee_reward( bob.referrer, izzycoin_id );
+      amount_type alice_refereer_reward = get_market_fee_reward( alice.referrer, jillcoin_id );
 
       // Bob's and Alice's registrars should get rewards
-      share_type bob_registrar_reward = get_market_fee_reward( bob.registrar, izzycoin_id );
-      share_type alice_registrar_reward = get_market_fee_reward( alice.registrar, jillcoin_id );
+      amount_type bob_registrar_reward = get_market_fee_reward( bob.registrar, izzycoin_id );
+      amount_type alice_registrar_reward = get_market_fee_reward( alice.registrar, jillcoin_id );
 
-      auto calculate_percent = [](const share_type& value, uint16_t percent)
+      auto calculate_percent = [](const amount_type& value, uint16_t percent)
       {
          auto a(value.value);
          a *= percent;
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(create_asset_via_proposal_test)
       create_op.common_options.max_supply = 0;
       create_op.precision = 2;
       create_op.common_options.core_exchange_rate = core_exchange_rate;
-      create_op.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+      create_op.common_options.max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
       create_op.common_options.flags = charge_market_fee;
 
       additional_asset_options_t options;
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(white_list_asset_rewards_test)
       //   100 Izzy (10%) and 300 Jill (20%).
 
       // Only Bob's registrar should get rewards
-      share_type bob_registrar_reward = get_market_fee_reward( bob.registrar, izzycoin_id );
+      amount_type bob_registrar_reward = get_market_fee_reward( bob.registrar, izzycoin_id );
       BOOST_CHECK_GT( bob_registrar_reward, 0 );
       BOOST_CHECK_EQUAL( get_market_fee_reward( bob.referrer, izzycoin_id ), 0 );
       BOOST_CHECK_EQUAL( get_market_fee_reward( alice.registrar, jillcoin_id ), 0 );

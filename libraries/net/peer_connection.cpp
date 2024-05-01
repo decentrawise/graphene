@@ -529,7 +529,7 @@ namespace graphene { namespace net
       // to give us some wiggle room)
       return inventory_peer_advertised_to_us.size() >
         GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES * GRAPHENE_NET_MAX_TRX_PER_SECOND * 60 +
-        (GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES + 1) * 60 / GRAPHENE_MIN_BLOCK_INTERVAL;
+        (GRAPHENE_NET_MAX_INVENTORY_SIZE_IN_MINUTES + 1) * 60 / GRAPHENE_LIMIT_MIN_BLOCK_INTERVAL;
     }
 
     fc::optional<fc::ip::endpoint> peer_connection::get_endpoint_for_connecting() const

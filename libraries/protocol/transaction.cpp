@@ -214,7 +214,7 @@ namespace graphene { namespace protocol {
          sign_state( const flat_set<public_key_type>& sigs,
                      const std::function<const authority*(account_id_type)>& active,
                      const std::function<const authority*(account_id_type)>& owner,
-                     uint32_t max_recursion_depth = GRAPHENE_MAX_SIG_CHECK_DEPTH,
+                     uint32_t max_recursion_depth = GRAPHENE_DEFAULT_SIG_CHECK_MAX_DEPTH,
                      const flat_set<public_key_type>& keys = empty_keyset )
          :  get_active(active),
             get_owner(owner),

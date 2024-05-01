@@ -14,7 +14,7 @@ namespace graphene { namespace protocol {
     */
    struct validator_create_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 5000 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 5000 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset             fee;
       /// The account which owns the validator. This account pays the fee for this operation.
@@ -34,7 +34,7 @@ namespace graphene { namespace protocol {
    {
       struct fee_parameters_type
       {
-         share_type fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         amount_type fee = 20 * GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset             fee;

@@ -80,7 +80,7 @@ namespace graphene { namespace protocol {
    {
       virtual ~base_operation() = default;
       template<typename T>
-      share_type calculate_fee(const T& params)const
+      amount_type calculate_fee(const T& params)const
       {
          return params.fee;
       }

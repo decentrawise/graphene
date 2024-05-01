@@ -213,7 +213,7 @@ namespace graphene { namespace wallet { namespace detail {
    } FC_CAPTURE_AND_RETHROW( (validator_name)(url)(block_producer_key)(broadcast) ) }
 
    signed_transaction wallet_api_impl::create_worker( string owner_account, time_point_sec work_begin_date,
-         time_point_sec work_end_date, share_type daily_pay, string name, string url,
+         time_point_sec work_end_date, amount_type daily_pay, string name, string url,
          variant worker_settings, bool broadcast)
    {
       worker_initializer init;

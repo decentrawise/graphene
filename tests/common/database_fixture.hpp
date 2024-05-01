@@ -288,7 +288,7 @@ struct database_fixture_base {
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = 2,
                                        asset_id_type backing_asset = {},
-                                       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY,
+                                       amount_type max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY,
                                        optional<uint16_t> initial_cr = {},
                                        optional<uint16_t> margin_call_fee_ratio = {} );
    const asset_object& create_backed_asset(const string& name,
@@ -297,14 +297,14 @@ struct database_fixture_base {
                                        uint16_t flags = charge_market_fee,
                                        uint16_t precision = 2,
                                        asset_id_type backing_asset = {},
-                                       share_type max_supply = GRAPHENE_MAX_SHARE_SUPPLY,
+                                       amount_type max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY,
                                        optional<uint16_t> initial_cr = {},
                                        optional<uint16_t> margin_call_fee_ratio = {} );
    const asset_object& create_prediction_market(const string& name,
                                        account_id_type issuer = GRAPHENE_PRODUCERS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
                                        uint16_t flags = charge_market_fee,
-                                       uint16_t precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS,
+                                       uint16_t precision = GRAPHENE_CORE_ASSET_PRECISION_DIGITS,
                                        asset_id_type backing_asset = {});
    const asset_object& create_user_asset( const string& name );
    const asset_object& create_user_asset( const string& name,
@@ -346,7 +346,7 @@ struct database_fixture_base {
    const validator_object& create_validator(const account_object& owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"),
                                         uint32_t skip_flags = ~0);
-   const worker_object& create_worker(account_id_type owner, const share_type daily_pay = 1000, const fc::microseconds& duration = fc::days(2));
+   const worker_object& create_worker(account_id_type owner, const amount_type daily_pay = 1000, const fc::microseconds& duration = fc::days(2));
    template<typename T>
    proposal_create_operation make_proposal_create_op( const T& op, account_id_type proposer = GRAPHENE_TEMP_ACCOUNT,
                                                       uint32_t timeout = 300, optional<uint32_t> review_period = {} ) const
@@ -390,7 +390,7 @@ struct database_fixture_base {
    asset cancel_limit_order( const limit_order_object& order );
    void transfer( account_id_type from, account_id_type to, const asset& amount, const asset& fee = asset() );
    void transfer( const account_object& from, const account_object& to, const asset& amount, const asset& fee = asset() );
-   void fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount );
+   void fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const amount_type amount );
    /**
     * NOTE: This modifies the database directly. You will probably have to call this each time you
     * finish creating a block

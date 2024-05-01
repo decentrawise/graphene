@@ -36,11 +36,11 @@ namespace graphene { namespace chain {
                                                             implementation_ids, impl_asset_dynamic_data_object_type>
    {
       public:
-         /// The number of shares currently in existence
-         share_type current_supply;
-         share_type confidential_supply; ///< total asset held in confidential balances
-         share_type accumulated_fees; ///< fees accumulate to be paid out over time
-         share_type fee_pool;         ///< in core asset
+         /// The number of tokens currently in existence
+         amount_type current_supply;
+         amount_type confidential_supply; ///< total asset held in confidential balances
+         amount_type accumulated_fees; ///< fees accumulate to be paid out over time
+         amount_type fee_pool;         ///< in core asset
    };
 
    /**
@@ -72,17 +72,17 @@ namespace graphene { namespace chain {
          bool allow_confidential()const { return !(options.flags & asset_issuer_permission_flags::disable_confidential); }
 
          /// Helper function to get an asset object with the given amount in this asset's type
-         asset amount(share_type a) const { return asset(a, asset_id_type(id)); }
+         asset amount(amount_type a) const { return asset(a, asset_id_type(id)); }
          /// Convert a string amount (i.e. "123.45") to an asset object with this asset's type
          /// The string may have a decimal and/or a negative sign.
          asset amount_from_string(string amount_string)const;
          /// Convert an asset to a textual representation, i.e. "123.45"
-         string amount_to_string(share_type amount)const;
+         string amount_to_string(amount_type amount)const;
          /// Convert an asset to a textual representation, i.e. "123.45"
          string amount_to_string(const asset& amount)const
          { FC_ASSERT(amount.asset_id == get_id()); return amount_to_string(amount.amount); }
          /// Convert an asset to a textual representation with symbol, i.e. "123.45 USD"
-         string amount_to_pretty_string(share_type amount)const
+         string amount_to_pretty_string(amount_type amount)const
          { return amount_to_string(amount) + " " + symbol; }
          /// Convert an asset to a textual representation with symbol, i.e. "123.45 USD"
          string amount_to_pretty_string(const asset &amount)const
@@ -137,7 +137,7 @@ namespace graphene { namespace chain {
           *  The total amount of an asset that is reserved for future issuance. 
           */
          template<class DB>
-         share_type reserved( const DB& db )const
+         amount_type reserved( const DB& db )const
          { return options.max_supply - dynamic_data(db).current_supply; }
    };
 
@@ -174,9 +174,9 @@ namespace graphene { namespace chain {
          bool is_prediction_market = false;
 
          /// This is the volume of this asset which has been force-settled this maintenance interval
-         share_type force_settled_volume;
-         /// Calculate the maximum force settlement volume per maintenance interval, given the current share supply
-         share_type max_force_settlement_volume(share_type current_supply)const;
+         amount_type force_settled_volume;
+         /// Calculate the maximum force settlement volume per maintenance interval, given the current supply
+         amount_type max_force_settlement_volume(amount_type current_supply)const;
 
          /** return true if there has been a black swan, false otherwise */
          bool has_settlement()const { return !settlement_price.is_null(); }
@@ -191,7 +191,7 @@ namespace graphene { namespace chain {
          /// Price at which force settlements of a black swanned asset will occur
          price settlement_price;
          /// Amount of collateral which is available for force settlement
-         share_type settlement_fund;
+         amount_type settlement_fund;
          ///@}
 
          /// Track whether core_exchange_rate in corresponding asset_object has updated

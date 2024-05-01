@@ -24,10 +24,10 @@ void database::debug_dump()
    const auto& bids = db.get_index_type<collateral_bid_index>().indices();
    const auto& settle_index = db.get_index_type<force_settlement_index>().indices();
    const auto& htlcs = db.get_index_type<htlc_index>().indices();
-   map<asset_id_type,share_type> total_balances;
-   map<asset_id_type,share_type> total_debts;
-   share_type core_in_orders;
-   share_type reported_core_in_orders;
+   map<asset_id_type,amount_type> total_balances;
+   map<asset_id_type,amount_type> total_debts;
+   amount_type core_in_orders;
+   amount_type reported_core_in_orders;
 
    for( const account_balance_object& a : balance_index )
    {

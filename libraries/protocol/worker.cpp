@@ -9,9 +9,9 @@ namespace graphene { namespace protocol {
       FC_ASSERT(fee.amount >= 0);
       FC_ASSERT(work_end_date > work_begin_date);
       FC_ASSERT(daily_pay > 0);
-      FC_ASSERT(daily_pay < GRAPHENE_MAX_SHARE_SUPPLY);
-      FC_ASSERT(name.size() < GRAPHENE_MAX_WORKER_NAME_LENGTH );
-      FC_ASSERT(url.size() < GRAPHENE_MAX_URL_LENGTH );
+      FC_ASSERT(daily_pay < GRAPHENE_CORE_ASSET_MAX_SUPPLY);
+      FC_ASSERT(name.size() < GRAPHENE_WORKER_NAME_MAX_LENGTH );
+      FC_ASSERT(url.size() < GRAPHENE_URL_MAX_LENGTH );
    }
 
 } }

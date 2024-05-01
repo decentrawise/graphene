@@ -15,13 +15,13 @@ namespace graphene { namespace protocol {
 bool is_valid_symbol( const string& symbol )
 {
     static const std::locale& loc = std::locale::classic();
-    if( symbol.size() < GRAPHENE_MIN_ASSET_SYMBOL_LENGTH )
+    if( symbol.size() < GRAPHENE_ASSET_SYMBOL_MIN_LENGTH )
         return false;
 
     if( symbol.substr(0,3) == "BIT" ) 
         return false;
 
-    if( symbol.size() > GRAPHENE_MAX_ASSET_SYMBOL_LENGTH )
+    if( symbol.size() > GRAPHENE_ASSET_SYMBOL_MAX_LENGTH )
         return false;
 
     if( !isalpha( symbol.front(), loc ) )
@@ -51,12 +51,12 @@ bool is_valid_symbol( const string& symbol )
     return true;
 }
 
-share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)const
+amount_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.price_per_kbyte );
 }
 
-share_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param)const
+amount_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param)const
 {
    auto core_fee_required = param.long_symbol; 
 
@@ -109,7 +109,7 @@ void asset_update_issuer_operation::validate()const
    FC_ASSERT( issuer != new_issuer );
 }
 
-share_type asset_update_operation::calculate_fee(const asset_update_operation::fee_parameters_type& k)const
+amount_type asset_update_operation::calculate_fee(const asset_update_operation::fee_parameters_type& k)const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
@@ -138,14 +138,14 @@ void asset_publish_feed_operation::validate()const
 void asset_reserve_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( amount_to_reserve.amount.value <= GRAPHENE_MAX_SHARE_SUPPLY );
+   FC_ASSERT( amount_to_reserve.amount.value <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
    FC_ASSERT( amount_to_reserve.amount.value > 0 );
 }
 
 void asset_issue_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( asset_to_issue.amount.value <= GRAPHENE_MAX_SHARE_SUPPLY );
+   FC_ASSERT( asset_to_issue.amount.value <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
    FC_ASSERT( asset_to_issue.amount.value > 0 );
    FC_ASSERT( asset_to_issue.asset_id != asset_id_type(0) );
 }
@@ -190,9 +190,9 @@ void backed_asset_options::validate() const
 void asset_options::validate()const
 {
    FC_ASSERT( max_supply > 0 );
-   FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
+   FC_ASSERT( max_supply <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
    FC_ASSERT( market_fee_percent <= GRAPHENE_100_PERCENT );
-   FC_ASSERT( max_market_fee >= 0 && max_market_fee <= GRAPHENE_MAX_SHARE_SUPPLY );
+   FC_ASSERT( max_market_fee >= 0 && max_market_fee <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
    // There must be no high bits in permissions whose meaning is not known.
    FC_ASSERT( !(issuer_permissions & ~ASSET_ISSUER_PERMISSION_MASK) );
    // The global_settle flag may never be set (this is a permission only)

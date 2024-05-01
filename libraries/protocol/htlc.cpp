@@ -11,11 +11,11 @@ namespace graphene { namespace protocol {
       FC_ASSERT( amount.amount > 0, "HTLC amount should be greater than zero" );
    }
 
-   share_type htlc_create_operation::calculate_fee(const fee_parameters_type &fee_params) const
+   amount_type htlc_create_operation::calculate_fee(const fee_parameters_type &fee_params) const
    {
       uint64_t days = (claim_period_seconds + SECONDS_PER_DAY - 1) / SECONDS_PER_DAY;
-      share_type total_fee = fee_params.fee;
-      total_fee += share_type(fee_params.fee_per_day) * days;
+      amount_type total_fee = fee_params.fee;
+      total_fee += amount_type(fee_params.fee_per_day) * days;
       if (extensions.value.memo.valid())
          total_fee += calculate_data_fee(fc::raw::pack_size(extensions.value.memo), fee_params.price_per_kbyte);
       return total_fee;
@@ -25,7 +25,7 @@ namespace graphene { namespace protocol {
       FC_ASSERT( fee.amount >= 0, "Fee amount should not be negative" );
    }
 
-   share_type htlc_redeem_operation::calculate_fee( const fee_parameters_type& fee_params )const
+   amount_type htlc_redeem_operation::calculate_fee( const fee_parameters_type& fee_params )const
    {
       uint64_t kb = ( preimage.size() + 1023 ) / 1024;
       uint64_t product = kb * fee_params.price_per_kbyte;
@@ -37,7 +37,7 @@ namespace graphene { namespace protocol {
       FC_ASSERT( fee.amount >= 0 , "Fee amount should not be negative");
    }
 
-   share_type htlc_extend_operation::calculate_fee( const fee_parameters_type& fee_params )const
+   amount_type htlc_extend_operation::calculate_fee( const fee_parameters_type& fee_params )const
    {
       uint32_t days = ( seconds_to_add + SECONDS_PER_DAY - 1 ) / SECONDS_PER_DAY;
       uint64_t per_day_fee = fee_params.fee_per_day * days;

@@ -25,7 +25,7 @@ namespace graphene { namespace protocol {
     */
    struct limit_order_create_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset           fee;
       account_id_type seller;
@@ -89,7 +89,7 @@ namespace graphene { namespace protocol {
    struct call_order_update_operation : public base_operation
    {
       /** this is slightly more expensive than limit orders, this pricing impacts prediction markets */
-      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset               fee;
       account_id_type     funding_account; ///< pays fee, collateral, and cover
@@ -146,7 +146,7 @@ namespace graphene { namespace protocol {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
 
       /// This is a virtual operation; there is no fee
-      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+      amount_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
    };
 
    /**
@@ -158,7 +158,7 @@ namespace graphene { namespace protocol {
    struct bid_collateral_operation : public base_operation
    {
       /** should be equivalent to call_order_update fee */
-      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 20 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset               fee;
       account_id_type     bidder; ///< pays fee and additional collateral
@@ -194,7 +194,7 @@ namespace graphene { namespace protocol {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
 
       /// This is a virtual operation; there is no fee
-      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+      amount_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
    };
 } } // graphene::protocol
 

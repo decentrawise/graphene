@@ -38,9 +38,9 @@ class database;
 struct refund_worker_type
 {
    /// Record of how much this worker has burned in his lifetime
-   share_type total_burned;
+   amount_type total_burned;
 
-   void pay_worker(share_type pay, database&);
+   void pay_worker(amount_type pay, database&);
 };
 
 /**
@@ -53,7 +53,7 @@ struct vesting_balance_worker_type
    /// The balance this worker pays into
    vesting_balance_id_type balance;
 
-   void pay_worker(share_type pay, database& db);
+   void pay_worker(amount_type pay, database& db);
 };
 
 /**
@@ -64,9 +64,9 @@ struct vesting_balance_worker_type
 struct burn_worker_type
 {
    /// Record of how much this worker has burned in his lifetime
-   share_type total_burned;
+   amount_type total_burned;
 
-   void pay_worker(share_type pay, database&);
+   void pay_worker(amount_type pay, database&);
 };
 ///@}
 
@@ -91,7 +91,7 @@ class worker_object : public abstract_object<worker_object, protocol_ids, worker
       /// Time at which this worker will cease to receive pay. Worker will be deleted at this time
       time_point_sec work_end_date;
       /// Amount in CORE this worker will be paid each day
-      share_type daily_pay;
+      amount_type daily_pay;
       /// ID of this worker's pay balance
       worker_type worker;
       /// Human-readable name for the worker

@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE( trade_amount_would_be_zero )
 
       const asset_object& test = create_user_asset( "UATEST" );
       const asset_id_type test_id = test.get_id();
-      const asset_object& core = get_asset( GRAPHENE_SYMBOL );
+      const asset_object& core = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
       const asset_id_type core_id = core.get_id();
       const account_object& core_seller = create_account( "seller1" );
       const account_object& core_buyer = create_account("buyer1");
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test1 )
 
       const asset_object& test = create_user_asset( "UATEST" );
       const asset_id_type test_id = test.get_id();
-      const asset_object& core = get_asset( GRAPHENE_SYMBOL );
+      const asset_object& core = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
       const asset_id_type core_id = core.get_id();
 
       transfer( council_account(db), seller, asset( 100000000 ) );
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE( limit_limit_rounding_test2 )
 
       const asset_object& test = create_user_asset( "UATEST" );
       const asset_id_type test_id = test.get_id();
-      const asset_object& core = get_asset( GRAPHENE_SYMBOL );
+      const asset_object& core = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
       const asset_id_type core_id = core.get_id();
 
       transfer( council_account(db), seller, asset( 100000000 ) );

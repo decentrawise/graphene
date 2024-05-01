@@ -77,14 +77,14 @@ struct block_struct {
 struct fee_struct {
    asset_id_type asset;
    std::string asset_name;
-   share_type amount;
+   amount_type amount;
    double amount_units;
 };
 
 struct transfer_struct {
    asset_id_type asset;
    std::string asset_name;
-   share_type amount;
+   amount_type amount;
    double amount_units;
    account_id_type from;
    account_id_type to;
@@ -95,11 +95,11 @@ struct fill_struct {
    account_id_type account_id;
    asset_id_type pays_asset_id;
    std::string pays_asset_name;
-   share_type pays_amount;
+   amount_type pays_amount;
    double pays_amount_units;
    asset_id_type receives_asset_id;
    std::string receives_asset_name;
-   share_type receives_amount;
+   amount_type receives_amount;
    double receives_amount_units;
    double fill_price;
    double fill_price_units;

@@ -42,9 +42,9 @@ namespace graphene { namespace chain {
           * transfers). Rather than maintaining an index of [asset,owner,order_id] we will simply maintain the running
           * total here and update it every time an order is created or modified.
           */
-         share_type total_core_in_orders;
+         amount_type total_core_in_orders;
 
-         share_type core_in_balance = 0; ///< redundantly store core balance here for better maintenance performance
+         amount_type core_in_balance = 0; ///< redundantly store core balance here for better maintenance performance
 
          bool has_cashback_vb = false; ///< redundantly store this for better maintenance performance
 
@@ -61,7 +61,7 @@ namespace graphene { namespace chain {
          /**
           * Tracks the total fees paid by this account for the purpose of calculating bulk discounts.
           */
-         share_type lifetime_fees_paid;
+         amount_type lifetime_fees_paid;
 
          /**
           * Tracks the fees paid by this account which have not been disseminated to the various parties that receive
@@ -71,12 +71,12 @@ namespace graphene { namespace chain {
           * These fees will be paid out as vesting cash-back, and this counter will reset during the maintenance
           * interval.
           */
-         share_type pending_fees;
+         amount_type pending_fees;
          /**
           * Same as @ref pending_fees, except these fees will be paid out as pre-vested cash-back (immediately
           * available for withdrawal) rather than requiring the normal vesting period.
           */
-         share_type pending_vested_fees;
+         amount_type pending_vested_fees;
 
          /// Whether this account has pending fees, no matter vested or not
          inline bool has_pending_fees() const { return pending_fees > 0 || pending_vested_fees > 0; }
@@ -90,7 +90,7 @@ namespace graphene { namespace chain {
          /**
           * Core fees are paid into the account_statistics_object by this method
           */
-         void pay_fee( share_type core_fee, share_type cashback_vesting_threshold );
+         void pay_fee( amount_type core_fee, amount_type cashback_vesting_threshold );
    };
 
    /**
@@ -106,7 +106,7 @@ namespace graphene { namespace chain {
       public:
          account_id_type   owner;
          asset_id_type     asset_type;
-         share_type        balance;
+         amount_type        balance;
          bool              maintenance_flag = false; ///< Whether need to process this balance object in maintenance interval
 
          asset get_balance()const { return asset(balance, asset_type); }
@@ -352,12 +352,12 @@ namespace graphene { namespace chain {
             composite_key<
                account_balance_object,
                member<account_balance_object, asset_id_type, &account_balance_object::asset_type>,
-               member<account_balance_object, share_type, &account_balance_object::balance>,
+               member<account_balance_object, amount_type, &account_balance_object::balance>,
                member<account_balance_object, account_id_type, &account_balance_object::owner>
             >,
             composite_key_compare<
                std::less< asset_id_type >,
-               std::greater< share_type >,
+               std::greater< amount_type >,
                std::less< account_id_type >
             >
          >

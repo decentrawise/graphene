@@ -24,7 +24,7 @@ namespace graphene { namespace protocol {
       asset             total_claimed;
 
       account_id_type fee_payer()const { return deposit_to_account; }
-      share_type      calculate_fee(const fee_parameters_type& )const { return 0; }
+      amount_type      calculate_fee(const fee_parameters_type& )const { return 0; }
       void            validate()const;
       void            get_required_authorities( vector<authority>& a )const
       {

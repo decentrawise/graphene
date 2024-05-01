@@ -7,7 +7,7 @@
 
 using namespace graphene::chain;
 
-share_type backed_asset_data_object::max_force_settlement_volume(share_type current_supply) const
+amount_type backed_asset_data_object::max_force_settlement_volume(amount_type current_supply) const
 {
    if( options.maximum_force_settlement_volume == 0 )
       return 0;
@@ -102,9 +102,9 @@ asset asset_object::amount_from_string(string amount_string) const
       FC_THROW( (amount_string) );
    }
 
-   share_type satoshis = 0;
+   amount_type satoshis = 0;
 
-   share_type scaled_precision = asset::scaled_precision( precision );
+   amount_type scaled_precision = asset::scaled_precision( precision );
 
    const auto decimal_pos = amount_string.find( '.' );
    const string lhs = amount_string.substr( negative_found, decimal_pos );
@@ -125,7 +125,7 @@ asset asset_object::amount_from_string(string amount_string) const
          satoshis += std::stoll( rhs );
    }
 
-   FC_ASSERT( satoshis <= GRAPHENE_MAX_SHARE_SUPPLY );
+   FC_ASSERT( satoshis <= GRAPHENE_CORE_ASSET_MAX_SUPPLY );
 
    if( negative_found )
       satoshis *= -1;
@@ -133,9 +133,9 @@ asset asset_object::amount_from_string(string amount_string) const
    return amount(satoshis);
 } FC_CAPTURE_AND_RETHROW( (amount_string) ) } // GCOVR_EXCL_LINE
 
-string asset_object::amount_to_string(share_type amount) const
+string asset_object::amount_to_string(amount_type amount) const
 {
-   share_type scaled_precision = asset::scaled_precision( precision );
+   amount_type scaled_precision = asset::scaled_precision( precision );
 
    string result = fc::to_string(amount.value / scaled_precision.value);
    auto decimals = abs( amount.value % scaled_precision.value );

@@ -30,7 +30,7 @@ namespace graphene { namespace chain {
           */
          virtual void pay_fee() override;
 
-         share_type                          _deferred_fee  = 0;
+         amount_type                          _deferred_fee  = 0;
          asset                               _deferred_paid_fee;
          const limit_order_create_operation* _op            = nullptr;
          const account_object*               _seller        = nullptr;

@@ -1409,7 +1409,7 @@ order_book database_api_impl::get_order_book( const string& base, const string& 
       auto order_price = price_to_string( o.sell_price, *assets[0], *assets[1] );
       if( o.sell_price.base.asset_id == base_id )
       {
-         auto quote_amt = assets[1]->amount_to_string( share_type( fc::uint128_t( o.for_sale.value )
+         auto quote_amt = assets[1]->amount_to_string( amount_type( fc::uint128_t( o.for_sale.value )
                                                               * o.sell_price.quote.amount.value
                                                               / o.sell_price.base.amount.value ) );
          auto base_amt = assets[0]->amount_to_string( o.for_sale );
@@ -1419,7 +1419,7 @@ order_book database_api_impl::get_order_book( const string& base, const string& 
       else
       {
          auto quote_amt = assets[1]->amount_to_string( o.for_sale );
-         auto base_amt = assets[0]->amount_to_string( share_type( fc::uint128_t( o.for_sale.value )
+         auto base_amt = assets[0]->amount_to_string( amount_type( fc::uint128_t( o.for_sale.value )
                                                              * o.sell_price.quote.amount.value
                                                              / o.sell_price.base.amount.value ) );
          result.asks.emplace_back( order_price, quote_amt, base_amt, o.get_id(),

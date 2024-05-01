@@ -13,11 +13,11 @@ struct fba_distribute_operation : public base_operation
    account_id_type account_id;
    // We use object_id_type because this is an implementation object, and therefore is not known to the protocol library
    object_id_type fba_id;
-   share_type amount;
+   amount_type amount;
 
    account_id_type fee_payer()const { return account_id; }
    void validate()const { FC_ASSERT( false ); }
-   share_type calculate_fee(const fee_parameters_type& k)const { return 0; }
+   amount_type calculate_fee(const fee_parameters_type& k)const { return 0; }
 };
 
 } }

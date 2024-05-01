@@ -69,7 +69,7 @@ namespace graphene { namespace protocol {
     */
    struct assert_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset                      fee;
       account_id_type            fee_paying_account;
@@ -79,7 +79,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
 } } // graphene::protocol

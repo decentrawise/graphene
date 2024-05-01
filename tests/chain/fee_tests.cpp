@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE( nonzero_fee_test )
    {
       ACTORS((alice)(bob));
 
-      const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
+      const amount_type prec = asset::scaled_precision( asset_id_type()(db).precision );
 
-      // Return number of core shares (times precision)
+      // Return amount of core (times precision)
       auto _core = [&]( int64_t x ) -> asset
       {  return asset( x*prec );    };
 
@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
       // Alice and Bob trade in the market and pay fees
       // Verify that Izzy and Jill can claim the fees
 
-      const share_type core_prec = asset::scaled_precision( asset_id_type()(db).precision );
+      const amount_type core_prec = asset::scaled_precision( asset_id_type()(db).precision );
 
-      // Return number of core shares (times precision)
+      // Return amount of core (times precision)
       auto _core = [&]( int64_t x ) -> asset
       {  return asset( x*core_prec );    };
 
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(asset_claim_fees_test)
       asset_id_type izzycoin_id = create_backed_asset( "IZZYCOIN", izzy_id,   GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
       asset_id_type jillcoin_id = create_backed_asset( "JILLCOIN", jill_id, 2*GRAPHENE_1_PERCENT, charge_market_fee ).get_id();
 
-      const share_type izzy_prec = asset::scaled_precision( asset_id_type(izzycoin_id)(db).precision );
-      const share_type jill_prec = asset::scaled_precision( asset_id_type(jillcoin_id)(db).precision );
+      const amount_type izzy_prec = asset::scaled_precision( asset_id_type(izzycoin_id)(db).precision );
+      const amount_type jill_prec = asset::scaled_precision( asset_id_type(jillcoin_id)(db).precision );
 
       auto _izzy = [&]( int64_t x ) -> asset
       {   return asset( x*izzy_prec, izzycoin_id );   };
@@ -186,9 +186,9 @@ BOOST_AUTO_TEST_CASE(asset_claim_pool_test)
         // Alice deposits CORE to the fee pool
         // Alice claims fee pool of her asset and can't claim pool of Bob's asset
 
-        const share_type core_prec = asset::scaled_precision( asset_id_type()(db).precision );
+        const amount_type core_prec = asset::scaled_precision( asset_id_type()(db).precision );
 
-        // return number of core shares (times precision)
+        // Return amount of core (times precision)
         auto _core = [&core_prec]( int64_t x ) -> asset
         {  return asset( x*core_prec );    };
 
@@ -280,12 +280,12 @@ BOOST_AUTO_TEST_CASE(asset_claim_pool_test)
         BOOST_CHECK( alicecoin_id(db).dynamic_asset_data_id(db).fee_pool == _core(100).amount );
 
         // can pay fee in the asset other than the one whose pool is being drained
-        share_type balance_before_claim = get_balance( alice_id, asset_id_type() );
+        amount_type balance_before_claim = get_balance( alice_id, asset_id_type() );
         claim_pool( alice_id, alicecoin_id, _core(100), aliceusd_id(db) );
         BOOST_CHECK( alicecoin_id(db).dynamic_asset_data_id(db).fee_pool == _core(0).amount );
 
         //check balance after claiming pool
-        share_type current_balance = get_balance( alice_id, asset_id_type() );
+        amount_type current_balance = get_balance( alice_id, asset_id_type() );
         BOOST_CHECK( balance_before_claim + _core(100).amount == current_balance );
 
         // can create a proposal to claim claim pool

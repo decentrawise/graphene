@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 300.0);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    }
    {
       BOOST_TEST_MESSAGE("Adding price feed 2");
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 300.0);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    }
    {
       BOOST_TEST_MESSAGE("Adding price feed 3");
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 100.0);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    }
    {
       BOOST_TEST_MESSAGE("Change underlying asset of bit_jmj from bit_usd to core");
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       BOOST_CHECK(ba.current_feed.core_exchange_rate.base.asset_id != ba.current_feed.core_exchange_rate.quote.asset_id);
    }
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 100);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    }
    {
       BOOST_TEST_MESSAGE("Change underlying asset of bit_jmj from core back to bit_usd");
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       BOOST_CHECK(ba.current_feed.core_exchange_rate.base.asset_id != ba.current_feed.core_exchange_rate.quote.asset_id);
    }
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 300.0);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    }
    {
       BOOST_TEST_MESSAGE("Adding Ben's pricing to JMJBIT");
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 300);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    }
    {
       BOOST_TEST_MESSAGE("Adding Dan's pricing to JMJBIT");
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 100);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
       generate_block();
       trx.clear();
 
@@ -384,13 +384,13 @@ BOOST_AUTO_TEST_CASE( reset_backing_asset_on_non_validator_asset )
 
       const backed_asset_data_object& ba = bit_jmj_id(db).backed_asset_data(db);
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 25);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       BOOST_TEST_MESSAGE("Adding Dan's pricing to JMJBIT");
       publish_feed(dan_id, bit_usd_id, 1, bit_jmj_id, 10, core_id);
 
       BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 25);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
       generate_block();
       trx.clear();
 

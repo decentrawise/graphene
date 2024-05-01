@@ -365,7 +365,7 @@ class wallet_api
        * @return total fees
        */
       asset set_fees_on_builder_transaction( transaction_handle_type handle,
-                                             const string& fee_asset = GRAPHENE_SYMBOL )const;
+                                             const string& fee_asset = GRAPHENE_CORE_ASSET_SYMBOL )const;
       /**
        * @ingroup Transaction Builder API
        *
@@ -1429,7 +1429,7 @@ class wallet_api
          const string& owner_account,
          const time_point_sec& work_begin_date,
          const time_point_sec& work_end_date,
-         const share_type& daily_pay,
+         const amount_type& daily_pay,
          const string& name,
          const string& url,
          const graphene::protocol::variant& worker_settings,

@@ -128,7 +128,7 @@ namespace graphene { namespace protocol {
          const flat_set<public_key_type>& available_keys,
          const std::function<const authority*(account_id_type)>& get_active,
          const std::function<const authority*(account_id_type)>& get_owner,
-         uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH
+         uint32_t max_recursion = GRAPHENE_DEFAULT_SIG_CHECK_MAX_DEPTH
          )const;
 
       /**
@@ -145,7 +145,7 @@ namespace graphene { namespace protocol {
          const chain_id_type& chain_id,
          const std::function<const authority*(account_id_type)>& get_active,
          const std::function<const authority*(account_id_type)>& get_owner,
-         uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH )const;
+         uint32_t max_recursion = GRAPHENE_DEFAULT_SIG_CHECK_MAX_DEPTH )const;
 
       /**
        * This is a slower replacement for get_required_signatures()
@@ -158,7 +158,7 @@ namespace graphene { namespace protocol {
          const flat_set<public_key_type>& available_keys,
          const std::function<const authority*(account_id_type)>& get_active,
          const std::function<const authority*(account_id_type)>& get_owner,
-         uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH
+         uint32_t max_recursion = GRAPHENE_DEFAULT_SIG_CHECK_MAX_DEPTH
          ) const;
 
       /**
@@ -224,7 +224,7 @@ namespace graphene { namespace protocol {
    void verify_authority( const vector<operation>& ops, const flat_set<public_key_type>& sigs,
                           const std::function<const authority*(account_id_type)>& get_active,
                           const std::function<const authority*(account_id_type)>& get_owner,
-                          uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH,
+                          uint32_t max_recursion = GRAPHENE_DEFAULT_SIG_CHECK_MAX_DEPTH,
                           bool allow_council = false,
                           const flat_set<account_id_type>& active_approvals = flat_set<account_id_type>(),
                           const flat_set<account_id_type>& owner_approvals = flat_set<account_id_type>());

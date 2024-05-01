@@ -30,9 +30,9 @@ namespace graphene { namespace protocol {
       FC_ASSERT( fee.amount >= 0 );
    }
 
-   share_type withdraw_permission_claim_operation::calculate_fee(const fee_parameters_type& k)const
+   amount_type withdraw_permission_claim_operation::calculate_fee(const fee_parameters_type& k)const
    {
-      share_type core_fee_required = k.fee;
+      amount_type core_fee_required = k.fee;
       if( memo )
          core_fee_required += calculate_data_fee( fc::raw::pack_size(memo), k.price_per_kbyte );
       return core_fee_required;

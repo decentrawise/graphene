@@ -734,7 +734,7 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       asset_publish_feed_operation op;
       op.publisher = vikram_id;
       op.asset_id = bit_usd_id;
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
+      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_CORE_ASSET_PRECISION),bit_usd.amount(30));
 
       // We'll expire margins after a month
       // Accept defaults for required collateral
@@ -742,26 +742,26 @@ BOOST_AUTO_TEST_CASE( mia_feeds )
       PUSH_TX( db, trx, ~0 );
 
       const backed_asset_data_object& ba = bit_usd.backed_asset_data(db);
-      BOOST_CHECK(ba.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_CORE_ASSET_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = ben_id;
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
+      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_CORE_ASSET_PRECISION),bit_usd.amount(25));
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_CORE_ASSET_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = dan_id;
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
+      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_CORE_ASSET_PRECISION),bit_usd.amount(40));
       op.feed.maximum_short_squeeze_ratio = 1001;
       op.feed.maintenance_collateral_ratio = 1001;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_CORE_ASSET_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = nathan_id;
       trx.operations.back() = op;
@@ -1139,7 +1139,7 @@ BOOST_AUTO_TEST_CASE( worker_pay_test )
    {
       asset_reserve_operation op;
       op.payer = account_id_type();
-      op.amount_to_reserve = asset(GRAPHENE_MAX_SHARE_SUPPLY/2);
+      op.amount_to_reserve = asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1251,7 +1251,7 @@ BOOST_AUTO_TEST_CASE( refund_worker_test )
    {
       asset_reserve_operation op;
       op.payer = account_id_type();
-      op.amount_to_reserve = asset(GRAPHENE_MAX_SHARE_SUPPLY/2);
+      op.amount_to_reserve = asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1324,7 +1324,7 @@ BOOST_AUTO_TEST_CASE( burn_worker_test )
       // refund some asset to fill up the pool
       asset_reserve_operation op;
       op.payer = account_id_type();
-      op.amount_to_reserve = asset(GRAPHENE_MAX_SHARE_SUPPLY/2);
+      op.amount_to_reserve = asset(GRAPHENE_CORE_ASSET_MAX_SUPPLY/2);
       trx.operations.push_back(op);
       PUSH_TX( db, trx, ~0 );
       trx.clear();
@@ -1592,8 +1592,8 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    database db;
    const uint32_t skip_flags = database::skip_undo_history_check;
    fc::temp_directory td( graphene::utilities::temp_directory_path() );
-   genesis_state.initial_balances.push_back({address(generate_private_key("n").get_public_key()), GRAPHENE_SYMBOL, 1});
-   genesis_state.initial_balances.push_back({address(generate_private_key("x").get_public_key()), GRAPHENE_SYMBOL, 1});
+   genesis_state.initial_balances.push_back({address(generate_private_key("n").get_public_key()), GRAPHENE_CORE_ASSET_SYMBOL, 1});
+   genesis_state.initial_balances.push_back({address(generate_private_key("x").get_public_key()), GRAPHENE_CORE_ASSET_SYMBOL, 1});
    fc::time_point_sec starting_time = genesis_state.initial_timestamp + 3000;
 
    auto n_key = generate_private_key("n");
@@ -1603,7 +1603,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
 
    genesis_state_type::initial_vesting_balance_type vest;
    vest.owner = address(v1_key.get_public_key());
-   vest.asset_symbol = GRAPHENE_SYMBOL;
+   vest.asset_symbol = GRAPHENE_CORE_ASSET_SYMBOL;
    vest.amount = 500;
    vest.begin_balance = vest.amount;
    vest.begin_timestamp = starting_time;
@@ -1841,7 +1841,7 @@ BOOST_AUTO_TEST_CASE(zero_second_vbo)
          create_op.owner = alice_id;
          create_op.work_begin_date = db.head_block_time();
          create_op.work_end_date = db.head_block_time() + fc::days(1000);
-         create_op.daily_pay = share_type( 10000 );
+         create_op.daily_pay = amount_type( 10000 );
          create_op.name = "alice";
          create_op.url = "";
          create_op.initializer = vesting_balance_worker_initializer(0);

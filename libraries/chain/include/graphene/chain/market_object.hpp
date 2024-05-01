@@ -23,9 +23,9 @@ class limit_order_object : public abstract_object<limit_order_object, protocol_i
    public:
       time_point_sec   expiration;
       account_id_type  seller;
-      share_type       for_sale; ///< asset id is sell_price.base.asset_id
+      amount_type       for_sale; ///< asset id is sell_price.base.asset_id
       price            sell_price;
-      share_type       deferred_fee; ///< fee converted to CORE
+      amount_type       deferred_fee; ///< fee converted to CORE
       asset            deferred_paid_fee; ///< originally paid fee
 
       pair<asset_id_type,asset_id_type> get_market()const
@@ -101,8 +101,8 @@ class call_order_object : public abstract_object<call_order_object, protocol_ids
       price collateralization()const { return get_collateral() / get_debt(); }
 
       account_id_type  borrower;
-      share_type       collateral;  ///< call_price.base.asset_id, access via get_collateral
-      share_type       debt;        ///< call_price.quote.asset_id, access via get_debt
+      amount_type       collateral;  ///< call_price.base.asset_id, access via get_collateral
+      amount_type       debt;        ///< call_price.quote.asset_id, access via get_debt
       price            call_price;  ///< Collateral / Debt
 
       optional<uint16_t> target_collateral_ratio; ///< maximum CR to maintain when selling collateral on margin call
@@ -123,7 +123,7 @@ class call_order_object : public abstract_object<call_order_object, protocol_ids
        *  @param maintenance_collateralization maintenance collateralization of debt asset
        *  @return maximum amount of debt that can be called
        */
-      share_type get_max_debt_to_cover( price match_price,
+      amount_type get_max_debt_to_cover( price match_price,
                                         price feed_price,
                                         const uint16_t maintenance_collateral_ratio,
                                         const optional<price>& maintenance_collateralization = optional<price>() )const;

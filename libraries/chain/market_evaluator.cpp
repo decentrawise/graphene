@@ -206,7 +206,7 @@ object_id_type call_order_update_evaluator::do_apply(const call_order_update_ope
    object_id_type call_order_id;
 
    optional<price> old_collateralization;
-   optional<share_type> old_debt;
+   optional<amount_type> old_debt;
 
    if( itr == call_idx.end() ) // creating new debt position
    {

@@ -33,18 +33,18 @@ struct genesis_state_type {
    struct initial_asset_type {
       struct initial_collateral_position {
          address owner;
-         share_type collateral;
-         share_type debt;
+         amount_type collateral;
+         amount_type debt;
       };
 
       string symbol;
       string issuer_name;
 
       string description;
-      uint8_t precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
+      uint8_t precision = GRAPHENE_CORE_ASSET_PRECISION_DIGITS;
 
-      share_type max_supply;
-      share_type accumulated_fees;
+      amount_type max_supply;
+      amount_type accumulated_fees;
 
       bool is_backed = false;
       vector<initial_collateral_position> collateral_records;
@@ -52,15 +52,15 @@ struct genesis_state_type {
    struct initial_balance_type {
       address owner;
       string asset_symbol;
-      share_type amount;
+      amount_type amount;
    };
    struct initial_vesting_balance_type {
       address owner;
       string asset_symbol;
-      share_type amount;
+      amount_type amount;
       time_point_sec begin_timestamp;
       uint32_t vesting_duration_seconds = 0;
-      share_type begin_balance;
+      amount_type begin_balance;
    };
    struct initial_validator_type {
       /// Must correspond to one of the initial accounts
@@ -74,18 +74,18 @@ struct genesis_state_type {
    struct initial_worker_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
-      share_type daily_pay;
+      amount_type daily_pay;
    };
 
    time_point_sec                           initial_timestamp;
-   share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   amount_type                               max_core_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    chain_parameters                         initial_parameters;
    immutable_chain_parameters               immutable_parameters;
    vector<initial_account_type>             initial_accounts;
    vector<initial_asset_type>               initial_assets;
    vector<initial_balance_type>             initial_balances;
    vector<initial_vesting_balance_type>     initial_vesting_balances;
-   uint64_t                                 initial_block_producers = GRAPHENE_DEFAULT_MIN_PRODUCER_COUNT;
+   uint64_t                                 initial_block_producers = GRAPHENE_MIN_PRODUCER_COUNT;
    vector<initial_validator_type>           initial_validator_candidates;
    vector<initial_delegate_type>            initial_delegate_candidates;
    vector<initial_worker_type>              initial_worker_candidates;

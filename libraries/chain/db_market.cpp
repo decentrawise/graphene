@@ -12,12 +12,12 @@ namespace graphene { namespace chain {
 
 namespace detail {
 
-   share_type calculate_percent(const share_type& value, uint16_t percent)
+   amount_type calculate_percent(const amount_type& value, uint16_t percent)
    {
       fc::uint128_t a(value.value);
       a *= percent;
       a /= GRAPHENE_100_PERCENT;
-      FC_ASSERT( a <= GRAPHENE_MAX_SHARE_SUPPLY, "overflow when calculating percent" );
+      FC_ASSERT( a <= GRAPHENE_CORE_ASSET_MAX_SUPPLY, "overflow when calculating percent" );
       return static_cast<int64_t>(a);
    }
 
@@ -138,7 +138,7 @@ void database::cancel_bid(const collateral_bid_object& bid, bool create_virtual_
    remove(bid);
 }
 
-void database::execute_bid( const collateral_bid_object& bid, share_type debt_covered, share_type collateral_from_fund,
+void database::execute_bid( const collateral_bid_object& bid, amount_type debt_covered, amount_type collateral_from_fund,
                             const price_feed& current_feed )
 {
    const call_order_object& call_obj = create<call_order_object>( [&](call_order_object& call ){
@@ -187,7 +187,7 @@ void database::cancel_limit_order( const limit_order_object& order, bool create_
    const account_statistics_object* seller_acc_stats = nullptr;
    const asset_dynamic_data_object* fee_asset_dyn_data = nullptr;
    limit_order_cancel_operation vop;
-   share_type deferred_fee = order.deferred_fee;
+   amount_type deferred_fee = order.deferred_fee;
    asset deferred_paid_fee = order.deferred_paid_fee;
    if( create_virtual_op )
    {
@@ -222,7 +222,7 @@ void database::cancel_limit_order( const limit_order_object& order, bool create_
                fee128 += order.deferred_fee.value;
                fee128 -= 1;
                fee128 /= order.deferred_fee.value;
-               share_type cancel_fee_amount = static_cast<int64_t>(fee128);
+               amount_type cancel_fee_amount = static_cast<int64_t>(fee128);
                // cancel_fee should be positive, pay it to asset's accumulated_fees
                fee_asset_dyn_data = &deferred_paid_fee.asset_id(*this).dynamic_asset_data_id(*this);
                modify( *fee_asset_dyn_data, [&](asset_dynamic_data_object& addo) {

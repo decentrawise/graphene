@@ -146,7 +146,7 @@ void database_fixture_base::init_genesis( database_fixture_base& fixture )
    init_ba1.issuer_name = "council-account";
    init_ba1.description = "Initial BA";
    init_ba1.precision = 4;
-   init_ba1.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   init_ba1.max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    init_ba1.accumulated_fees = 0;
    init_ba1.is_backed = true;
    fixture.genesis_state.initial_assets.push_back( init_ba1 );
@@ -509,10 +509,10 @@ void database_fixture_base::verify_asset_supplies( const database& db )
    const auto &acct_balance_index = db.get_index_type<account_balance_index>().indices();
    const auto &settle_index = db.get_index_type<force_settlement_index>().indices();
    const auto &bids = db.get_index_type<collateral_bid_index>().indices();
-   map<asset_id_type, share_type> total_balances;
-   map<asset_id_type, share_type> total_debts;
-   share_type core_in_orders;
-   share_type reported_core_in_orders;
+   map<asset_id_type, amount_type> total_balances;
+   map<asset_id_type, amount_type> total_debts;
+   amount_type core_in_orders;
+   amount_type reported_core_in_orders;
 
    for (const account_balance_object &b : acct_balance_index)
       total_balances[b.asset_type] += b.balance;
@@ -716,9 +716,9 @@ asset_create_operation database_fixture_base::make_backed_asset(
    account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
    uint16_t flags /* = charge_market_fee */,
-   uint16_t precision /* = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS */,
+   uint16_t precision /* = GRAPHENE_CORE_ASSET_PRECISION_DIGITS */,
    asset_id_type backing_asset /* = CORE */,
-   share_type max_supply,  /* = GRAPHENE_MAX_SHARE_SUPPLY */
+   amount_type max_supply,  /* = GRAPHENE_CORE_ASSET_MAX_SUPPLY */
    optional<uint16_t> initial_cr, /* = {} */
    optional<uint16_t> margin_call_fee_ratio /* = {} */
    )
@@ -745,9 +745,9 @@ const asset_object& database_fixture_base::create_backed_asset(
    account_id_type issuer /* = GRAPHENE_PRODUCERS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
    uint16_t flags /* = charge_market_fee */,
-   uint16_t precision /* = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS */,
+   uint16_t precision /* = GRAPHENE_CORE_ASSET_PRECISION_DIGITS */,
    asset_id_type backing_asset /* = CORE */,
-   share_type max_supply,  /* = GRAPHENE_MAX_SHARE_SUPPLY */
+   amount_type max_supply,  /* = GRAPHENE_CORE_ASSET_MAX_SUPPLY */
    optional<uint16_t> initial_cr, /* = {} */
    optional<uint16_t> margin_call_fee_ratio /* = {} */
    )
@@ -776,7 +776,7 @@ const asset_object& database_fixture_base::create_prediction_market(
    creator.issuer = issuer;
    creator.fee = asset();
    creator.symbol = name;
-   creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   creator.common_options.max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    creator.precision = precision;
    creator.common_options.market_fee_percent = market_fee_percent;
    creator.common_options.issuer_permissions = flags | global_settle;
@@ -805,7 +805,7 @@ const asset_object& database_fixture_base::create_user_asset( const string& name
    creator.common_options.max_supply = 0;
    creator.precision = 2;
    creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
-   creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   creator.common_options.max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    creator.common_options.flags = charge_market_fee;
    creator.common_options.issuer_permissions = charge_market_fee;
    trx.operations.clear();
@@ -828,7 +828,7 @@ const asset_object& database_fixture_base::create_user_asset( const string& name
    creator.common_options.max_supply = 0;
    creator.precision = precision;
    creator.common_options.core_exchange_rate = core_exchange_rate;
-   creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   creator.common_options.max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    creator.common_options.flags = flags;
    creator.common_options.issuer_permissions = flags;
    creator.common_options.market_fee_percent = market_fee_percent;
@@ -1007,7 +1007,7 @@ const validator_object& database_fixture_base::create_validator( const account_o
    return db.get<validator_object>(ptx.operation_results[0].get<object_id_type>());
 } FC_CAPTURE_AND_RETHROW() } // GCOVR_EXCL_LINE
 
-const worker_object& database_fixture_base::create_worker( const account_id_type owner, const share_type daily_pay, const fc::microseconds& duration )
+const worker_object& database_fixture_base::create_worker( const account_id_type owner, const amount_type daily_pay, const fc::microseconds& duration )
 { try {
    worker_create_operation op;
    op.owner = owner;
@@ -1287,7 +1287,7 @@ void database_fixture_base::bid_collateral(const account_object& who, const asse
    verify_asset_supplies(db);
 } FC_CAPTURE_AND_RETHROW( (who.name)(to_bid)(to_cover) ) } // GCOVR_EXCL_LINE
 
-void database_fixture_base::fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const share_type amount )
+void database_fixture_base::fund_fee_pool( const account_object& from, const asset_object& asset_to_fund, const amount_type amount )
 {
    asset_fund_fee_pool_operation fund;
    fund.from_account = from.id;
@@ -1511,18 +1511,18 @@ flat_map< uint64_t, graphene::chain::fee_parameters > database_fixture_base::get
    flat_map<uint64_t, graphene::chain::fee_parameters> ret_val;
 
    htlc_create_operation::fee_parameters_type create_param;
-   create_param.fee_per_day = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
-   create_param.fee = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
+   create_param.fee_per_day = 2 * GRAPHENE_CORE_ASSET_PRECISION;
+   create_param.fee = 2 * GRAPHENE_CORE_ASSET_PRECISION;
    ret_val[((operation)htlc_create_operation()).which()] = create_param;
 
    htlc_redeem_operation::fee_parameters_type redeem_param;
-   redeem_param.fee = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
-   redeem_param.price_per_kbyte = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
+   redeem_param.fee = 2 * GRAPHENE_CORE_ASSET_PRECISION;
+   redeem_param.price_per_kbyte = 2 * GRAPHENE_CORE_ASSET_PRECISION;
    ret_val[((operation)htlc_redeem_operation()).which()] = redeem_param;
 
    htlc_extend_operation::fee_parameters_type extend_param;
-   extend_param.fee = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
-   extend_param.fee_per_day = 2 * GRAPHENE_BLOCKCHAIN_PRECISION;
+   extend_param.fee = 2 * GRAPHENE_CORE_ASSET_PRECISION;
+   extend_param.fee_per_day = 2 * GRAPHENE_CORE_ASSET_PRECISION;
    ret_val[((operation)htlc_extend_operation()).which()] = extend_param;
 
    // set the transfer kb fee to something other than default, to verify we're looking

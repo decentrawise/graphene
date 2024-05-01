@@ -60,16 +60,16 @@ struct bucket_object : public abstract_object<bucket_object, MARKET_HISTORY_SPAC
    price low()const { return asset( low_base, key.base ) / asset( low_quote, key.quote ); }
 
    bucket_key          key;
-   share_type          high_base;
-   share_type          high_quote;
-   share_type          low_base;
-   share_type          low_quote;
-   share_type          open_base;
-   share_type          open_quote;
-   share_type          close_base;
-   share_type          close_quote;
-   share_type          base_volume;
-   share_type          quote_volume;
+   amount_type          high_base;
+   amount_type          high_quote;
+   amount_type          low_base;
+   amount_type          low_quote;
+   amount_type          open_base;
+   amount_type          open_quote;
+   amount_type          close_base;
+   amount_type          close_quote;
+   amount_type          base_volume;
+   amount_type          quote_volume;
 };
 
 struct history_key {
@@ -110,10 +110,10 @@ struct market_ticker_object : public abstract_object<market_ticker_object, MARKE
 {
    asset_id_type       base;
    asset_id_type       quote;
-   share_type          last_day_base;
-   share_type          last_day_quote;
-   share_type          latest_base;
-   share_type          latest_quote;
+   amount_type          last_day_base;
+   amount_type          last_day_quote;
+   amount_type          latest_base;
+   amount_type          latest_quote;
    fc::uint128_t       base_volume;
    fc::uint128_t       quote_volume;
 };

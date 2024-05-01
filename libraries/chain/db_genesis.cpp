@@ -51,7 +51,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Create blockchain accounts
    fc::ecc::private_key null_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
    create<account_balance_object>([](account_balance_object& b) {
-      b.balance = GRAPHENE_MAX_SHARE_SUPPLY;
+      b.balance = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    });
    const account_object& council_account =
       create<account_object>( [this](account_object& n) {
@@ -64,7 +64,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          n.statistics = create<account_statistics_object>( [&n](account_statistics_object& s){
                            s.owner = n.id;
                            s.name = n.name;
-                           s.core_in_balance = GRAPHENE_MAX_SHARE_SUPPLY;
+                           s.core_in_balance = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
                         }).id;
          n.creation_block_num = 0;
          n.creation_time = _current_block_time;
@@ -178,13 +178,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Create core asset
    const asset_dynamic_data_object& core_dyn_asset =
       create<asset_dynamic_data_object>([](asset_dynamic_data_object& a) {
-         a.current_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+         a.current_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
       });
    const asset_object& core_asset =
      create<asset_object>( [&genesis_state,&core_dyn_asset,this]( asset_object& a ) {
-         a.symbol = GRAPHENE_SYMBOL;
+         a.symbol = GRAPHENE_CORE_ASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;
-         a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
+         a.precision = GRAPHENE_CORE_ASSET_PRECISION_DIGITS;
          a.options.flags = 0;
          a.options.issuer_permissions = 0;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -214,7 +214,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       const asset_object& asset_obj = create<asset_object>( [id,&dyn_asset,this]( asset_object& a ) {
          a.symbol = "SPECIAL" + std::to_string( id );
          a.options.max_supply = 0;
-         a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
+         a.precision = GRAPHENE_CORE_ASSET_PRECISION_DIGITS;
          a.options.flags = 0;
          a.options.issuer_permissions = 0;
          a.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -315,8 +315,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       return itr->get_id();
    };
 
-   map<asset_id_type, share_type> total_supplies;
-   map<asset_id_type, share_type> total_debts;
+   map<asset_id_type, amount_type> total_supplies;
+   map<asset_id_type, amount_type> total_debts;
 
    // Create initial assets
    for( const genesis_state_type::initial_asset_type& asst : genesis_state.initial_assets )
@@ -351,7 +351,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                c.debt = collateral_rec.debt;
                c.call_price = price::call_price(chain::asset(c.debt, new_asset_id),
                                                 chain::asset(c.collateral, core_asset.get_id()),
-                                                GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+                                                GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
             });
 
             total_supplies[ asset_id_type(0) ] += collateral_rec.collateral;
@@ -361,7 +361,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
          backed_asset_data_id = create<backed_asset_data_object>([&core_asset,new_asset_id](backed_asset_data_object& b) {
             b.options.short_backing_asset = core_asset.id;
-            b.options.minimum_feeds = GRAPHENE_DEFAULT_MINIMUM_FEEDS;
+            b.options.minimum_feeds = GRAPHENE_ASSET_MIN_PRICE_FEEDS;
             b.asset_id = new_asset_id;
          }).id;
       }
@@ -428,7 +428,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    }
    else
    {
-       total_supplies[ asset_id_type(0) ] = GRAPHENE_MAX_SHARE_SUPPLY;
+       total_supplies[ asset_id_type(0) ] = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
    }
 
    const auto& idx = get_index_type<asset_index>().indices().get<by_symbol>();

@@ -27,11 +27,11 @@ struct init_policy_visitor
    typedef void result_type;
 
    init_policy_visitor( vesting_policy& po,
-                        const share_type& begin_balance,
+                        const amount_type& begin_balance,
                         const fc::time_point_sec& n ):p(po),init_balance(begin_balance),now(n){}
 
    vesting_policy&    p;
-   share_type         init_balance;
+   amount_type         init_balance;
    fc::time_point_sec now;
 
    void operator()( const linear_vesting_policy_initializer& i )const

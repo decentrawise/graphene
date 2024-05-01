@@ -912,7 +912,7 @@ signed_transaction wallet_api::create_worker(
    const string& owner_account,
    const time_point_sec& work_begin_date,
    const time_point_sec& work_end_date,
-   const share_type& daily_pay,
+   const amount_type& daily_pay,
    const string& name,
    const string& url,
    const variant& worker_settings,
@@ -1438,7 +1438,7 @@ public_key_type    wallet_api::create_blind_account( const string& label, const 
 vector<asset>   wallet_api::get_blind_balances( const string& key_or_label )const
 {
    vector<asset> result;
-   map<asset_id_type, share_type> balances;
+   map<asset_id_type, amount_type> balances;
 
    vector<commitment_type> used;
 

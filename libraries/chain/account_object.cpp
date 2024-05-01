@@ -6,7 +6,7 @@
 
 namespace graphene { namespace chain {
 
-share_type cut_fee(share_type a, uint16_t p)
+amount_type cut_fee(amount_type a, uint16_t p)
 {
    if( a == 0 || p == 0 )
       return 0;
@@ -31,7 +31,7 @@ void account_statistics_object::process_fees(const account_object& a, database& 
 {
    if( pending_fees > 0 || pending_vested_fees > 0 )
    {
-      auto pay_out_fees = [&](const account_object& account, share_type core_fee_total, bool require_vesting)
+      auto pay_out_fees = [&](const account_object& account, amount_type core_fee_total, bool require_vesting)
       {
          // Check the referrer -- if he's no longer a member, pay to the lifetime referrer instead.
          // No need to check the registrar; registrars are required to be lifetime members.
@@ -40,18 +40,18 @@ void account_statistics_object::process_fees(const account_object& a, database& 
                acc.referrer = acc.lifetime_referrer;
             });
 
-         share_type network_cut = cut_fee(core_fee_total, account.network_fee_percentage);
+         amount_type network_cut = cut_fee(core_fee_total, account.network_fee_percentage);
          assert( network_cut <= core_fee_total );
 
 #ifndef NDEBUG
          const auto& props = d.get_global_properties();
 
-         share_type reserveed = cut_fee(network_cut, props.parameters.reserve_percent_of_fee);
-         share_type accumulated = network_cut - reserveed;
+         amount_type reserveed = cut_fee(network_cut, props.parameters.reserve_percent_of_fee);
+         amount_type accumulated = network_cut - reserveed;
          assert( accumulated + reserveed == network_cut );
 #endif
-         share_type lifetime_cut = cut_fee(core_fee_total, account.lifetime_referrer_fee_percentage);
-         share_type referral = core_fee_total - network_cut - lifetime_cut;
+         amount_type lifetime_cut = cut_fee(core_fee_total, account.lifetime_referrer_fee_percentage);
+         amount_type referral = core_fee_total - network_cut - lifetime_cut;
 
          d.modify( d.get_core_dynamic_data(), [network_cut](asset_dynamic_data_object& addo) {
             addo.accumulated_fees += network_cut;
@@ -60,8 +60,8 @@ void account_statistics_object::process_fees(const account_object& a, database& 
          // Potential optimization: Skip some of this math and object lookups by special casing on the account type.
          // For example, if the account is a lifetime member, we can skip all this and just deposit the referral to
          // it directly.
-         share_type referrer_cut = cut_fee(referral, account.referrer_rewards_percentage);
-         share_type registrar_cut = referral - referrer_cut;
+         amount_type referrer_cut = cut_fee(referral, account.referrer_rewards_percentage);
+         amount_type registrar_cut = referral - referrer_cut;
 
          d.deposit_cashback(d.get(account.lifetime_referrer), lifetime_cut, require_vesting);
          d.deposit_cashback(d.get(account.referrer), referrer_cut, require_vesting);
@@ -81,7 +81,7 @@ void account_statistics_object::process_fees(const account_object& a, database& 
    }
 }
 
-void account_statistics_object::pay_fee( share_type core_fee, share_type cashback_vesting_threshold )
+void account_statistics_object::pay_fee( amount_type core_fee, amount_type cashback_vesting_threshold )
 {
    if( core_fee > cashback_vesting_threshold )
       pending_fees += core_fee;

@@ -481,7 +481,7 @@ public:
 
       fc::future<void>     _kill_inactive_conns_loop_done;
       /// A cached copy of the block interval, to avoid a thread hop to the blockchain to get the current value
-      uint8_t _recent_block_interval_seconds = GRAPHENE_MAX_BLOCK_INTERVAL;
+      uint8_t _recent_block_interval_seconds = GRAPHENE_LIMIT_MAX_BLOCK_INTERVAL;
 
       std::string          _user_agent_string;
       /**

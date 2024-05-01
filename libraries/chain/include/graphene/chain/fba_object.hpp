@@ -15,7 +15,7 @@ class fba_accumulator_object : public graphene::db::abstract_object<fba_accumula
                                                                     implementation_ids, impl_fba_accumulator_object_type>
 {
    public:
-      share_type accumulated_fba_fees;
+      amount_type accumulated_fba_fees;
       optional< asset_id_type > designated_asset;
 
       bool is_configured( const database& db )const;

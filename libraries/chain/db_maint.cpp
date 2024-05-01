@@ -36,8 +36,8 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
                   [](const ObjectType& o) { return std::cref(o); });
    std::partial_sort(refs.begin(), refs.begin() + count, refs.end(),
                    [this](const ObjectType& a, const ObjectType& b)->bool {
-      share_type oa_vote = _vote_tally_buffer[a.vote_id];
-      share_type ob_vote = _vote_tally_buffer[b.vote_id];
+      amount_type oa_vote = _vote_tally_buffer[a.vote_id];
+      amount_type ob_vote = _vote_tally_buffer[b.vote_id];
       if( oa_vote != ob_vote )
          return oa_vote > ob_vote;
       return a.vote_id < b.vote_id;
@@ -92,11 +92,11 @@ void database::perform_account_maintenance(Type tally_helper)
 struct worker_pay_visitor
 {
    private:
-      share_type pay;
+      amount_type pay;
       database& db;
 
    public:
-      worker_pay_visitor(share_type pay, database& db)
+      worker_pay_visitor(amount_type pay, database& db)
          : pay(pay), db(db) {}
 
       typedef void result_type;
@@ -122,7 +122,7 @@ void database::update_worker_votes()
    }
 }
 
-void database::pay_workers( share_type& budget )
+void database::pay_workers( amount_type& budget )
 {
    const auto head_time = head_block_time();
 //   ilog("Processing payroll! Available budget is ${b}", ("b", budget));
@@ -137,8 +137,8 @@ void database::pay_workers( share_type& budget )
    // worker with more votes is preferred
    // if two workers exactly tie for votes, worker with lower ID is preferred
    std::sort(active_workers.begin(), active_workers.end(), [](const worker_object& wa, const worker_object& wb) {
-      share_type wa_vote = wa.total_votes;
-      share_type wb_vote = wb.total_votes;
+      amount_type wa_vote = wa.total_votes;
+      amount_type wb_vote = wb.total_votes;
       if( wa_vote != wb_vote )
          return wa_vote > wb_vote;
       return wa.id < wb.id;
@@ -151,7 +151,7 @@ void database::pay_workers( share_type& budget )
    for( uint32_t i = 0; i < active_workers.size() && budget > 0; ++i )
    {
       const worker_object& active_worker = active_workers[i];
-      share_type requested_pay = active_worker.daily_pay;
+      amount_type requested_pay = active_worker.daily_pay;
 
       // Note: if there is a good chance that passed_time_count == day_count,
       //       for better performance, can avoid the 128 bit calculation by adding a check.
@@ -161,7 +161,7 @@ void database::pay_workers( share_type& budget )
       pay /= day_count;
       requested_pay = static_cast<uint64_t>(pay);
 
-      share_type actual_pay = std::min(budget, requested_pay);
+      amount_type actual_pay = std::min(budget, requested_pay);
       //ilog(" ==> Paying ${a} to worker ${w}", ("w", active_worker.id)("a", actual_pay));
       modify(active_worker, [&](worker_object& w) {
          w.worker.visit(worker_pay_visitor(actual_pay, *this));
@@ -174,12 +174,12 @@ void database::pay_workers( share_type& budget )
 void database::update_block_producers()
 { try {
    assert( !_validator_count_histogram_buffer.empty() );
-   share_type stake_target = (_total_voting_stake-_validator_count_histogram_buffer[0]) / 2;
+   amount_type stake_target = (_total_voting_stake-_validator_count_histogram_buffer[0]) / 2;
 
    /// accounts that vote for 0 or 1 validator do not get to express an opinion on
    /// the number of validators to have (they abstain and are non-voting accounts)
 
-   share_type stake_tally = 0;
+   amount_type stake_tally = 0;
 
    size_t validator_count = 0;
    if( stake_target > 0 )
@@ -247,11 +247,11 @@ void database::update_block_producers()
 void database::update_council_delegates()
 { try {
    assert( !_council_count_histogram_buffer.empty() );
-   share_type stake_target = (_total_voting_stake-_council_count_histogram_buffer[0]) / 2;
+   amount_type stake_target = (_total_voting_stake-_council_count_histogram_buffer[0]) / 2;
 
    /// accounts that vote for 0 or 1 delegate do not get to express an opinion on
    /// the number of delegates to have (they abstain and are non-voting accounts)
-   share_type stake_tally = 0;
+   amount_type stake_tally = 0;
    size_t delegate_count = 0;
    if( stake_target > 0 )
    {
@@ -342,7 +342,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    // end of the maintenance interval.  Thus the accumulated_fees
    // are available for the budget at this point, but not included
    // in core.reserved().
-   share_type reserve = rec.from_initial_reserve + core_dd.accumulated_fees;
+   amount_type reserve = rec.from_initial_reserve + core_dd.accumulated_fees;
    // Similarly, we consider leftover validator_budget to be burned
    // at the BEGINNING of the maintenance interval.
    reserve += dpo.validator_budget;
@@ -356,7 +356,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    budget_u128 += ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS) - 1);
    budget_u128 >>= GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS;
    if( budget_u128 < static_cast<fc::uint128_t>(reserve.value) )
-      rec.total_budget = share_type(static_cast<uint64_t>(budget_u128));
+      rec.total_budget = amount_type(static_cast<uint64_t>(budget_u128));
    else
       rec.total_budget = reserve;
 
@@ -396,9 +396,9 @@ void database::process_budget()
 
       budget_record rec;
       initialize_budget_record( now, rec );
-      share_type available_funds = rec.total_budget;
+      amount_type available_funds = rec.total_budget;
 
-      share_type validator_budget = gpo.parameters.producer_pay_per_block.value * blocks_to_maint;
+      amount_type validator_budget = gpo.parameters.producer_pay_per_block.value * blocks_to_maint;
       rec.requested_validator_budget = validator_budget;
       validator_budget = std::min(validator_budget, available_funds);
       rec.validator_budget = validator_budget;
@@ -409,7 +409,7 @@ void database::process_budget()
       constexpr uint64_t seconds_per_day = 86400;
       worker_budget_u128 /= seconds_per_day;
 
-      share_type worker_budget;
+      amount_type worker_budget;
       if( worker_budget_u128 >= static_cast<fc::uint128_t>(available_funds.value) )
          worker_budget = available_funds;
       else
@@ -417,7 +417,7 @@ void database::process_budget()
       rec.worker_budget = worker_budget;
       available_funds -= worker_budget;
 
-      share_type leftover_worker_funds = worker_budget;
+      amount_type leftover_worker_funds = worker_budget;
       pay_workers(leftover_worker_funds);
       rec.leftover_worker_funds = leftover_worker_funds;
       available_funds += leftover_worker_funds;
@@ -556,17 +556,17 @@ void split_fba_balance(
    fc::uint128_t buyback_amount_128 = fba.accumulated_fba_fees.value;
    buyback_amount_128 *= designated_asset_buyback_pct;
    buyback_amount_128 /= GRAPHENE_100_PERCENT;
-   share_type buyback_amount = static_cast<uint64_t>(buyback_amount_128);
+   amount_type buyback_amount = static_cast<uint64_t>(buyback_amount_128);
 
    fc::uint128_t issuer_amount_128 = fba.accumulated_fba_fees.value;
    issuer_amount_128 *= designated_asset_issuer_pct;
    issuer_amount_128 /= GRAPHENE_100_PERCENT;
-   share_type issuer_amount = static_cast<uint64_t>(issuer_amount_128);
+   amount_type issuer_amount = static_cast<uint64_t>(issuer_amount_128);
 
    // this assert should never fail
    FC_ASSERT( buyback_amount + issuer_amount <= fba.accumulated_fba_fees );
 
-   share_type network_amount = fba.accumulated_fba_fees - (buyback_amount + issuer_amount);
+   amount_type network_amount = fba.accumulated_fba_fees - (buyback_amount + issuer_amount);
 
    const asset_object& designated_asset = (*fba.designated_asset)(db);
 
@@ -636,7 +636,7 @@ void create_buyback_orders( database& db )
       {
          const auto* it = entry.second;
          asset_id_type asset_to_sell = it->asset_type;
-         share_type amount_to_sell = it->balance;
+         amount_type amount_to_sell = it->balance;
          if( asset_to_sell == asset_to_buy.id )
             continue;
          if( amount_to_sell == 0 )
@@ -707,7 +707,7 @@ void database::process_bids( const backed_asset_data_object& bad )
    const auto start = bid_idx.lower_bound( to_revive_id );
    auto end = bid_idx.upper_bound( to_revive_id );
 
-   share_type covered = 0;
+   amount_type covered = 0;
    auto itr = start;
    auto revive_ratio = bad.current_feed.maintenance_collateral_ratio;
    while( covered < bdd.current_supply && itr != end )
@@ -726,8 +726,8 @@ void database::process_bids( const backed_asset_data_object& bad )
    if( covered < bdd.current_supply ) return;
 
    end = itr;
-   share_type to_cover = bdd.current_supply;
-   share_type remaining_fund = bad.settlement_fund;
+   amount_type to_cover = bdd.current_supply;
+   amount_type remaining_fund = bad.settlement_fund;
    itr = start;
    while( itr != end )
    {
@@ -736,8 +736,8 @@ void database::process_bids( const backed_asset_data_object& bad )
       asset debt_in_bid = bid.inv_swan_price.quote;
       if( debt_in_bid.amount > bdd.current_supply )
          debt_in_bid.amount = bdd.current_supply;
-      share_type debt = debt_in_bid.amount;
-      share_type collateral = (debt_in_bid * bad.settlement_price).amount;
+      amount_type debt = debt_in_bid.amount;
+      amount_type collateral = (debt_in_bid * bad.settlement_price).amount;
       if( debt >= to_cover )
       {
          debt = to_cover;

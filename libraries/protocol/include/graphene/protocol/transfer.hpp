@@ -23,8 +23,8 @@ namespace graphene { namespace protocol {
    struct transfer_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee               = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t price_per_kbyte   = 10 * GRAPHENE_BLOCKCHAIN_PRECISION; /// only required for large memos.
+         uint64_t fee               = 20 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint32_t price_per_kbyte   = 10 * GRAPHENE_CORE_ASSET_PRECISION; /// only required for large memos.
       };
 
       asset            fee;
@@ -42,7 +42,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
    /**
@@ -56,7 +56,7 @@ namespace graphene { namespace protocol {
    struct override_transfer_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee               = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee               = 20 * GRAPHENE_CORE_ASSET_PRECISION;
          uint32_t price_per_kbyte   = 10; /// only required for large memos.
       };
 
@@ -76,7 +76,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
 }} // graphene::protocol

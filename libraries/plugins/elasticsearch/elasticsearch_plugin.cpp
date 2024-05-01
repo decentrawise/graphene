@@ -268,11 +268,11 @@ struct operation_visitor
 {
    using result_type = void;
 
-   share_type fee_amount;
+   amount_type fee_amount;
    asset_id_type fee_asset;
 
    asset_id_type transfer_asset_id;
-   share_type transfer_amount;
+   amount_type transfer_amount;
    account_id_type transfer_from;
    account_id_type transfer_to;
 
@@ -290,9 +290,9 @@ struct operation_visitor
    object_id_type      fill_order_id;
    account_id_type     fill_account_id;
    asset_id_type       fill_pays_asset_id;
-   share_type          fill_pays_amount;
+   amount_type          fill_pays_amount;
    asset_id_type       fill_receives_asset_id;
-   share_type          fill_receives_amount;
+   amount_type          fill_receives_amount;
    double              fill_fill_price;
    bool                fill_is_maker;
 

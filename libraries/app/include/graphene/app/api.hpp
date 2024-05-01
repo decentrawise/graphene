@@ -470,7 +470,7 @@ namespace graphene { namespace app {
          {
             string          name;
             account_id_type account_id;
-            share_type      amount;
+            amount_type      amount;
          };
          struct asset_holders
          {
@@ -529,7 +529,7 @@ namespace graphene { namespace app {
 
             price         min_price; ///< possible lowest price in the group
             price         max_price; ///< possible highest price in the group
-            share_type    total_for_sale; ///< total amount of asset for sale, asset id is min_price.base.asset_id
+            amount_type    total_for_sale; ///< total amount of asset for sale, asset id is min_price.base.asset_id
          };
 
          /**

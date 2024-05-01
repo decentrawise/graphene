@@ -25,8 +25,8 @@ namespace graphene { namespace protocol {
    struct htlc_create_operation : public base_operation 
    {
       struct fee_parameters_type {
-         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 1 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint64_t fee_per_day = 1 * GRAPHENE_CORE_ASSET_PRECISION;
          uint32_t price_per_kbyte = 10;
       };
 
@@ -66,14 +66,14 @@ namespace graphene { namespace protocol {
       /****
        * @brief calculates the fee to be paid for this operation
        */
-      share_type calculate_fee(const fee_parameters_type &fee_params) const;
+      amount_type calculate_fee(const fee_parameters_type &fee_params) const;
    };
 
    struct htlc_redeem_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t price_per_kbyte = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 1 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint64_t price_per_kbyte = 1 * GRAPHENE_CORE_ASSET_PRECISION;
       };
       
       // paid to network
@@ -102,7 +102,7 @@ namespace graphene { namespace protocol {
       /****
        * @brief calculates the fee to be paid for this operation
        */
-      share_type calculate_fee(const fee_parameters_type& fee_params)const;
+      amount_type calculate_fee(const fee_parameters_type& fee_params)const;
    };
 
    /**
@@ -122,7 +122,7 @@ namespace graphene { namespace protocol {
       account_id_type fee_payer()const { return to; }
       void validate()const { FC_ASSERT( !"virtual operation" ); }
 
-      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+      amount_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
 
       asset fee;
 
@@ -137,8 +137,8 @@ namespace graphene { namespace protocol {
    struct htlc_extend_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t fee_per_day = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 1 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint64_t fee_per_day = 1 * GRAPHENE_CORE_ASSET_PRECISION;
       };
       
       // paid to network
@@ -167,7 +167,7 @@ namespace graphene { namespace protocol {
       /****
        * @brief calculates the fee to be paid for this operation
        */
-      share_type calculate_fee(const fee_parameters_type& fee_params)const;
+      amount_type calculate_fee(const fee_parameters_type& fee_params)const;
    };
 
    struct htlc_refund_operation : public base_operation
@@ -185,7 +185,7 @@ namespace graphene { namespace protocol {
       void            validate()const { FC_ASSERT( !"virtual operation" ); }
 
       /// This is a virtual operation; there is no fee
-      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+      amount_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
 
       asset fee;
 

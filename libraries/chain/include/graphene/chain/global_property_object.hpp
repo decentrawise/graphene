@@ -46,7 +46,7 @@ namespace graphene { namespace chain {
          validator_id_type current_producer;
          time_point_sec    next_maintenance_time;
          time_point_sec    last_budget_time;
-         share_type        validator_budget;
+         amount_type        validator_budget;
          uint32_t          accounts_registered_this_interval = 0;
          /**
           *  Every time a block is missed this increases by

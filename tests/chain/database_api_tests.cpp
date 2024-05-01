@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
 
       // prepare data for get_htlc
       {
-         int64_t init_balance(100 * GRAPHENE_BLOCKCHAIN_PRECISION);
+         int64_t init_balance(100 * GRAPHENE_CORE_ASSET_PRECISION);
          transfer( council_account, alice_id, graphene::chain::asset(init_balance) );
 
          uint16_t preimage_size = 256;
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE( subscription_notification_test )
          // alice puts a htlc contract to bob
          graphene::chain::htlc_create_operation create_operation;
          BOOST_TEST_MESSAGE("Alice, who has 100 coins, is transferring 3 coins to Bob");
-         create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_BLOCKCHAIN_PRECISION );
+         create_operation.amount = graphene::chain::asset( 3 * GRAPHENE_CORE_ASSET_PRECISION );
          create_operation.to = bob_id;
          create_operation.claim_period_seconds = 60;
          create_operation.preimage_hash = hash_it<fc::sha256>( pre_image );
@@ -1088,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
    // query with no constraint, expected:
    // 1. up to 101 orders returned
    // 2. orders were sorted by price desendingly
-   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_SYMBOL, "CNY");
+   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_CORE_ASSET_SYMBOL, "CNY");
    BOOST_CHECK(results.size() == 101);
    for (size_t i = 0 ; i < results.size() - 1 ; ++i)
    {
@@ -1101,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
    // query with specified limit, expected:
    // 1. up to specified amount of orders returned
    // 2. orders were sorted by price desendingly
-   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_SYMBOL, "CNY", 50);
+   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_CORE_ASSET_SYMBOL, "CNY", 50);
    BOOST_CHECK(results.size() == 50);
    for (size_t i = 0 ; i < results.size() - 1 ; ++i)
    {
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
 
    // query with specified order id and limit, expected:
    // same as before, but also the first order's id equal to specified
-   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_SYMBOL, "CNY", 80,
+   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_CORE_ASSET_SYMBOL, "CNY", 80,
        limit_order_id_type(o.id));
    BOOST_CHECK(results.size() == 80);
    BOOST_CHECK(results.front().id == o.id);
@@ -1136,7 +1136,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
    // 3. the first order's sell price equal to specified
    cancel_limit_order(o); // NOTE 1: this canceled order was in scope of the
                           // first created 50 orders, so with price 2.5 CORE/CNY
-   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_SYMBOL, "CNY", 50,
+   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_CORE_ASSET_SYMBOL, "CNY", 50,
        limit_order_id_type(o.id), o.sell_price);
    BOOST_CHECK(results.size() == 50);
    BOOST_CHECK(results.front().id > o.id);
@@ -1154,7 +1154,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
 
    cancel_limit_order(o); // NOTE 3: this time the canceled order was in scope
                           // of the lowest price 150 orders
-   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_SYMBOL, "CNY", 101,
+   results = db_api.get_account_limit_orders(seller.name, GRAPHENE_CORE_ASSET_SYMBOL, "CNY", 101,
        limit_order_id_type(o.id), o.sell_price);
    BOOST_CHECK(results.size() == 71);
    BOOST_CHECK(results.front().id > o.id);
@@ -1167,7 +1167,7 @@ BOOST_AUTO_TEST_CASE(get_account_limit_orders)
    BOOST_CHECK(results.front().sell_price == price(core.amount(100), bitcny.amount(280)));
    BOOST_CHECK(results.back().sell_price == price(core.amount(100), bitcny.amount(350)));
 
-   BOOST_CHECK_THROW(db_api.get_account_limit_orders(seller.name, GRAPHENE_SYMBOL, "CNY", 101,
+   BOOST_CHECK_THROW(db_api.get_account_limit_orders(seller.name, GRAPHENE_CORE_ASSET_SYMBOL, "CNY", 101,
                limit_order_id_type(o.id)), fc::exception);
 
 } FC_LOG_AND_RETHROW() }
@@ -1603,7 +1603,7 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
 
    graphene::app::database_api db_api( db, &( app.get_options() ) );
 
-   auto oassets = db_api.get_assets( { GRAPHENE_SYMBOL } );
+   auto oassets = db_api.get_assets( { GRAPHENE_CORE_ASSET_SYMBOL } );
    BOOST_REQUIRE( !oassets.empty() );
    BOOST_REQUIRE( oassets[0].valid() );
    BOOST_REQUIRE( oassets[0]->total_in_collateral.valid() );
@@ -1617,7 +1617,7 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
    asset_id_type btc_id = create_backed_asset( "BTC", nathan_id, 100, charge_market_fee, 8, bitusd_id ).get_id();
    update_feed_producers( btc_id, { nathan_id } );
 
-   oassets = db_api.get_assets( { GRAPHENE_SYMBOL, "USDBIT", "DANBIT", "BTC" } );
+   oassets = db_api.get_assets( { GRAPHENE_CORE_ASSET_SYMBOL, "USDBIT", "DANBIT", "BTC" } );
    BOOST_REQUIRE_EQUAL( 4, oassets.size() );
    BOOST_REQUIRE( oassets[0].valid() );
    BOOST_REQUIRE( oassets[0]->total_in_collateral.valid() );
@@ -1662,7 +1662,7 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
    borrow( nathan_id, bitusd.amount(1000), asset(15000) );
    borrow( dan_id, bitusd.amount(100), asset(2000) );
 
-   oassets = db_api.get_assets( { GRAPHENE_SYMBOL, "USDBIT", "DANBIT", "BTC" } );
+   oassets = db_api.get_assets( { GRAPHENE_CORE_ASSET_SYMBOL, "USDBIT", "DANBIT", "BTC" } );
    BOOST_REQUIRE_EQUAL( 4, oassets.size() );
    BOOST_REQUIRE( oassets[0].valid() );
    BOOST_REQUIRE( oassets[0]->total_in_collateral.valid() );
@@ -1687,7 +1687,7 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
    borrow( nathan_id, bitdan.amount(1000), asset(15000) );
    borrow( nathan_id, btc.amount(5), bitusd.amount(1000) );
 
-   oassets = db_api.lookup_asset_symbols( { GRAPHENE_SYMBOL, "USDBIT", "DANBIT", "BTC" } );
+   oassets = db_api.lookup_asset_symbols( { GRAPHENE_CORE_ASSET_SYMBOL, "USDBIT", "DANBIT", "BTC" } );
    BOOST_REQUIRE_EQUAL( 4, oassets.size() );
    BOOST_REQUIRE( oassets[0].valid() );
    BOOST_REQUIRE( oassets[0]->total_in_collateral.valid() );
@@ -1713,7 +1713,7 @@ BOOST_AUTO_TEST_CASE( asset_in_collateral )
    generate_blocks( db.head_block_time() + fc::days(2) );
    fc::usleep(fc::milliseconds(100));
 
-   auto assets = db_api.list_assets( GRAPHENE_SYMBOL, 1 );
+   auto assets = db_api.list_assets( GRAPHENE_CORE_ASSET_SYMBOL, 1 );
    BOOST_REQUIRE( !assets.empty() );
    BOOST_REQUIRE( assets[0].total_in_collateral.valid() );
    BOOST_CHECK( !assets[0].total_backing_collateral.valid() );

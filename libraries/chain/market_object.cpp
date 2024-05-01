@@ -37,7 +37,7 @@ max_debt_to_cover = max_amount_to_sell * match_price
 */
 // TODO: This function needs to be refactored along with others to make maintenance_collateralization non-optional
 // since it is the actual way now
-share_type call_order_object::get_max_debt_to_cover( price match_price,
+amount_type call_order_object::get_max_debt_to_cover( price match_price,
                                                      price feed_price,
                                                      const uint16_t maintenance_collateral_ratio,
                                                      const optional<price>& maintenance_collateralization )const
@@ -100,7 +100,7 @@ share_type call_order_object::get_max_debt_to_cover( price match_price,
    i256 to_cover_i256 = ( numerator / denominator );
    if( to_cover_i256 >= debt.value ) // avoid possible overflow
       return debt;
-   share_type to_cover_amt = static_cast< int64_t >( to_cover_i256 );
+   amount_type to_cover_amt = static_cast< int64_t >( to_cover_i256 );
 
    // stabilize
    // note: rounding up-down results in 3x imperfection rate in comparison to down-down-up

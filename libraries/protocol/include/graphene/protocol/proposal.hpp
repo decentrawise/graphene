@@ -48,7 +48,7 @@ namespace graphene { namespace protocol {
    struct proposal_create_operation : public base_operation
    {
        struct fee_parameters_type { 
-          uint64_t fee              = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+          uint64_t fee              = 20 * GRAPHENE_CORE_ASSET_PRECISION; 
           uint32_t price_per_kbyte  = 10;
        };
 
@@ -74,7 +74,7 @@ namespace graphene { namespace protocol {
 
        account_id_type fee_payer()const { return fee_paying_account; }
        void            validate()const;
-       share_type      calculate_fee(const fee_parameters_type& k)const;
+       amount_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
    /**
@@ -98,7 +98,7 @@ namespace graphene { namespace protocol {
    struct proposal_update_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee               = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+         uint64_t fee               = 20 * GRAPHENE_CORE_ASSET_PRECISION; 
          uint32_t price_per_kbyte   = 10;
       };
 
@@ -116,7 +116,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      amount_type      calculate_fee(const fee_parameters_type& k)const;
 
       void get_required_authorities( vector<authority>& )const;
       void get_required_active_authorities( flat_set<account_id_type>& )const;
@@ -136,7 +136,7 @@ namespace graphene { namespace protocol {
     */
    struct proposal_delete_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee =  GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset             fee;
       account_id_type   fee_paying_account;

@@ -8,10 +8,10 @@ namespace graphene { namespace protocol {
 
    struct asset
    {
-      asset( share_type a = 0, asset_id_type id = asset_id_type() )
+      asset( amount_type a = 0, asset_id_type id = asset_id_type() )
       :amount(a),asset_id(id){}
 
-      share_type    amount;
+      amount_type    amount;
       asset_id_type asset_id;
 
       asset& operator += ( const asset& o )
@@ -66,7 +66,7 @@ namespace graphene { namespace protocol {
          return asset( a.amount + b.amount, a.asset_id );
       }
 
-      static share_type scaled_precision( uint8_t precision );
+      static amount_type scaled_precision( uint8_t precision );
 
       asset multiply_and_round_up( const price& p )const; ///< Multiply and round up
    };
@@ -162,10 +162,10 @@ namespace graphene { namespace protocol {
       price core_exchange_rate;
 
       /** Fixed point between 1.000 and 10.000, implied fixed point denominator is GRAPHENE_COLLATERAL_RATIO_DENOM */
-      uint16_t maintenance_collateral_ratio = GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO;
+      uint16_t maintenance_collateral_ratio = GRAPHENE_MAINTENANCE_COLLATERAL_RATIO;
 
       /** Fixed point between 1.000 and 10.000, implied fixed point denominator is GRAPHENE_COLLATERAL_RATIO_DENOM */
-      uint16_t maximum_short_squeeze_ratio = GRAPHENE_DEFAULT_MAX_SHORT_SQUEEZE_RATIO;
+      uint16_t maximum_short_squeeze_ratio = GRAPHENE_MAX_SHORT_SQUEEZE_RATIO;
 
       /** When selling collateral to pay off debt, the least amount of debt to receive should be
        *  min_usd = max_short_squeeze_price() * collateral

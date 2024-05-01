@@ -55,13 +55,13 @@ namespace graphene { namespace protocol {
     */
    struct worker_create_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 5000*GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 5000*GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset                fee;
       account_id_type      owner;
       time_point_sec       work_begin_date;
       time_point_sec       work_end_date;
-      share_type           daily_pay;
+      amount_type          daily_pay;
       string               name;
       string               url;
       /// This should be set to the initializer appropriate for the type of worker to be created.

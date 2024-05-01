@@ -193,7 +193,7 @@ public:
    void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const operation& op);
    void replace_operation_in_builder_transaction(transaction_handle_type handle,
          uint32_t operation_index, const operation& new_op);
-   asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL);
+   asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_CORE_ASSET_SYMBOL);
    transaction preview_builder_transaction(transaction_handle_type handle);
    signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
    signed_transaction sign_builder_transaction2(transaction_handle_type transaction_handle,
@@ -268,7 +268,7 @@ public:
          bool broadcast );
 
    signed_transaction create_worker( string owner_account, time_point_sec work_begin_date,
-         time_point_sec work_end_date, share_type daily_pay, string name, string url,
+         time_point_sec work_end_date, amount_type daily_pay, string name, string url,
          variant worker_settings, bool broadcast );
 
    signed_transaction update_worker_votes( string account, worker_vote_delta delta, bool broadcast );

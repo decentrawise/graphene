@@ -240,16 +240,16 @@ namespace graphene { namespace chain {
           */
          optional< vesting_balance_id_type > deposit_lazy_vesting(
             const optional< vesting_balance_id_type >& ovbid,
-            share_type amount,
+            amount_type amount,
             uint32_t req_vesting_seconds,
             vesting_balance_type balance_type,
             account_id_type req_owner,
             bool require_vesting );
 
          /// helper to handle cashback rewards
-         void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
+         void deposit_cashback(const account_object& acct, amount_type amount, bool require_vesting = true);
          /// helper to handle validator pay
-         void deposit_producer_pay(const validator_object& wit, share_type amount);
+         void deposit_producer_pay(const validator_object& wit, amount_type amount);
 
          string to_pretty_string( const asset& a )const;
 
@@ -272,7 +272,7 @@ namespace graphene { namespace chain {
          void cancel_limit_order(const limit_order_object& order, bool create_virtual_op = true);
          void revive_backed_asset( const asset_object& backed_asset );
          void cancel_bid(const collateral_bid_object& bid, bool create_virtual_op = true);
-         void execute_bid( const collateral_bid_object& bid, share_type debt_covered, share_type collateral_from_fund, const price_feed& current_feed );
+         void execute_bid( const collateral_bid_object& bid, amount_type debt_covered, amount_type collateral_from_fund, const price_feed& current_feed );
 
       private:
          void _cancel_bids_and_revive_backed_asset(const asset_object &backed_asset, const backed_asset_data_object &bad);
@@ -572,7 +572,7 @@ namespace graphene { namespace chain {
 
          void initialize_budget_record( fc::time_point_sec now, budget_record& rec )const;
          void process_budget();
-         void pay_workers( share_type& budget );
+         void pay_workers( amount_type& budget );
          void perform_chain_maintenance(const signed_block& next_block);
          void update_block_producers();
          void update_council_delegates();

@@ -59,9 +59,9 @@ namespace graphene { namespace protocol {
 
       struct fee_parameters_type
       {
-         uint64_t basic_fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint64_t premium_fee    = 2000*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t basic_fee      = 5*GRAPHENE_CORE_ASSET_PRECISION; ///< the cost to register the cheapest non-free account
+         uint64_t premium_fee    = 2000*GRAPHENE_CORE_ASSET_PRECISION; ///< the cost to register the cheapest non-free account
+         uint32_t price_per_kbyte = GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset           fee;
@@ -83,7 +83,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return registrar; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& )const;
+      amount_type      calculate_fee(const fee_parameters_type& )const;
 
       void get_required_active_authorities( flat_set<account_id_type>& a )const
       {
@@ -112,8 +112,8 @@ namespace graphene { namespace protocol {
 
       struct fee_parameters_type
       {
-         share_type fee             = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t   price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+         amount_type fee             = 20 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint32_t   price_per_kbyte = GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset fee;
@@ -131,7 +131,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return account; }
       void       validate()const;
-      share_type calculate_fee( const fee_parameters_type& k )const;
+      amount_type calculate_fee( const fee_parameters_type& k )const;
 
       bool is_owner_update()const
       { return owner || extensions.value.owner_special_authority.valid(); }
@@ -164,7 +164,7 @@ namespace graphene { namespace protocol {
     */
    struct account_whitelist_operation : public base_operation
    {
-      struct fee_parameters_type { share_type fee = 300000; };
+      struct fee_parameters_type { amount_type fee = 300000; };
       enum account_listing {
          no_listing = 0x0, ///< No opinion is specified about this account
          white_listed = 0x1, ///< This account is whitelisted, but not blacklisted
@@ -203,8 +203,8 @@ namespace graphene { namespace protocol {
    struct account_upgrade_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t membership_annual_fee   =  2000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t membership_lifetime_fee = 10000 * GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to upgrade to a lifetime member
+         uint64_t membership_annual_fee   =  2000 * GRAPHENE_CORE_ASSET_PRECISION;
+         uint64_t membership_lifetime_fee = 10000 * GRAPHENE_CORE_ASSET_PRECISION; ///< the cost to upgrade to a lifetime member
       };
 
       asset             fee;
@@ -216,7 +216,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return account_to_upgrade; }
       void       validate()const;
-      share_type calculate_fee( const fee_parameters_type& k )const;
+      amount_type calculate_fee( const fee_parameters_type& k )const;
    };
 
    /**
@@ -234,7 +234,7 @@ namespace graphene { namespace protocol {
     */
    struct account_transfer_operation : public base_operation
    {
-      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_BLOCKCHAIN_PRECISION; };
+      struct fee_parameters_type { uint64_t fee = 500 * GRAPHENE_CORE_ASSET_PRECISION; };
 
       asset           fee;
       account_id_type account_id;

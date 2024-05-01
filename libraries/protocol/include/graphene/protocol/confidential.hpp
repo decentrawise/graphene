@@ -48,7 +48,7 @@ namespace graphene { namespace protocol {
    struct blind_memo
    {
       account_id_type     from;
-      share_type          amount;
+      amount_type          amount;
       string              message;
       /** set to the first 4 bytes of the shared secret
        * used to encrypt the memo.  Used to verify that
@@ -128,8 +128,8 @@ namespace graphene { namespace protocol {
    struct transfer_to_blind_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee              = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint32_t price_per_output = 5*GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee              = 5*GRAPHENE_CORE_ASSET_PRECISION; ///< the cost to register the cheapest non-free account
+         uint32_t price_per_output = 5*GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset                 fee;
@@ -140,7 +140,7 @@ namespace graphene { namespace protocol {
 
       account_id_type fee_payer()const { return from; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& )const;
+      amount_type      calculate_fee(const fee_parameters_type& )const;
    };
 
    /**
@@ -150,7 +150,7 @@ namespace graphene { namespace protocol {
    struct transfer_from_blind_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee              = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
+         uint64_t fee              = 5*GRAPHENE_CORE_ASSET_PRECISION; ///< the cost to register the cheapest non-free account
       };
 
       asset                 fee;
@@ -215,8 +215,8 @@ namespace graphene { namespace protocol {
    struct blind_transfer_operation : public base_operation
    {
       struct fee_parameters_type { 
-         uint64_t fee              = 5*GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to register the cheapest non-free account
-         uint32_t price_per_output = 5*GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee              = 5*GRAPHENE_CORE_ASSET_PRECISION; ///< the cost to register the cheapest non-free account
+         uint32_t price_per_output = 5*GRAPHENE_CORE_ASSET_PRECISION;
       };
 
       asset                 fee;
@@ -226,7 +226,7 @@ namespace graphene { namespace protocol {
       /** graphene TEMP account */
       account_id_type fee_payer()const;
       void            validate()const;
-      share_type      calculate_fee( const fee_parameters_type& k )const;
+      amount_type      calculate_fee( const fee_parameters_type& k )const;
 
       void            get_required_authorities( vector<authority>& a )const
       {

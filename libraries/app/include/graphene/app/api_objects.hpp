@@ -140,8 +140,8 @@ namespace graphene { namespace app {
       explicit extended_asset_object( const asset_object& a ) : asset_object( a ) {}
       explicit extended_asset_object( asset_object&& a ) : asset_object( std::move(a) ) {}
 
-      optional<share_type> total_in_collateral;
-      optional<share_type> total_backing_collateral;
+      optional<amount_type> total_in_collateral;
+      optional<amount_type> total_backing_collateral;
    };
 
    struct maybe_signed_block_header : block_header

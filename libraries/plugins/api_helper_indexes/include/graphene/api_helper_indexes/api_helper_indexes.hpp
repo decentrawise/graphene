@@ -20,12 +20,12 @@ class amount_in_collateral_index : public secondary_index
       virtual void about_to_modify( const object& before ) override;
       virtual void object_modified( const object& after ) override;
 
-      share_type get_amount_in_collateral( const asset_id_type& asset )const;
-      share_type get_backing_collateral( const asset_id_type& asset )const;
+      amount_type get_amount_in_collateral( const asset_id_type& asset )const;
+      amount_type get_backing_collateral( const asset_id_type& asset )const;
 
    private:
-      flat_map<asset_id_type, share_type> in_collateral;
-      flat_map<asset_id_type, share_type> backing_collateral;
+      flat_map<asset_id_type, amount_type> in_collateral;
+      flat_map<asset_id_type, amount_type> backing_collateral;
 };
 
 /**

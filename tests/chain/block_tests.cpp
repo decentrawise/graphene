@@ -1256,7 +1256,7 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
          }
       };
 
-      auto generate_xfer_tx = [&]( account_id_type from, account_id_type to, share_type amount, int blocks_to_expire ) -> signed_transaction
+      auto generate_xfer_tx = [&]( account_id_type from, account_id_type to, amount_type amount, int blocks_to_expire ) -> signed_transaction
       {
          signed_transaction tx;
          transfer_operation xfer_op;
@@ -1376,7 +1376,7 @@ BOOST_AUTO_TEST_CASE( genesis_reserve_ids )
          usd.issuer_name = "init0";
          usd.description = "federally floated";
          usd.precision = 4;
-         usd.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+         usd.max_supply = GRAPHENE_CORE_ASSET_MAX_SUPPLY;
          usd.accumulated_fees = 0;
          usd.is_backed = true;
          

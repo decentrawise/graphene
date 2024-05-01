@@ -94,7 +94,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       } );
    }
 
-   share_type generic_evaluator::calculate_fee_for_operation(const operation& op) const
+   amount_type generic_evaluator::calculate_fee_for_operation(const operation& op) const
    {
      return db().current_fee_schedule().calculate_fee( op ).amount;
    }

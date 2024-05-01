@@ -131,7 +131,7 @@ void database::deposit_market_fee_vesting_balance(const account_id_type &account
 
 optional< vesting_balance_id_type > database::deposit_lazy_vesting(
    const optional< vesting_balance_id_type >& ovbid,
-   share_type amount, uint32_t req_vesting_seconds,
+   amount_type amount, uint32_t req_vesting_seconds,
    vesting_balance_type balance_type,
    account_id_type req_owner,
    bool require_vesting )
@@ -175,7 +175,7 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
    return vbo.id;
 }
 
-void database::deposit_cashback(const account_object& acct, share_type amount, bool require_vesting)
+void database::deposit_cashback(const account_object& acct, amount_type amount, bool require_vesting)
 {
    // If we don't have a VBO, or if it has the wrong maturity
    // due to a policy change, cut it loose.
@@ -222,7 +222,7 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
    return;
 }
 
-void database::deposit_producer_pay(const validator_object& wit, share_type amount)
+void database::deposit_producer_pay(const validator_object& wit, amount_type amount)
 {
    if( amount == 0 )
       return;

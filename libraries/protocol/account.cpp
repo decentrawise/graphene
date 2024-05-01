@@ -32,18 +32,18 @@ namespace graphene { namespace protocol {
  * In addition we require the following:
  *
  * - All letters are lowercase
- * - Length is between (inclusive) GRAPHENE_MIN_ACCOUNT_NAME_LENGTH and GRAPHENE_MAX_ACCOUNT_NAME_LENGTH
+ * - Length is between (inclusive) GRAPHENE_ACCOUNT_NAME_MIN_LENGTH and GRAPHENE_ACCOUNT_NAME_MAX_LENGTH
  */
 bool is_valid_name( const string& name )
 { try {
     const size_t len = name.size();
 
-    if( len < GRAPHENE_MIN_ACCOUNT_NAME_LENGTH )
+    if( len < GRAPHENE_ACCOUNT_NAME_MIN_LENGTH )
     {
         return false;
     }
 
-    if( len > GRAPHENE_MAX_ACCOUNT_NAME_LENGTH )
+    if( len > GRAPHENE_ACCOUNT_NAME_MAX_LENGTH )
     {
         return false;
     }
@@ -54,7 +54,7 @@ bool is_valid_name( const string& name )
        size_t end = name.find_first_of( '.', begin );
        if( end == std::string::npos )
           end = len;
-       if( (end - begin) < GRAPHENE_MIN_ACCOUNT_NAME_LENGTH )
+       if( (end - begin) < GRAPHENE_ACCOUNT_NAME_MIN_LENGTH )
        {
           return false;
        }
@@ -141,7 +141,7 @@ void account_options::validate() const
               "May not specify fewer validators or delegates than the number voted for.");
 }
 
-share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
+amount_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
 {
    auto core_fee_required = k.basic_fee;
 
@@ -190,7 +190,7 @@ void account_create_operation::validate()const
 
 
 
-share_type account_update_operation::calculate_fee( const fee_parameters_type& k )const
+amount_type account_update_operation::calculate_fee( const fee_parameters_type& k )const
 {
    auto core_fee_required = k.fee;  
    if( new_options )
@@ -235,7 +235,7 @@ void account_update_operation::validate()const
       validate_special_authority( *extensions.value.active_special_authority );
 }
 
-share_type account_upgrade_operation::calculate_fee(const fee_parameters_type& k) const
+amount_type account_upgrade_operation::calculate_fee(const fee_parameters_type& k) const
 {
    if( upgrade_to_lifetime_member )
       return k.membership_lifetime_fee;

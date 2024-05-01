@@ -1233,7 +1233,7 @@ BOOST_AUTO_TEST_CASE( create_buy_ua_multiple_match_new )
 { try {
    INVOKE( issue_ua );
    const asset_object&   core_asset     = get_asset( UA_TEST_SYMBOL );
-   const asset_object&   test_asset     = get_asset( GRAPHENE_SYMBOL );
+   const asset_object&   test_asset     = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
    const account_object& nathan_account = get_account( "nathan" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
@@ -1273,7 +1273,7 @@ BOOST_AUTO_TEST_CASE( create_buy_exact_match_ua )
 { try {
    INVOKE( issue_ua );
    const asset_object&   test_asset     = get_asset( UA_TEST_SYMBOL );
-   const asset_object&   core_asset     = get_asset( GRAPHENE_SYMBOL );
+   const asset_object&   core_asset     = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
    const account_object& nathan_account = get_account( "nathan" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
@@ -1314,7 +1314,7 @@ BOOST_AUTO_TEST_CASE( create_buy_ua_multiple_match_new_reverse )
 { try {
    INVOKE( issue_ua );
    const asset_object&   test_asset     = get_asset( UA_TEST_SYMBOL );
-   const asset_object&   core_asset     = get_asset( GRAPHENE_SYMBOL );
+   const asset_object&   core_asset     = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
    const account_object& nathan_account = get_account( "nathan" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
@@ -1354,7 +1354,7 @@ BOOST_AUTO_TEST_CASE( create_buy_ua_multiple_match_new_reverse_fract )
 { try {
    INVOKE( issue_ua );
    const asset_object&   test_asset     = get_asset( UA_TEST_SYMBOL );
-   const asset_object&   core_asset     = get_asset( GRAPHENE_SYMBOL );
+   const asset_object&   core_asset     = get_asset( GRAPHENE_CORE_ASSET_SYMBOL );
    const account_object& nathan_account = get_account( "nathan" );
    const account_object& buyer_account  = create_account( "buyer" );
    const account_object& seller_account = create_account( "seller" );
@@ -1405,7 +1405,7 @@ BOOST_AUTO_TEST_CASE( ua_fees )
       const asset_dynamic_data_object& asset_dynamic = test_asset.dynamic_asset_data_id(db);
       const account_object& nathan_account = get_account("nathan");
       const account_object& council_account = account_id_type()(db);
-      const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
+      const amount_type prec = asset::scaled_precision( asset_id_type()(db).precision );
 
       fund_fee_pool(council_account, test_asset, 1000*prec);
       BOOST_CHECK(asset_dynamic.fee_pool == 1000*prec);
@@ -1515,32 +1515,32 @@ BOOST_AUTO_TEST_CASE( validator_feeds )
       asset_publish_feed_operation op;
       op.publisher = block_producers[0];
       op.asset_id = bit_usd.get_id();
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(30));
+      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_CORE_ASSET_PRECISION),bit_usd.amount(30));
       // Accept defaults for required collateral
       trx.operations.emplace_back(op);
       PUSH_TX( db, trx, ~0 );
 
       const backed_asset_data_object& ba = bit_usd.backed_asset_data(db);
-      BOOST_CHECK(ba.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK(ba.current_feed.settlement_price.to_real() == 30.0 / GRAPHENE_CORE_ASSET_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = block_producers[1];
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(25));
+      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_CORE_ASSET_PRECISION),bit_usd.amount(25));
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_CORE_ASSET_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
 
       op.publisher = block_producers[2];
-      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_BLOCKCHAIN_PRECISION),bit_usd.amount(40));
+      op.feed.settlement_price = op.feed.core_exchange_rate = ~price(asset(GRAPHENE_CORE_ASSET_PRECISION),bit_usd.amount(40));
       // But this validator is an idiot.
       op.feed.maintenance_collateral_ratio = 1001;
       trx.operations.back() = op;
       PUSH_TX( db, trx, ~0 );
 
-      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_BLOCKCHAIN_PRECISION);
-      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_DEFAULT_MAINTENANCE_COLLATERAL_RATIO);
+      BOOST_CHECK_EQUAL(ba.current_feed.settlement_price.to_real(), 30.0 / GRAPHENE_CORE_ASSET_PRECISION);
+      BOOST_CHECK(ba.current_feed.maintenance_collateral_ratio == GRAPHENE_MAINTENANCE_COLLATERAL_RATIO);
    } catch (const fc::exception& e) {
       edump((e.to_detail_string()));
       throw;
@@ -1583,7 +1583,7 @@ BOOST_AUTO_TEST_CASE( fill_order )
 BOOST_AUTO_TEST_CASE( producer_pay_test )
 { try {
 
-   const share_type prec = asset::scaled_precision( asset_id_type()(db).precision );
+   const amount_type prec = asset::scaled_precision( asset_id_type()(db).precision );
 
    // there is an immediate maintenance interval in the first block
    //   which will initialize last_budget_time
@@ -1595,7 +1595,7 @@ BOOST_AUTO_TEST_CASE( producer_pay_test )
    transfer(account_id_type()(db), get_account("init3"), asset(20*prec));
    generate_block();
 
-   auto last_validator_vbo_balance = [&]() -> share_type
+   auto last_validator_vbo_balance = [&]() -> amount_type
    {
       const validator_object& wit = db.fetch_block_by_number(db.head_block_num())->validator(db);
       if( !wit.pay_vb.valid() )
@@ -1736,7 +1736,7 @@ BOOST_AUTO_TEST_CASE( reserve_asset_test )
 
       int64_t init_balance = 10000;
       int64_t reserve_amount = 3000;
-      share_type initial_reserve;
+      amount_type initial_reserve;
 
       BOOST_TEST_MESSAGE( "Test reserve operation on core asset" );
       transfer( council_account, alice_id, casset.amount( init_balance ) );
@@ -1788,13 +1788,13 @@ BOOST_AUTO_TEST_CASE( call_order_update_evaluator_test )
    try
    {
       ACTORS( (alice) (bob) );
-      transfer(council_account, alice_id, asset(10000000 * GRAPHENE_BLOCKCHAIN_PRECISION));
+      transfer(council_account, alice_id, asset(10000000 * GRAPHENE_CORE_ASSET_PRECISION));
 
       const auto& core   = asset_id_type()(db);
 
       // attempt to increase current supply beyond max_supply
       const auto& bitusd = create_backed_asset( "USDBIT", alice_id, 100, charge_market_fee, 2U, 
-            asset_id_type{}, GRAPHENE_MAX_SHARE_SUPPLY / 2 );
+            asset_id_type{}, GRAPHENE_CORE_ASSET_MAX_SUPPLY / 2 );
 
       {
          BOOST_TEST_MESSAGE( "Setting price feed to $100000 / 1" );
@@ -1808,7 +1808,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_evaluator_test )
          BOOST_TEST_MESSAGE( "Attempting a call_order_update that exceeds max_supply" );
          call_order_update_operation op;
          op.funding_account = alice_id;
-         op.delta_collateral = asset( 1000000 * GRAPHENE_BLOCKCHAIN_PRECISION );
+         op.delta_collateral = asset( 1000000 * GRAPHENE_CORE_ASSET_PRECISION );
          op.delta_debt = asset( bitusd.options.max_supply + 1, bitusd.get_id() );
          transaction tx;
          tx.operations.push_back( op );
@@ -1820,7 +1820,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_evaluator_test )
          BOOST_TEST_MESSAGE( "Creating 2 bitusd and transferring to bob (increases current supply)" );
          call_order_update_operation op;
          op.funding_account = alice_id;
-         op.delta_collateral = asset( 100 * GRAPHENE_BLOCKCHAIN_PRECISION );
+         op.delta_collateral = asset( 100 * GRAPHENE_CORE_ASSET_PRECISION );
          op.delta_debt = asset( 2, bitusd.get_id() );
          transaction tx;
          tx.operations.push_back( op );
@@ -1833,7 +1833,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_evaluator_test )
          BOOST_TEST_MESSAGE( "Again attempting a call_order_update_operation that is max_supply - 1 (should throw)" );
          call_order_update_operation op;
          op.funding_account = alice_id;
-         op.delta_collateral = asset( 100000 * GRAPHENE_BLOCKCHAIN_PRECISION );
+         op.delta_collateral = asset( 100000 * GRAPHENE_CORE_ASSET_PRECISION );
          op.delta_debt = asset( bitusd.options.max_supply - 1, bitusd.get_id() );
          transaction tx;
          tx.operations.push_back( op );
@@ -1845,7 +1845,7 @@ BOOST_AUTO_TEST_CASE( call_order_update_evaluator_test )
          BOOST_TEST_MESSAGE( "Again attempting a call_order_update_operation that equals max_supply (should work)" );
          call_order_update_operation op;
          op.funding_account = alice_id;
-         op.delta_collateral = asset( 100000 * GRAPHENE_BLOCKCHAIN_PRECISION );
+         op.delta_collateral = asset( 100000 * GRAPHENE_CORE_ASSET_PRECISION );
          op.delta_debt = asset( bitusd.options.max_supply - 2, bitusd.get_id() );
          transaction tx;
          tx.operations.push_back( op );

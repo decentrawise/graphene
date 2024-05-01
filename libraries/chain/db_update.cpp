@@ -62,7 +62,7 @@ void database::update_signing_validator(const validator_object& signing_validato
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
    uint64_t new_block_aslot = dpo.current_aslot + get_slot_at_time( new_block.timestamp );
 
-   share_type producer_pay = std::min( gpo.parameters.producer_pay_per_block, dpo.validator_budget );
+   amount_type producer_pay = std::min( gpo.parameters.producer_pay_per_block, dpo.validator_budget );
 
    modify( dpo, [&]( dynamic_global_property_object& _dpo )
    {
