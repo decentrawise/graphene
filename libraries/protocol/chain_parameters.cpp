@@ -43,7 +43,6 @@ namespace graphene { namespace protocol {
       to.maximum_producer_count = from.maximum_producer_count;
       to.maximum_council_count = from.maximum_council_count;
       to.maximum_authority_membership = from.maximum_authority_membership;
-      to.reserve_percent_of_fee = from.reserve_percent_of_fee;
       to.network_percent_of_fee = from.network_percent_of_fee;
       to.lifetime_referrer_percent_of_fee = from.lifetime_referrer_percent_of_fee;
       to.cashback_vesting_period_seconds = from.cashback_vesting_period_seconds;
@@ -82,7 +81,6 @@ namespace graphene { namespace protocol {
    void chain_parameters::validate()const
    {
       get_current_fees().validate();
-      FC_ASSERT( reserve_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );
       FC_ASSERT( network_percent_of_fee + lifetime_referrer_percent_of_fee <= GRAPHENE_100_PERCENT );

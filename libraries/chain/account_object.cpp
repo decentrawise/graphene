@@ -43,13 +43,6 @@ void account_statistics_object::process_fees(const account_object& a, database& 
          amount_type network_cut = cut_fee(core_fee_total, account.network_fee_percentage);
          assert( network_cut <= core_fee_total );
 
-#ifndef NDEBUG
-         const auto& props = d.get_global_properties();
-
-         amount_type reserveed = cut_fee(network_cut, props.parameters.reserve_percent_of_fee);
-         amount_type accumulated = network_cut - reserveed;
-         assert( accumulated + reserveed == network_cut );
-#endif
          amount_type lifetime_cut = cut_fee(core_fee_total, account.lifetime_referrer_fee_percentage);
          amount_type referral = core_fee_total - network_cut - lifetime_cut;
 
@@ -67,7 +60,7 @@ void account_statistics_object::process_fees(const account_object& a, database& 
          d.deposit_cashback(d.get(account.referrer), referrer_cut, require_vesting);
          d.deposit_cashback(d.get(account.registrar), registrar_cut, require_vesting);
 
-         assert( referrer_cut + registrar_cut + accumulated + reserveed + lifetime_cut == core_fee_total );
+         assert( referrer_cut + registrar_cut + accumulated + lifetime_cut == core_fee_total );
       };
 
       pay_out_fees(a, pending_fees, true);

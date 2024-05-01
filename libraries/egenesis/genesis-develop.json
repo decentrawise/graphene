@@ -223,7 +223,6 @@
     "maximum_producer_count": 1001,
     "maximum_council_count": 1001,
     "maximum_authority_membership": 10,
-    "reserve_percent_of_fee": 2000,
     "network_percent_of_fee": 2000,
     "lifetime_referrer_percent_of_fee": 3000,
     "cashback_vesting_period_seconds": 31536000,

@@ -32,7 +32,6 @@ namespace graphene { namespace protocol {
       uint16_t    maximum_producer_count              = GRAPHENE_DEFAULT_MAX_PRODUCER_COUNT; ///< maximum number of block producers
       uint16_t    maximum_council_count               = GRAPHENE_DEFAULT_MAX_COUNCIL_COUNT; ///< maximum number of council delegates
       uint16_t    maximum_authority_membership        = GRAPHENE_DEFAULT_MAX_AUTHORITY_MEMBERSHIP; ///< largest number of keys/accounts an authority can have
-      uint16_t    reserve_percent_of_fee              = GRAPHENE_DEFAULT_BURN_PERCENT_OF_FEE; ///< the percentage of the network's allocation of a fee that is taken out of circulation
       uint16_t    network_percent_of_fee              = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE; ///< percent of transaction fees paid to network
       uint16_t    lifetime_referrer_percent_of_fee    = GRAPHENE_DEFAULT_LIFETIME_REFERRER_PERCENT_OF_FEE; ///< percent of transaction fees paid to the referrer
       uint32_t    cashback_vesting_period_seconds     = GRAPHENE_DEFAULT_CASHBACK_VESTING_PERIOD; ///< time after cashback rewards are accrued before they become liquid
@@ -93,7 +92,6 @@ FC_REFLECT( graphene::protocol::chain_parameters,
             (maximum_producer_count)
             (maximum_council_count)
             (maximum_authority_membership)
-            (reserve_percent_of_fee)
             (network_percent_of_fee)
             (lifetime_referrer_percent_of_fee)
             (cashback_vesting_period_seconds)
